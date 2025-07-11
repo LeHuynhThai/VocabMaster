@@ -23,10 +23,24 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
                     </ul>
+                    @{
+                        var userName = Context.Session.GetString("Name");
+                    }
+                    @if (!string.IsNullOrEmpty(userName))
+                    {
+                        <div class="d-flex ms-auto align-items-center">
+                            <span class="me-3 fw-bold text-primary">@userName</span>
+                            <a class="btn btn-primary" asp-controller="Account" asp-action="Logout">Đăng xuất</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex ms-auto">
+                            <a class="btn btn-outline-primary me-2" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+                            <a class="btn btn-primary" asp-controller="Account" asp-action="Register">Đăng ký</a>
+                        </div>
+                    }
                 </div>
             </div>
         </nav>

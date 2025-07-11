@@ -1,0 +1,16 @@
+﻿@{
+    ViewBag.Title = "Đăng nhập";
+}
+<h2 class="text-center">Đăng nhập</h2>
+<form method="post" class="mx-auto" style="max-width: 300px;">
+    <div class="mb-3">
+        <label for="Name" class="form-label">Tên đăng nhập</label>
+        <input type="text" class="form-control" id="Name" name="Name" required />
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+</form>
+@if (ViewBag.Error != null)
+{
+    <p class="text-danger text-center mt-2">@ViewBag.Error</p>
+}
+
