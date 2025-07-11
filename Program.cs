@@ -1,4 +1,12 @@
+﻿using Microsoft.EntityFrameworkCore;
+using VocabMaster.Data;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Đăng ký AppDbContext với DI container, sử dụng SQL Server.
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext") ?? throw new InvalidOperationException("Không tìm thấy")));
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
