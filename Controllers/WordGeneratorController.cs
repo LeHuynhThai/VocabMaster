@@ -13,11 +13,6 @@ namespace VocabMaster.Controllers
             _context = context;
         }
 
-        private static readonly List<string> Words = new List<string>
-        {
-            "apple", "banana", "cat", "dog", "elephant", "flower", "guitar", "house", "island", "jungle"
-        };
-
         [HttpGet]
         public IActionResult Index(string randomWord = null)
         {
