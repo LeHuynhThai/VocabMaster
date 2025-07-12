@@ -2,13 +2,46 @@
     ViewData["Title"] = "VocabMaster";
 }
 
-<form method="post" asp-controller = "WordGenerator" asp-action="GenerateWord">
-    <button type="submit" class="btn btn-success">Học từ mới</button>
-</form>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <h2 class="card-title mb-4">Từ vựng ngẫu nhiên</h2>
+                    
+                    <form method="post" asp-action="GenerateWord">
+                        <button type="submit" class="btn btn-primary btn-lg mb-4">
+                            <i class="bi bi-shuffle me-2"></i>Sinh từ mới
+                        </button>
+                    </form>
 
-@if (ViewBag.RandomWord != null)
-{
-    <div class="alert alert-info mt-3">
-        <strong>Từ vựng ngẫu nhiên:</strong> @ViewBag.RandomWord
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-warning">
+                            @ViewBag.Error
+                        </div>
+                    }
+                    
+                    @if (ViewBag.RandomWord != null)
+                    {
+                        var word = ViewBag.RandomWord as VocabMaster.Models.Vocabulary;
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h3 class="text-primary mb-3">@word.Word</h3>
+                                @if (!string.IsNullOrEmpty(word.Pronunciation))
+                                {
+                                    <p class="text-muted">/@word.Pronunciation/</p>
+                                }
+                                <h4 class="text-success">@word.Meaning</h4>
+                                @if (!string.IsNullOrEmpty(word.Example))
+                                {
+                                    <p class="mt-3 fst-italic">@word.Example</p>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
-}
+</div>
