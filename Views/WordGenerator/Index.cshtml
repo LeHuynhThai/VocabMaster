@@ -1,0 +1,14 @@
+﻿@{
+    ViewData["Title"] = "VocabMaster";
+}
+
+<form method="post" asp-controller = "WordGenerator" asp-action="GenerateWord">
+    <button type="submit" class="btn btn-success">Học từ mới</button>
+</form>
+
+@if (ViewBag.RandomWord != null)
+{
+    <div class="alert alert-info mt-3">
+        <strong>Từ vựng ngẫu nhiên:</strong> @ViewBag.RandomWord
+    </div>
+}
