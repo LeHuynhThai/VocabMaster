@@ -45,15 +45,28 @@
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav class="flex-shrink-0 p-3 bg-light" style="width: 220px; min-height: 80vh;">
+            <h5 class="mb-4">Demo</h5>
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item mb-2">
+                    <a class="nav-link" asp-controller="Home" asp-action="Index">Demo 1</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Demo 2</a>
+                </li>
+            </ul>
+        </nav>
+        <!-- Main content -->
+        <div class="flex-grow-1">
             @RenderBody()
-        </main>
+        </div>
     </div>
 
     <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - VocabMaster - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        <div class="container text-center">
+            &copy; 2025 - VocabMaster
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
