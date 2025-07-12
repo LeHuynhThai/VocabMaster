@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using VocabMaster.Data;
+using VocabMaster.Models;
 
 namespace VocabMaster.Controllers
 {
@@ -14,18 +16,46 @@ namespace VocabMaster.Controllers
         }
 
         [HttpGet]
-        public IActionResult Index(string randomWord = null)
+        public IActionResult Index()
         {
-            ViewBag.RandomWord = randomWord;   
             return View();
         }
         
         [HttpPost]
-        public IActionResult GenerateWord()
+        public async Task<IActionResult> GenerateWord()
         {
-            var random = new Random();
-            var randomWord = Words[random.Next(Words.Count)];
-            return RedirectToAction("Index", new { randomWord = randomWord });
+            try 
+            {
+                var wordCount = await _context.Vocabularies.CountAsync();
+                if(wordCount == 0)
+                {
+                    ViewBag.Error = "Không có từ vựng nào trong cơ sở dữ liệu";
+                    return View("Index");
+                }
+
+                var random = new Random();
+                var skipCount = random.Next(0, wordCount);
+
+                var randomWord = await _context.Vocabularies
+                    .Skip(skipCount)
+                    .Take(1)
+                    .FirstOrDefaultAsync();
+
+                if(randomWord != null)
+                {
+                    ViewBag.RandomWord = randomWord;
+                }
+                else
+                {
+                    ViewBag.Error = "Không tìm thấy từ vựng ngẫu nhiên";
+                }
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = "Có lỗi xảy ra: " + ex.Message;
+            }
+
+            return View("Index");
         }
     }
 }
