@@ -2,17 +2,19 @@
 using Microsoft.EntityFrameworkCore;
 using VocabMaster.Data;
 using VocabMaster.Models;
+using VocabMaster.Services.Interfaces;
 
 namespace VocabMaster.Controllers
 {
     public class WordGeneratorController : Controller
     {
 
-        private readonly AppDbContext _context;
+        private readonly IVocabularyService _vocabularyService; // Vocabulary service
 
-        public WordGeneratorController(AppDbContext context)
+        // Constructor
+        public WordGeneratorController(IVocabularyService vocabularyService)
         {
-            _context = context;
+            _vocabularyService = vocabularyService;
         }
 
         [HttpGet]
@@ -21,47 +23,28 @@ namespace VocabMaster.Controllers
             return View();
         }
         
+        // Generate word
         [HttpPost]
         public async Task<IActionResult> GenerateWord()
         {
             try 
             {
-                // Lấy tổng số từ vựng trong bảng Vocabularies
-                var wordCount = await _context.Vocabularies.CountAsync();
-                // Nếu không có từ vựng nào trong bảng Vocabularies, hiển thị thông báo lỗi
-                if(wordCount == 0)
+                var randomWord = await _vocabularyService.GetRandomVocabularyAsync(); // Get random vocabulary
+                if(randomWord != null) // If random word exists
                 {
-                    ViewBag.Error = "Không có từ vựng nào trong cơ sở dữ liệu";
-                    return View("Index");
+                    ViewBag.RandomWord = randomWord; // display random word
                 }
-                // Tạo số ngẫu nhiên
-                var random = new Random();
-                // Tạo số ngẫu nhiên trong khoảng từ 0 đến tổng số từ vựng
-                var skipCount = random.Next(0, wordCount);
-                // Lấy từ vựng ngẫu nhiên từ bảng Vocabularies
-                var randomWord = await _context.Vocabularies
-                    .Skip(skipCount) // bỏ qua số lượng từ vựng ngẫu nhiên
-                    .Take(1) // lấy 1 từ vựng kế tiếp
-                    .FirstOrDefaultAsync(); // lấy từ vựng đầu tiên
-
-                // Nếu từ vựng ngẫu nhiên tồn tại, hiển thị từ vựng ngẫu nhiên
-                if(randomWord != null)
-                {
-                    ViewBag.RandomWord = randomWord;
-                }
-                // Nếu từ vựng ngẫu nhiên không tồn tại, hiển thị thông báo lỗi
                 else
                 {
-                    ViewBag.Error = "Không tìm thấy từ vựng ngẫu nhiên";
+                    ViewBag.Error = "No vocabulary found"; // display error
                 }
             }
-            // Nếu có lỗi xảy ra, hiển thị thông báo lỗi
             catch (Exception ex)
             {
-                ViewBag.Error = "Có lỗi xảy ra: " + ex.Message;
+                ViewBag.Error = "An error occurred: " + ex.Message; // display error
             }
 
-            return View("Index");
+            return View("Index"); // return view
         }
     }
 }

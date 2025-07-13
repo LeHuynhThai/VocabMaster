@@ -1,4 +1,4 @@
-namespace VocabMaster.Models
+﻿namespace VocabMaster.Models
 {
     public class ErrorViewModel
     {
