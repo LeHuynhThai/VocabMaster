@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VocabMaster.Data;
+using VocabMaster.Data.SeedData;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,13 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddSession();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<AppDbContext>();
+    await VocabularySeeder.SeedVocabularies(context);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
