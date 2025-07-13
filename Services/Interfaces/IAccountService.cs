@@ -4,7 +4,7 @@ namespace VocabMaster.Services.Interfaces;
 
 public interface IAccountService
 {
-    Task<bool> LoginAsync(string name); // Login
+    Task<User> LoginAsync(string name, string password); // Login
     Task<bool> RegisterAsync(User user); // Register
-    void Logout(); // Logout
+    Task LogoutAsync(); // Logout
 }
