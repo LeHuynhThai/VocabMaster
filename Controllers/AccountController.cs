@@ -2,17 +2,18 @@
 using Microsoft.EntityFrameworkCore;
 using VocabMaster.Data;
 using VocabMaster.Entities;
+using VocabMaster.Services.Interfaces;
 
 namespace VocabMaster.Controllers
 {
     public class AccountController : Controller
     {
 
-        private readonly AppDbContext _context;
+        private readonly IAccountService _accountService;
 
-        public AccountController(AppDbContext context)
+        public AccountController(IAccountService accountService)
         {
-            _context = context;
+            _accountService = accountService;
         }
 
         public IActionResult Index()
@@ -25,44 +26,49 @@ namespace VocabMaster.Controllers
         {
             return View();
         }
+
+        // Login
         [HttpPost]
-        public async Task<IActionResult> Login(string Name)
+        public async Task<IActionResult> Login(string name)
         {
-            var user =  await _context.Users.FirstOrDefaultAsync(u => u.Name == Name);
-            if (user != null)
+            if (await _accountService.LoginAsync(name)) // If login successful
             {
-                HttpContext.Session.SetString("Name", user.Name);
                 return RedirectToAction("Index", "Home");
             }
             else
             {
-                ViewBag.Error = "Tên đăng nhập không đúng";
+                ViewBag.Error = "Login failed"; // display error
                 return View();
-            }    
+            }
         }
+
+        // Register
         [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
+
+        // Register
         [HttpPost]
         public async Task<IActionResult> Register(User user)
         {
-            if(await _context.Users.AnyAsync(u => u.Name == user.Name))
+            if (await _accountService.RegisterAsync(user)) // If register successful
             {
-                ModelState.AddModelError("Name", "Tên đăng nhập đã tồn tại");
-                return View();
+                ViewBag.Success = "Register successful"; // display success
+                return RedirectToAction("Login");
             }
             else
             {
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-                return RedirectToAction("Login");
-            }    
+                ModelState.AddModelError("Name", "Name already exists"); // display error   
+                return View();
+            }
         }
+
+        // Logout
         public IActionResult Logout()
         {
-            HttpContext.Session.Clear();
+            _accountService.Logout();
             return RedirectToAction("Login");
         }
     }

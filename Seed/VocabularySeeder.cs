@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using VocabMaster.Models;
+using VocabMaster.Entities;
 
 namespace VocabMaster.Data.SeedData
 {

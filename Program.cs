@@ -1,18 +1,45 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VocabMaster.Data;
 using VocabMaster.Data.SeedData;
+using VocabMaster.Repositories.Implementations;
+using VocabMaster.Services.Implementations;
+using VocabMaster.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Đăng ký AppDbContext với DI container, sử dụng SQL Server.
+// Register AppDbContext with DI container, using SQL Server.
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext") ?? throw new InvalidOperationException("Không tìm thấy")));
 
+// Add Authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Auth/Login";
+        options.LogoutPath = "/Auth/Logout";
+        options.AccessDeniedPath = "/Auth/AccessDenied";
+        options.Cookie.Name = "VocabMaster.Auth";
+        options.Cookie.HttpOnly = true;
+        options.ExpireTimeSpan = TimeSpan.FromDays(7);
+        options.SlidingExpiration = true;
+    });
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddSession();
+
+// Add repositories
+builder.Services.AddScoped<IVocabularyRepository, VocabularyRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// Add services
+builder.Services.AddScoped<IVocabularyService, VocabularyService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+
+// Add HttpContextAccessor
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -32,17 +59,17 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
-app.UseSession();
 
+// Add Authentication & Authorization middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
-
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

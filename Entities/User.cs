@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace VocabMaster.Models
+namespace VocabMaster.Entities
 {
     public class User
     {
