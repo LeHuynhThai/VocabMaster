@@ -25,13 +25,10 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                     </ul>
-                    @{
-                        var userName = Context.Session.GetString("Name");
-                    }
-                    @if (!string.IsNullOrEmpty(userName))
+                    @if (User.Identity.IsAuthenticated)
                     {
                         <div class="d-flex ms-auto align-items-center">
-                            <span class="me-3 fw-bold text-primary">@userName</span>
+                            <span class="me-3 fw-bold text-primary">@User.Identity.Name</span>
                             <a class="btn btn-primary" asp-controller="Account" asp-action="Logout">Đăng xuất</a>
                         </div>
                     }
@@ -48,19 +45,22 @@
     </header>
     <div class="d-flex">
         <!-- Sidebar -->
-        <nav class="flex-shrink-0 p-3 bg-light" style="width: 220px; min-height: 80vh;">
-            <h5 class="mb-4">Demo</h5>
-            <ul class="nav nav-pills flex-column">
-                <li class="nav-item mb-2">
-                    <a class="nav-link" asp-controller="WordGenerator" asp-action="Index">Demo 1</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link">Demo 2</a>
-                </li>
-            </ul>
-        </nav>
+        @if (User.Identity.IsAuthenticated)
+        {
+            <nav class="flex-shrink-0 p-3 bg-light" style="width: 220px; min-height: 80vh;">
+                <h5 class="mb-4">Demo</h5>
+                <ul class="nav nav-pills flex-column">
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" asp-controller="WordGenerator" asp-action="Index">Demo 1</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link">Demo 2</a>
+                    </li>
+                </ul>
+            </nav>
+        }
         <!-- Main content -->
-        <div class="flex-grow-1">
+        <div class="@(User.Identity.IsAuthenticated ? "flex-grow-1 p-3" : "container py-4")">
             @RenderBody()
         </div>
     </div>

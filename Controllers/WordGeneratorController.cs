@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using VocabMaster.Data;
 using VocabMaster.Models;
 using VocabMaster.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace VocabMaster.Controllers
 {
@@ -17,13 +18,15 @@ namespace VocabMaster.Controllers
             _vocabularyService = vocabularyService;
         }
 
+        [Authorize]
         [HttpGet]
         public IActionResult Index()
         {
             return View();
         }
-        
+
         // Generate word
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> GenerateWord()
         {
