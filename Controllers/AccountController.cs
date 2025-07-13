@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VocabMaster.Data;
-using VocabMaster.Models;
+using VocabMaster.Entities;
 
 namespace VocabMaster.Controllers
 {
