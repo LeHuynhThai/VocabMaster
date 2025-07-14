@@ -23,13 +23,21 @@ public class UserRepository : IUserRepository
 
     public async Task AddAsync(User user)
     {
-        user.Role = UserRole.User;
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
     }
 
-    public async Task<User> LoginAsync(string name, string password)
+    public async Task<User> ValidateUserAsync(string name, string password)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.Name == name && u.Password == password);
+        // Get user by name
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Name == name);
+
+        // If user not found or password is incorrect
+        if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.Password))
+        {
+            return null;
+        }
+
+        return user;
     }
 }

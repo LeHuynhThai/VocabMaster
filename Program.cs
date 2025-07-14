@@ -17,15 +17,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(options =>
     {
         options.LoginPath = "/Account/Login";
-        options.LogoutPath = "/Account/Logout";
-        options.AccessDeniedPath = "/Account/AccessDenied";
         options.Cookie.Name = "VocabMaster.Auth";
         options.Cookie.HttpOnly = true;
-        options.ExpireTimeSpan = TimeSpan.FromDays(7);
-        options.SlidingExpiration = true;
+        options.SlidingExpiration = true; // reset the expiration time on each request
     });
 
-// Add services to the container.
+
+// Add Authentication
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddSession();

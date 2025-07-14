@@ -1,80 +1,76 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using VocabMaster.Entities;
+using VocabMaster.Models.User;
 using VocabMaster.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
+using VocabMaster.Entities;
 
-namespace VocabMaster.Controllers
+namespace VocabMaster.Controllers;
+
+public class AccountController : Controller
 {
-    public class AccountController : Controller
+    private readonly IAccountService _accountService;
+
+    public AccountController(IAccountService accountService)
     {
-        private readonly IAccountService _accountService;
+        _accountService = accountService;
+    }
 
-        public AccountController(IAccountService accountService)
+    [HttpGet]
+    public IActionResult Login()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Login(LoginViewModel model)
+    {
+        if (!ModelState.IsValid)
         {
-            _accountService = accountService;
+            return View(model);
         }
 
-        [HttpGet]
-        public IActionResult Login()
+        var user = await _accountService.LoginAsync(model.Name, model.Password);
+        if (user != null)
         {
-            if (User.Identity.IsAuthenticated)
-            {
-                return RedirectToAction("Index", "Home");
-            }
-            return View();
+            return RedirectToAction("Index", "Home");
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Login(string name, string password)
+        ModelState.AddModelError("", "Tên đăng nhập hoặc mật khẩu không đúng");
+        return View(model);
+    }
+
+    [HttpGet]
+    public IActionResult Register()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Register(RegisterViewModel model)
+    {
+        if (!ModelState.IsValid)
         {
-            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(password))
-            {
-                ModelState.AddModelError("", "Please enter all login information");
-                return View();
-            }
-
-            var user = await _accountService.LoginAsync(name, password);
-            if (user != null)
-            {
-                return RedirectToAction("Index", "Home");
-            }
-
-            ModelState.AddModelError("", "Username or password is incorrect");
-            return View();
+            return View(model);
         }
 
-        [HttpGet]
-        public IActionResult Register()
+        var user = new User 
+        { 
+            Name = model.Name,
+            Password = model.Password
+        };
+
+        if (await _accountService.RegisterAsync(user))
         {
-            if (User.Identity.IsAuthenticated)
-            {
-                return RedirectToAction("Index", "Home");
-            }
-            return View();
+            return RedirectToAction(nameof(Login));
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Register(User user)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(user);
-            }
+        ModelState.AddModelError("", "Tên đăng nhập đã tồn tại");
+        return View(model);
+    }
 
-            if (await _accountService.RegisterAsync(user))
-            {
-                TempData["SuccessMessage"] = "Registration successful! Please login.";
-                return RedirectToAction("Login");
-            }
-
-            ModelState.AddModelError("Name", "Username already exists");
-            return View(user);
-        }
-
-        public async Task<IActionResult> Logout()
-        {
-            await _accountService.LogoutAsync();
-            return RedirectToAction("Login");
-        }
+    [HttpPost]
+    public async Task<IActionResult> Logout()
+    {
+        await _accountService.LogoutAsync();
+        return RedirectToAction("Index", "Home");
     }
 }

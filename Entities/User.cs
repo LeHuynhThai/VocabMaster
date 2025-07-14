@@ -7,15 +7,15 @@ namespace VocabMaster.Entities
         [Key]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Name is required")]
-        [MaxLength(50, ErrorMessage = "Name must be less than 50 characters")]
+        [Required]
+        [MaxLength(50)]
         public string Name { get; set; }
 
-        [Required(ErrorMessage = "Password is required")]
-        [StringLength(3, ErrorMessage = "Password must be at least 3 characters")]
+        [Required]
+        [MaxLength(100)]
         public string Password { get; set; }
 
-        public UserRole Role { get; set; } = UserRole.User; // Default role is User
+        public UserRole Role { get; set; } = UserRole.User;
     }
     public enum UserRole
     {
