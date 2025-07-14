@@ -1,39 +1,31 @@
-﻿@{
-    ViewData["Title"] = "Đăng nhập";
-}
+﻿@model VocabMaster.Models.User.LoginViewModel
 
 <div class="row justify-content-center">
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card">
             <div class="card-body">
-                <h2 class="card-title text-center mb-4">@ViewData["Title"]</h2>
-
-                @if (TempData["SuccessMessage"] != null)
-                {
-                    <div class="alert alert-success">
-                        @TempData["SuccessMessage"]
-                    </div>
-                }
-
-                <form method="post">
-                    <div class="validation-summary-errors text-danger" asp-validation-summary="ModelOnly"></div>
-
+                <h2 class="card-title text-center">Đăng nhập</h2>
+                <form asp-action="Login" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
                     <div class="form-group mb-3">
-                        <label for="name" class="form-label">Tên đăng nhập</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
+                        <label asp-for="Name" class="control-label">Tên đăng nhập</label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
-
+                    
                     <div class="form-group mb-3">
-                        <label for="password" class="form-label">Mật khẩu</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                        <label asp-for="Password" class="control-label">Mật khẩu</label>
+                        <input asp-for="Password" class="form-control" type="password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
-
-                    <div class="d-grid gap-2">
+                    
+                    <div class="form-group text-center">
                         <button type="submit" class="btn btn-primary">Đăng nhập</button>
                     </div>
                 </form>
-
-                <div class="mt-3 text-center">
+                
+                <div class="text-center mt-3">
                     <p>Chưa có tài khoản? <a asp-action="Register">Đăng ký ngay</a></p>
                 </div>
             </div>
@@ -42,5 +34,5 @@
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 } 

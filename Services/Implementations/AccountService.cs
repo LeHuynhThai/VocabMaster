@@ -23,36 +23,47 @@ public class AccountService : IAccountService
     // Login
     public async Task<User> LoginAsync(string name, string password)
     {
-        var user = await _userRepository.LoginAsync(name, password); // Login
+        var user = await _userRepository.ValidateUserAsync(name, password); // Validate user
         if (user != null) // If user exists
         {
-            var claims = new List<Claim> // Claims
-            {
-                new Claim(ClaimTypes.Name, user.Name),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Role, user.Role.ToString())
-            };
+            var userClaims = CreateUserClaims(user); // Create user claims
+            var userIdentity = new ClaimsIdentity(userClaims, CookieAuthenticationDefaults.AuthenticationScheme); // Create user identity
+            var cookieProperties = CreateAuthenticationProperties(); // Create authentication properties
 
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme); // Claims identity
-            var authProperties = new AuthenticationProperties // Authentication properties
-            {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
-            };
-
+            // Sign in user
             await _httpContextAccessor.HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity),
-                authProperties);
+                new ClaimsPrincipal(userIdentity),
+                cookieProperties);
         }
 
         return user;
+    }
+
+    // Create user claims
+    private List<Claim> CreateUserClaims(User user)
+    {
+        return new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, user.Name),
+            new Claim(ClaimTypes.Role, user.Role.ToString())
+        };
+    }
+
+    private AuthenticationProperties CreateAuthenticationProperties()
+    {
+        return new AuthenticationProperties
+        {
+            IsPersistent = true // Keep the user logged in even after the browser is closed
+        };
     }
 
     public async Task<bool> RegisterAsync(User user)
     {
         if (await _userRepository.IsNameExistsAsync(user.Name))
             return false;
+
+        user.Password = HashPassword(user.Password);
 
         await _userRepository.AddAsync(user);
         return true;
@@ -61,6 +72,11 @@ public class AccountService : IAccountService
     public async Task LogoutAsync()
     {
         await _httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    }
+
+    public string HashPassword(string password)
+    {
+        return BCrypt.Net.BCrypt.HashPassword(password);
     }
 }
 
