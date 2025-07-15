@@ -34,7 +34,7 @@ public class AccountController : Controller
             return RedirectToAction("Index", "Home");
         }
 
-        ModelState.AddModelError("", "Tên đăng nhập hoặc mật khẩu không đúng");
+        ModelState.AddModelError("", "Username or password is incorrect");
         return View(model);
     }
 
@@ -52,18 +52,20 @@ public class AccountController : Controller
             return View(model);
         }
 
+        // Create user
         var user = new User 
         { 
-            Name = model.Name,
-            Password = model.Password
+            Name = model.Name, // Set name
+            Password = model.Password // Set password
         };
 
+        // Register user
         if (await _accountService.RegisterAsync(user))
         {
-            return RedirectToAction(nameof(Login));
+            return RedirectToAction("Login"); // Redirect to login page
         }
 
-        ModelState.AddModelError("", "Tên đăng nhập đã tồn tại");
+        ModelState.AddModelError("", "Username already exists");
         return View(model);
     }
 
