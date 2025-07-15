@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using VocabMaster.Models;
 using VocabMaster.Services.Interfaces;
+using VocabMaster.Entities;
 
 namespace VocabMaster.Services.Implementations
 {
@@ -8,30 +9,28 @@ namespace VocabMaster.Services.Implementations
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<DictionaryService> _logger;
+        private readonly IVocabularyService _vocabularyService;
         private readonly string _dictionaryApiUrl = "https://api.dictionaryapi.dev/api/v2/entries/en/";
-        private readonly string _randomWordApiUrl = "https://random-word-api.herokuapp.com/word";
         
         
-        public DictionaryService(ILogger<DictionaryService> logger)
+        public DictionaryService(ILogger<DictionaryService> logger, IVocabularyService vocabularyService)
         {
             _httpClient = new HttpClient();
             _logger = logger;
+            _vocabularyService = vocabularyService;
         }
 
         public async Task<DictionaryResponse> GetRandomWordAsync()
         {
             try
             {
-                var randomWordResponse = await _httpClient.GetAsync(_randomWordApiUrl);
-                if (!randomWordResponse.IsSuccessStatusCode)
+                var vocabulary = await _vocabularyService.GetRandomVocabularyAsync();
+                if (vocabulary == null)
                 {
-                    _logger.LogError($"Error getting random word: {randomWordResponse.StatusCode}");
+                    _logger.LogWarning("No vocabulary found");
                     return null;
                 }
-                var content = await randomWordResponse.Content.ReadAsStringAsync();
-                var words = JsonSerializer.Deserialize<string[]>(content);
-                var randomWord = words?.FirstOrDefault();
-                return await GetWordDefinitionAsync(randomWord);
+                return await GetWordDefinitionAsync(vocabulary.Word);
             }
             catch (Exception ex)
             {

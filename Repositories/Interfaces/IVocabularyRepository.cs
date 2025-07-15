@@ -1,8 +1,10 @@
 ﻿using VocabMaster.Entities;
 
-public interface IVocabularyRepository
+namespace VocabMaster.Repositories.Interfaces
 {
-    Task<Vocabulary> GetRandomAsync(); // Get random vocabulary
-    Task<int> GetTotalCountAsync(); // Get total count of vocabularies
-    Task<IEnumerable<Vocabulary>> GetAllAsync(); // Get all vocabularies
+    public interface IVocabularyRepository
+    {
+        Task<Vocabulary> GetRandomAsync(); // Get random vocabulary
+        Task<int> CountAsync(); // Get total count of vocabularies
+    }
 }
