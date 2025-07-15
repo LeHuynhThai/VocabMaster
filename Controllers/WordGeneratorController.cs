@@ -1,53 +1,85 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using VocabMaster.Data;
 using VocabMaster.Models;
 using VocabMaster.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace VocabMaster.Controllers
 {
+    [Authorize]
     public class WordGeneratorController : Controller
     {
+        private readonly IDictionaryService _dictionaryService;
+        private readonly ILogger<WordGeneratorController> _logger;
 
-        private readonly IVocabularyService _vocabularyService; // Vocabulary service
-
-        // Constructor
-        public WordGeneratorController(IVocabularyService vocabularyService)
+        public WordGeneratorController(
+            IDictionaryService dictionaryService,
+            ILogger<WordGeneratorController> logger)
         {
-            _vocabularyService = vocabularyService;
+            _dictionaryService = dictionaryService;
+            _logger = logger;
         }
 
-        [Authorize]
         [HttpGet]
         public IActionResult Index()
         {
             return View();
         }
 
-        // Generate word
-        [Authorize]
         [HttpPost]
         public async Task<IActionResult> GenerateWord()
         {
             try
             {
-                var randomWord = await _vocabularyService.GetRandomVocabularyAsync(); // Get random vocabulary
-                if(randomWord != null) // If random word exists
+                var randomWord = await _dictionaryService.GetRandomWordAsync();
+                
+                if (randomWord == null)
                 {
-                    ViewBag.RandomWord = randomWord; // display random word
+                    _logger.LogWarning("No word found");
+                    ModelState.AddModelError("", "Cannot generate random word. Please try again.");
+                    return View("Index");
                 }
-                else
-                {
-                    ViewBag.Error = "No vocabulary found"; // display error
-                }
+
+                ViewBag.RandomWord = randomWord;
+                return View("Index");
             }
             catch (Exception ex)
             {
-                ViewBag.Error = "An error occurred: " + ex.Message; // display error
+                _logger.LogError(ex, "Error generating random word");
+                ModelState.AddModelError("", "An error occurred. Please try again.");
+                return View("Index");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetWordDefinition(string word)
+        {
+            if (string.IsNullOrEmpty(word))
+            {
+                return BadRequest("Word cannot be empty");
             }
 
-            return View("Index"); // return view
+            try
+            {
+                var definition = await _dictionaryService.GetWordDefinitionAsync(word);
+                
+                if (definition == null)
+                {
+                    _logger.LogWarning($"No definition found for word: {word}");
+                    ModelState.AddModelError("", $"No definition found for word: {word}");
+                    return View("Index");
+                }
+
+                ViewBag.RandomWord = definition;
+                return View("Index");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting word definition: {word}");
+                ModelState.AddModelError("", "An error occurred. Please try again.");
+                return View("Index");
+            }
         }
     }
 }

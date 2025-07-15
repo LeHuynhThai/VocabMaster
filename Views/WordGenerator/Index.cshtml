@@ -1,42 +1,130 @@
-﻿@using VocabMaster.Entities
+﻿@using VocabMaster.Models
 @{
     ViewData["Title"] = "VocabMaster";
 }
 
 <div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-6">
+        <div class="col-md-8">
             <div class="card shadow">
                 <div class="card-body text-center">
                     <h2 class="card-title mb-4">Từ vựng ngẫu nhiên</h2>
                     
-                    <form method="post" asp-action="GenerateWord">
-                        <button type="submit" class="btn btn-primary btn-lg mb-4">
-                            <i class="bi bi-shuffle me-2"></i>Sinh từ mới
-                        </button>
-                    </form>
+                    <div class="d-flex justify-content-center mb-4">
+                        <!-- Nút sinh từ ngẫu nhiên -->
+                        <form method="post" asp-action="GenerateWord" class="me-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-shuffle me-2"></i>Sinh từ ngẫu nhiên
+                            </button>
+                        </form>
+                        
+                        <!-- Form tra cứu từ -->
+                        <form method="post" asp-action="GetWordDefinition" class="d-flex">
+                            <input type="text" name="word" class="form-control me-2" placeholder="Nhập từ cần tra" required />
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-search me-1"></i>Tra từ
+                            </button>
+                        </form>
+                    </div>
 
+                    <!-- Hiển thị lỗi từ ModelState -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-warning mb-4">
+                            <ul class="mb-0">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    
+                    <!-- Hiển thị lỗi từ ViewBag (cho tương thích ngược) -->
                     @if (ViewBag.Error != null)
                     {
-                        <div class="alert alert-warning">
+                        <div class="alert alert-warning mb-4">
                             @ViewBag.Error
                         </div>
                     }
                     
+                    <!-- Hiển thị từ vựng -->
                     @if (ViewBag.RandomWord != null)
                     {
-                        var word = ViewBag.RandomWord as Vocabulary;
+                        var word = ViewBag.RandomWord as DictionaryResponse;
                         <div class="card mb-3">
                             <div class="card-body">
-                                <h3 class="text-primary mb-3">@word.Word</h3>
-                                @if (!string.IsNullOrEmpty(word.Pronunciation))
+                                <!-- Từ vựng và phiên âm -->
+                                <div class="d-flex align-items-center mb-3">
+                                    <h2 class="text-primary mb-0">@word.Word</h2>
+                                    @if (!string.IsNullOrEmpty(word.Phonetic))
+                                    {
+                                        <span class="text-muted ms-3">/@word.Phonetic/</span>
+                                    }
+                                </div>
+
+                                <!-- Audio phát âm -->
+                                @if (word.Phonetics != null && word.Phonetics.Any(p => !string.IsNullOrEmpty(p.Audio)))
                                 {
-                                    <p class="text-muted">/@word.Pronunciation/</p>
+                                    <div class="mb-4">
+                                        @foreach (var phonetic in word.Phonetics.Where(p => !string.IsNullOrEmpty(p.Audio)))
+                                        {
+                                            <div class="d-flex align-items-center mb-2">
+                                                <audio controls class="me-2">
+                                                    <source src="@phonetic.Audio" type="audio/mpeg">
+                                                </audio>
+                                                @if (!string.IsNullOrEmpty(phonetic.Text))
+                                                {
+                                                    <span class="text-muted">/@phonetic.Text/</span>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
                                 }
-                                <h4 class="text-success">@word.Meaning</h4>
-                                @if (!string.IsNullOrEmpty(word.Example))
+
+                                <!-- Nghĩa của từ -->
+                                @if (word.Meanings != null)
                                 {
-                                    <p class="mt-3 fst-italic">@word.Example</p>
+                                    foreach (var meaning in word.Meanings)
+                                    {
+                                        <div class="mb-4">
+                                            <h4 class="text-success">
+                                                <i class="bi bi-bookmark me-2"></i>@meaning.PartOfSpeech
+                                            </h4>
+
+                                            @foreach (var def in meaning.Definitions)
+                                            {
+                                                <div class="card bg-light mb-3">
+                                                    <div class="card-body">
+                                                        <p class="mb-2">@def.Text</p>
+
+                                                        @if (!string.IsNullOrEmpty(def.Example))
+                                                        {
+                                                            <p class="fst-italic text-muted mb-2">
+                                                                <i class="bi bi-quote me-2"></i>@def.Example
+                                                            </p>
+                                                        }
+
+                                                        @if (def.Synonyms != null && def.Synonyms.Any())
+                                                        {
+                                                            <div class="mb-2">
+                                                                <span class="fw-bold">Synonyms: </span>
+                                                                @string.Join(", ", def.Synonyms)
+                                                            </div>
+                                                        }
+
+                                                        @if (def.Antonyms != null && def.Antonyms.Any())
+                                                        {
+                                                            <div>
+                                                                <span class="fw-bold">Antonyms: </span>
+                                                                @string.Join(", ", def.Antonyms)
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
                                 }
                             </div>
                         </div>
