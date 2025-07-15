@@ -35,6 +35,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Add services
 builder.Services.AddScoped<IVocabularyService, VocabularyService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IDictionaryService, DictionaryService>();
 
 // Add HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
