@@ -10,12 +10,12 @@ namespace VocabMaster.Controllers
     public class WordGeneratorController : Controller
     {
 
-        private readonly IVocabularyService _vocabularyService; // Vocabulary service
+        private readonly IDictionaryService _dictionaryService; // Dictionary service
 
         // Constructor
-        public WordGeneratorController(IVocabularyService vocabularyService)
+        public WordGeneratorController(IDictionaryService dictionaryService)
         {
-            _vocabularyService = vocabularyService;
+            _dictionaryService = dictionaryService;
         }
 
         [Authorize]
@@ -32,14 +32,14 @@ namespace VocabMaster.Controllers
         {
             try
             {
-                var randomWord = await _vocabularyService.GetRandomVocabularyAsync(); // Get random vocabulary
+                var randomWord = await _dictionaryService.GetRandomWordAsync(); // Get random word
                 if(randomWord != null) // If random word exists
                 {
                     ViewBag.RandomWord = randomWord; // display random word
                 }
                 else
                 {
-                    ViewBag.Error = "No vocabulary found"; // display error
+                    ViewBag.Error = "No word found"; // display error
                 }
             }
             catch (Exception ex)
