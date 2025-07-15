@@ -9,14 +9,5 @@ namespace VocabMaster.Entities
 
         [MaxLength(100)]
         public string Word { get; set; }
-
-        [MaxLength(100)]
-        public string Meaning { get; set; }
-
-        [MaxLength(100)]
-        public string Example { get; set; }
-
-        [MaxLength(100)]
-        public string? Pronunciation { get; set; }
     }
 }

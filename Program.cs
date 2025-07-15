@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VocabMaster.Data;
-using VocabMaster.Data.SeedData;
 using VocabMaster.Repositories.Implementations;
 using VocabMaster.Services.Implementations;
 using VocabMaster.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using VocabMaster.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,7 +46,6 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
-    await VocabularySeeder.SeedVocabularies(context);
 }
 
 // Configure the HTTP request pipeline.
