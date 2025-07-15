@@ -1,21 +1,40 @@
-using VocabMaster.Entities;
-using VocabMaster.Repositories;
+﻿using VocabMaster.Entities;
+using VocabMaster.Repositories.Interfaces;
 using VocabMaster.Services.Interfaces;
 
-namespace VocabMaster.Services.Implementations;
-
-public class VocabularyService : IVocabularyService
+namespace VocabMaster.Services.Implementations
 {
-    private readonly IVocabularyRepository _repository; // Vocabulary repository
-
-    public VocabularyService(IVocabularyRepository repository)
+    public class VocabularyService : IVocabularyService
     {
-        _repository = repository;
-    }
+        private readonly IVocabularyRepository _repository;
+        private readonly ILogger<VocabularyService> _logger;
 
-    public async Task<Vocabulary> GetRandomVocabularyAsync()
-    {
-        return await _repository.GetRandomAsync();
+        public VocabularyService(
+            IVocabularyRepository repository,
+            ILogger<VocabularyService> logger)
+        {
+            _repository = repository;
+            _logger = logger;
+        }
+
+        public async Task<Vocabulary> GetRandomVocabularyAsync()
+        {
+            try
+            {
+                var vocabulary = await _repository.GetRandomAsync();
+                if (vocabulary == null)
+                {
+                    _logger.LogWarning("No vocabulary found");
+                    return null;
+                }
+                return vocabulary;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting random vocabulary");
+                throw;
+            }
+        }
     }
 }
 
