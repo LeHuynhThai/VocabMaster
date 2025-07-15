@@ -30,7 +30,7 @@ namespace VocabMaster.Controllers
         [HttpPost]
         public async Task<IActionResult> GenerateWord()
         {
-            try 
+            try
             {
                 var randomWord = await _vocabularyService.GetRandomVocabularyAsync(); // Get random vocabulary
                 if(randomWord != null) // If random word exists
