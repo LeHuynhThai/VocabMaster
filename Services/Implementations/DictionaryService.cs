@@ -8,20 +8,9 @@ namespace VocabMaster.Services.Implementations
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<DictionaryService> _logger;
-        private readonly string _apiUrl = "https://api.dictionaryapi.dev/api/v2/entries/en/";
-        private readonly Random _random = new Random();
-        private readonly string[] _commonWords = new [] 
-        {
-            "hello", "world", "love", "happy", "sad", "book", "computer", "friend",
-            "family", "work", "play", "eat", "sleep", "dream", "hope", "peace",
-            "joy", "smile", "laugh", "learn", "teach", "create", "build", "grow",
-            "run", "walk", "talk", "think", "feel", "believe", "understand", "remember",
-            "imagine", "create", "build", "grow", "run", "walk", "talk", "think",
-            "feel", "believe", "understand", "remember", "imagine", "create", "build", "grow",
-            "run", "walk", "talk", "think", "feel", "believe", "understand", "remember",
-            "imagine", "create", "build", "grow", "run", "walk", "talk", "think",
-            "feel", "believe", "understand", "remember", "imagine", "create", "build", "grow",
-        };
+        private readonly string _dictionaryApiUrl = "https://api.dictionaryapi.dev/api/v2/entries/en/";
+        private readonly string _randomWordApiUrl = "https://random-word-api.herokuapp.com/word";
+        
         
         public DictionaryService(ILogger<DictionaryService> logger)
         {
@@ -33,14 +22,35 @@ namespace VocabMaster.Services.Implementations
         {
             try
             {
-                var random = _commonWords[_random.Next(_commonWords.Length)];
-                var word = await _httpClient.GetAsync($"{_apiUrl}{random}");
-                if(!word.IsSuccessStatusCode)
+                var randomWordResponse = await _httpClient.GetAsync(_randomWordApiUrl);
+                if (!randomWordResponse.IsSuccessStatusCode)
                 {
-                    _logger.LogError($"Error getting word: {word.StatusCode}");
+                    _logger.LogError($"Error getting random word: {randomWordResponse.StatusCode}");
                     return null;
                 }
-                var content = await word.Content.ReadAsStringAsync();
+                var content = await randomWordResponse.Content.ReadAsStringAsync();
+                var words = JsonSerializer.Deserialize<string[]>(content);
+                var randomWord = words?.FirstOrDefault();
+                return await GetWordDefinitionAsync(randomWord);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting random word");
+                return null;
+            }
+        }
+
+        public async Task<DictionaryResponse> GetWordDefinitionAsync(string word)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_dictionaryApiUrl}{word}");
+                if(!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError($"Error getting word: {response.StatusCode}");
+                    return null;
+                }
+                var content = await response.Content.ReadAsStringAsync();
                 var dictionaryResponse = JsonSerializer.Deserialize<List<DictionaryResponse>>(content);
                 return dictionaryResponse?.FirstOrDefault();
             }
