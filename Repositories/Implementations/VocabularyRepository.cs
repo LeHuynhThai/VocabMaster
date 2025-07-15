@@ -1,45 +1,36 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VocabMaster.Data;
 using VocabMaster.Entities;
+using VocabMaster.Repositories.Interfaces;
 
-namespace VocabMaster.Repositories.Implementations;
-
-public class VocabularyRepository : IVocabularyRepository
+namespace VocabMaster.Repositories.Implementations
 {
-    private readonly AppDbContext _context; // DbContext
-
-    // Constructor
-    public VocabularyRepository(AppDbContext context)
+    public class VocabularyRepository : IVocabularyRepository
     {
-        _context = context;
-    }
+        private readonly AppDbContext _context;
+        private readonly Random _random = new Random();
 
-    // Get random vocabulary
-    public async Task<Vocabulary> GetRandomAsync()
-    {
-        var count = await GetTotalCountAsync(); // Get total count of vocabularies
-        if (count == 0) return null; // If no vocabularies, return null
+        public VocabularyRepository(AppDbContext context)
+        {
+            _context = context;
+        }
 
-        var random = new Random(); // Create a random number generator
-        var skipCount = random.Next(0, count); // Create a random number in the range of 0 to count
+        public async Task<int> CountAsync()
+        {
+            return await _context.Vocabularies.CountAsync();
+        }
 
-        // Get a random vocabulary
-        return await _context.Vocabularies  
-            .Skip(skipCount) // Skip the number of vocabularies to skip
-            .Take(1) // Take 1 vocabulary
-            .FirstOrDefaultAsync(); // Get the first vocabulary
-    }
+        public async Task<Vocabulary> GetRandomAsync()
+        {
+            var count = await _context.Vocabularies.CountAsync();
+            if (count == 0) return null;
 
-    // Get total count of vocabularies
-    public async Task<int> GetTotalCountAsync()
-    {
-        return await _context.Vocabularies.CountAsync(); // Count vocabularies
-    }
-
-    // Get all vocabularies
-    public async Task<IEnumerable<Vocabulary>> GetAllAsync()
-    {
-        return await _context.Vocabularies.ToListAsync(); // Get all vocabularies
+            var skipCount = _random.Next(count);
+            return await _context.Vocabularies
+                .Skip(skipCount)
+                .Take(1)
+                .FirstOrDefaultAsync();
+        }
     }
 }
 
