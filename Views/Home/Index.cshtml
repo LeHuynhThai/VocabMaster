@@ -2,56 +2,80 @@
     ViewData["Title"] = "VocabMaster";
 }
 
-<div class="home-container d-flex justify-content-center align-items-center" style="min-height: 80vh; margin: -1rem; padding: 1rem;">
-    <div class="card shadow-lg border-0" style="max-width: 900px; width: 100%; background: rgba(255, 255, 255, 0.95);">
-        <div class="card-body text-center p-5">
-            <div class="mb-4">
-                <i class="bi bi-book-half text-primary display-1"></i>
-            </div>
-            <h1 class="display-4 mb-4 fw-bold">
-                VocabMaster
-            </h1>
-            <p class="lead mb-5">
-                Trang web giúp bạn học từ vựng tiếng Anh mỗi ngày<br>
-                <span class="text-primary fw-bold">Dễ dàng - Hiệu quả - Miễn phí</span>
-            </p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/home.css" />
+}
 
-            <!-- Tính năng nổi bật -->
-            <div class="row mb-5">
-                <div class="col-md-4 mb-4 mb-md-0">
-                    <div class="feature-card p-4 h-100">
-                        <div class="feature-icon mb-3">
-                            <i class="bi bi-lightning-charge fs-1" style="color: #FF9F1C;"></i>
+<div class="home-container d-flex flex-column justify-content-between" style="min-height: 100vh; margin: -1rem; padding: 2rem;">
+    <!-- Main Content -->
+    <div class="d-flex justify-content-center align-items-center position-relative flex-grow-1">
+        <!-- Background shapes -->
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+
+        <div class="card shadow-lg border-0" style="max-width: 1000px; width: 100%; background: rgba(255, 255, 255, 0.95);">
+            <div class="card-body p-md-5 p-4">
+                <div class="text-center mb-5">
+                    <div class="app-icon mb-4">
+                        <i class="bi bi-book-half"></i>
+                    </div>
+                    <h1 class="display-4 fw-bold mb-3 text-gradient">
+                        VocabMaster
+                    </h1>
+                    <p class="lead mb-4">
+                        Trang web giúp bạn học từ vựng tiếng Anh mỗi ngày
+                        <br>
+                        <br>
+                        <span class="highlight-text">Dễ dàng - Hiệu quả - Miễn phí</span>
+                    </p>
+                </div>
+
+                <!-- Tính năng nổi bật -->
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon-wrapper mb-3">
+                                <div class="feature-icon" style="background: linear-gradient(45deg, #FF9F1C, #FFBF69);">
+                                    <i class="bi bi-lightning-charge"></i>
+                                </div>
+                            </div>
+                            <h5 class="feature-title">Học nhanh</h5>
+                            <p class="feature-text">Từ vựng mới mỗi ngày giúp bạn cải thiện vốn từ nhanh chóng</p>
                         </div>
-                        <h5 class="fw-bold">Học nhanh</h5>
-                        <p class="text-muted mb-0">Từ vựng mới mỗi ngày giúp bạn cải thiện vốn từ nhanh chóng</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon-wrapper mb-3">
+                                <div class="feature-icon" style="background: linear-gradient(45deg, #4CC9F0, #4361EE);">
+                                    <i class="bi bi-graph-up"></i>
+                                </div>
+                            </div>
+                            <h5 class="feature-title">Theo dõi tiến độ</h5>
+                            <p class="feature-text">Xem sự tiến bộ của bạn qua các biểu đồ trực quan</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon-wrapper mb-3">
+                                <div class="feature-icon" style="background: linear-gradient(45deg, #7209B7, #B5179E);">
+                                    <i class="bi bi-trophy"></i>
+                                </div>
+                            </div>
+                            <h5 class="feature-title">Thành tích</h5>
+                            <p class="feature-text">Nhận huy hiệu và phần thưởng khi hoàn thành mục tiêu học tập</p>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4 mb-md-0">
-                    <div class="feature-card p-4 h-100">
-                        <div class="feature-icon mb-3">
-                            <i class="bi bi-graph-up fs-1" style="color: #4CC9F0;"></i>
-                        </div>
-                        <h5 class="fw-bold">Theo dõi tiến độ</h5>
-                        <p class="text-muted mb-0">Xem sự tiến bộ của bạn qua các biểu đồ trực quan</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="feature-card p-4 h-100">
-                        <div class="feature-icon mb-3">
-                            <i class="bi bi-trophy fs-1" style="color: #4361EE;"></i>
-                        </div>
-                        <h5 class="fw-bold">Thành tích</h5>
-                        <p class="text-muted mb-0">Nhận huy hiệu và phần thưởng khi hoàn thành mục tiêu học tập</p>
-                    </div>
+
+                <div class="text-center">
+                    <a href="@Url.Action("Index", "WordGenerator")" 
+                       class="btn btn-primary btn-lg px-5 py-3 rounded-pill start-button">
+                        <i class="bi bi-play-circle me-2"></i>
+                        Bắt đầu học từ mới
+                    </a>
                 </div>
             </div>
-
-            <a href="@Url.Action("Index", "WordGenerator")" 
-               class="btn btn-primary btn-lg px-5 py-3 rounded-pill">
-                <i class="bi bi-play-circle me-2"></i>
-                Bắt đầu học từ mới
-            </a>
         </div>
     </div>
 </div>
