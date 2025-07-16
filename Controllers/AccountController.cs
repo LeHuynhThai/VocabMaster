@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using VocabMaster.Entities;
 using VocabMaster.Models.User;
 using VocabMaster.Services.Interfaces;
-using VocabMaster.Entities;
 
 namespace VocabMaster.Controllers;
 
@@ -53,8 +53,8 @@ public class AccountController : Controller
         }
 
         // Create user
-        var user = new User 
-        { 
+        var user = new User
+        {
             Name = model.Name, // Set name
             Password = model.Password // Set password
         };

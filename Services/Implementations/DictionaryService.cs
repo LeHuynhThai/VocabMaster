@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using VocabMaster.Models;
 using VocabMaster.Services.Interfaces;
-using VocabMaster.Entities;
 
 namespace VocabMaster.Services.Implementations
 {
@@ -11,8 +10,8 @@ namespace VocabMaster.Services.Implementations
         private readonly ILogger<DictionaryService> _logger;
         private readonly IVocabularyService _vocabularyService;
         private readonly string _dictionaryApiUrl = "https://api.dictionaryapi.dev/api/v2/entries/en/";
-        
-        
+
+
         public DictionaryService(ILogger<DictionaryService> logger, IVocabularyService vocabularyService)
         {
             _httpClient = new HttpClient();
@@ -20,6 +19,7 @@ namespace VocabMaster.Services.Implementations
             _vocabularyService = vocabularyService;
         }
 
+        // get random word from vocabulary service and get word definition from dictionary api
         public async Task<DictionaryResponse> GetRandomWordAsync()
         {
             try
@@ -38,13 +38,13 @@ namespace VocabMaster.Services.Implementations
                 return null;
             }
         }
-
+        // get word definition from dictionary api
         public async Task<DictionaryResponse> GetWordDefinitionAsync(string word)
         {
             try
             {
                 var response = await _httpClient.GetAsync($"{_dictionaryApiUrl}{word}");
-                if(!response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogError($"Error getting word: {response.StatusCode}");
                     return null;
