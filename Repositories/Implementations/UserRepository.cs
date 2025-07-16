@@ -11,22 +11,26 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
+    // get user by name
     public async Task<User> GetByNameAsync(string name)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.Name == name);
+        return await _context.Users.FirstOrDefaultAsync(u => u.Name == name); // find
     }
 
+    // check if user name exists
     public async Task<bool> IsNameExistsAsync(string name)
     {
         return await _context.Users.AnyAsync(u => u.Name == name);
     }
 
+    // add user
     public async Task AddAsync(User user)
     {
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
     }
 
+    // validate user
     public async Task<User> ValidateUserAsync(string name, string password)
     {
         // Get user by name
