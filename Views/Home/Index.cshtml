@@ -1,77 +1,81 @@
 ﻿@{
     ViewData["Title"] = "VocabMaster";
 }
-<!-- Thêm link Bootstrap Icons vào _Layout.cshtml nếu chưa có -->
-<div class="home-container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="card shadow-lg border-0" style="max-width: 800px; width: 100%; background: rgba(255, 255, 255, 0.95);">
-        <div class="card-body text-center p-5">
-            <h1 class="display-4 mb-4 text-primary fw-bold">
-                <i class="bi bi-book-half me-2"></i>
-                VocabMaster
-            </h1>
-            <p class="lead mb-5">
-                Trang web giúp bạn học từ vựng tiếng Anh mỗi ngày<br>
-                <span class="text-success fw-bold">Dễ dàng - Hiệu quả - Miễn phí</span>
-            </p>
 
-            <!-- Tính năng nổi bật -->
-            <div class="row mb-5">
-                <div class="col-md-4">
-                    <div class="feature-card p-3">
-                        <i class="bi bi-lightning-charge text-warning fs-1"></i>
-                        <h5 class="mt-3">Học nhanh</h5>
-                        <p class="text-muted">Từ vựng mới mỗi ngày</p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/home.css" />
+}
+
+<div class="home-container d-flex flex-column justify-content-between" style="min-height: 100vh; margin: -1rem; padding: 2rem;">
+    <!-- Main Content -->
+    <div class="d-flex justify-content-center align-items-center position-relative flex-grow-1">
+        <!-- Background shapes -->
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+
+        <div class="card shadow-lg border-0" style="max-width: 1000px; width: 100%; background: rgba(255, 255, 255, 0.95);">
+            <div class="card-body p-md-5 p-4">
+                <div class="text-center mb-5">
+                    <div class="app-icon mb-4">
+                        <i class="bi bi-book-half"></i>
+                    </div>
+                    <h1 class="display-4 fw-bold mb-3 text-gradient">
+                        VocabMaster
+                    </h1>
+                    <p class="lead mb-4">
+                        Trang web giúp bạn học từ vựng tiếng Anh mỗi ngày
+                        <br>
+                        <br>
+                        <span class="highlight-text">Dễ dàng - Hiệu quả - Miễn phí</span>
+                    </p>
+                </div>
+
+                <!-- Tính năng nổi bật -->
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon-wrapper mb-3">
+                                <div class="feature-icon" style="background: linear-gradient(45deg, #FF9F1C, #FFBF69);">
+                                    <i class="bi bi-lightning-charge"></i>
+                                </div>
+                            </div>
+                            <h5 class="feature-title">Học nhanh</h5>
+                            <p class="feature-text">Từ vựng mới mỗi ngày giúp bạn cải thiện vốn từ nhanh chóng</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon-wrapper mb-3">
+                                <div class="feature-icon" style="background: linear-gradient(45deg, #4CC9F0, #4361EE);">
+                                    <i class="bi bi-graph-up"></i>
+                                </div>
+                            </div>
+                            <h5 class="feature-title">Theo dõi tiến độ</h5>
+                            <p class="feature-text">Xem sự tiến bộ của bạn qua các biểu đồ trực quan</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon-wrapper mb-3">
+                                <div class="feature-icon" style="background: linear-gradient(45deg, #7209B7, #B5179E);">
+                                    <i class="bi bi-trophy"></i>
+                                </div>
+                            </div>
+                            <h5 class="feature-title">Thành tích</h5>
+                            <p class="feature-text">Nhận huy hiệu và phần thưởng khi hoàn thành mục tiêu học tập</p>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="feature-card p-3">
-                        <i class="bi bi-graph-up text-success fs-1"></i>
-                        <h5 class="mt-3">Theo dõi tiến độ</h5>
-                        <p class="text-muted">Xem sự tiến bộ của bạn</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="feature-card p-3">
-                        <i class="bi bi-trophy text-primary fs-1"></i>
-                        <h5 class="mt-3">Thành tích</h5>
-                        <p class="text-muted">Nhận huy hiệu khi học tập</p>
-                    </div>
+
+                <div class="text-center">
+                    <a href="@Url.Action("Index", "WordGenerator")" 
+                       class="btn btn-primary btn-lg px-5 py-3 rounded-pill start-button">
+                        <i class="bi bi-play-circle me-2"></i>
+                        Bắt đầu học từ mới
+                    </a>
                 </div>
             </div>
-
-            <a href="@Url.Action("Index", "WordGenerator")" 
-               class="btn btn-primary btn-lg px-5 py-3 start-button">
-                <i class="bi bi-play-circle me-2"></i>
-                Bắt đầu học từ mới
-            </a>
         </div>
     </div>
 </div>
-
-<style>
-    .home-container {
-        background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
-        margin: -1rem;  /* Bù lại padding của container */
-        padding: 1rem;
-    }
-
-    .feature-card {
-        transition: all 0.3s ease;
-        border-radius: 10px;
-    }
-
-    .feature-card:hover {
-        transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .start-button {
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .start-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    }
-</style>

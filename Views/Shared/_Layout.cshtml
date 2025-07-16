@@ -9,12 +9,17 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/VocabMaster.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-0">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">VocabMaster</a>
+                <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-book-half text-primary fs-3 me-2"></i>
+                    <span class="fw-bold">VocabMaster</span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -22,21 +27,45 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house-door me-1"></i> Trang chủ
+                            </a>
                         </li>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="WordGenerator" asp-action="Index">
+                                    <i class="bi bi-book me-1"></i> Từ điển
+                                </a>
+                            </li>
+                        }
                     </ul>
                     @if (User.Identity.IsAuthenticated)
                     {
                         <div class="d-flex ms-auto align-items-center">
-                            <span class="me-3 fw-bold text-primary">@User.Identity.Name</span>
-                            <a class="btn btn-primary" asp-controller="Account" asp-action="Logout">Đăng xuất</a>
+                            <div class="user-info me-3">
+                                <span class="fw-bold text-primary">
+                                    <i class="bi bi-person-circle me-1"></i>
+                                    @User.Identity.Name
+                                </span>
+                            </div>
+                            <a class="btn btn-outline-primary rounded-pill" asp-controller="Account" asp-action="Logout">
+                                <i class="bi bi-box-arrow-right me-1"></i>
+                                Đăng xuất
+                            </a>
                         </div>
                     }
                     else
                     {
                         <div class="d-flex ms-auto">
-                            <a class="btn btn-outline-primary me-2" asp-controller="Account" asp-action="Login">Đăng nhập</a>
-                            <a class="btn btn-primary" asp-controller="Account" asp-action="Register">Đăng ký</a>
+                            <a class="btn btn-outline-primary rounded-pill me-2" asp-controller="Account" asp-action="Login">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>
+                                Đăng nhập
+                            </a>
+                            <a class="btn btn-primary rounded-pill" asp-controller="Account" asp-action="Register">
+                                <i class="bi bi-person-plus me-1"></i>
+                                Đăng ký
+                            </a>
                         </div>
                     }
                 </div>
@@ -47,27 +76,53 @@
         <!-- Sidebar -->
         @if (User.Identity.IsAuthenticated)
         {
-            <nav class="flex-shrink-0 p-3 bg-light" style="width: 220px; min-height: 80vh;">
-                <h5 class="mb-4">Demo</h5>
+            <nav class="sidebar p-3 bg-light" style="width: 250px; min-height: calc(100vh - 60px);">
+                <div class="sidebar-header mb-4">
+                    <h5 class="sidebar-title fw-bold text-primary">
+                        <i class="bi bi-grid-1x2 me-2"></i>
+                        Danh mục
+                    </h5>
+                </div>
                 <ul class="nav nav-pills flex-column">
                     <li class="nav-item mb-2">
-                        <a class="nav-link" asp-controller="WordGenerator" asp-action="Index">Demo 1</a>
+                        <a class="nav-link @(Context.Request.Path.Value.Contains("/WordGenerator") ? "active" : "")" 
+                           asp-controller="WordGenerator" asp-action="Index">
+                            <i class="bi bi-shuffle me-2"></i>
+                            Từ vựng ngẫu nhiên
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-collection me-2"></i>
+                            Danh sách từ vựng
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-journal-text me-2"></i>
+                            Luyện tập
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link">Demo 2</a>
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-graph-up me-2"></i>
+                            Thống kê
+                        </a>
                     </li>
                 </ul>
             </nav>
         }
         <!-- Main content -->
-        <div class="@(User.Identity.IsAuthenticated ? "flex-grow-1 p-3" : "container py-4")">
+        <div class="@(User.Identity.IsAuthenticated ? "flex-grow-1 p-3 main-content" : "container py-4")">
             @RenderBody()
         </div>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="border-top footer text-muted py-3 mt-4">
         <div class="container text-center">
-            &copy; 2025 - VocabMaster
+            <span>&copy; 2025 - VocabMaster</span>
+            <span class="mx-2">|</span>
+            <span><i class="bi bi-heart-fill text-danger"></i> Học từ vựng mỗi ngày</span>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

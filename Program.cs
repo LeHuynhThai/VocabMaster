@@ -5,10 +5,7 @@ using VocabMaster.Services.Implementations;
 using VocabMaster.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using VocabMaster.Repositories.Interfaces;
-using CsvHelper;
-using System.Globalization;
-using System.IO;
-using Microsoft.Extensions.Logging;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +18,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(options =>
     {
         options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
         options.Cookie.Name = "VocabMaster.Auth";
         options.Cookie.HttpOnly = true;
         options.SlidingExpiration = true; // reset the expiration time on each request
@@ -45,22 +43,6 @@ builder.Services.AddScoped<IDictionaryService, DictionaryService>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    try 
-    {
-        logger.LogInformation("Starting database seeding...");
-        await DbSeeder.SeedFromCsv(db, logger);
-        logger.LogInformation("Database seeding completed successfully");
-    }
-    catch (Exception ex)
-    {
-        logger.LogError($"An error occurred while seeding the database: {ex.Message}");
-    }
-}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

@@ -1,9 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using VocabMaster.Models;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VocabMaster.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace VocabMaster.Controllers
 {
@@ -33,7 +30,7 @@ namespace VocabMaster.Controllers
             try
             {
                 var randomWord = await _dictionaryService.GetRandomWordAsync();
-                
+
                 if (randomWord == null)
                 {
                     _logger.LogWarning("No word found");
@@ -63,7 +60,7 @@ namespace VocabMaster.Controllers
             try
             {
                 var definition = await _dictionaryService.GetWordDefinitionAsync(word);
-                
+
                 if (definition == null)
                 {
                     _logger.LogWarning($"No definition found for word: {word}");

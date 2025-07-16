@@ -1,9 +1,8 @@
-﻿using VocabMaster.Entities;
-using VocabMaster.Repositories;
-using VocabMaster.Services.Interfaces;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
+using VocabMaster.Entities;
+using VocabMaster.Services.Interfaces;
 
 namespace VocabMaster.Services.Implementations;
 
@@ -13,7 +12,7 @@ public class AccountService : IAccountService
     private readonly IHttpContextAccessor _httpContextAccessor; // Http context accessor
 
     // Constructor
-    public AccountService(IUserRepository userRepository, 
+    public AccountService(IUserRepository userRepository,
                          IHttpContextAccessor httpContextAccessor)
     {
         _userRepository = userRepository;
@@ -71,7 +70,11 @@ public class AccountService : IAccountService
 
     public async Task LogoutAsync()
     {
-        await _httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        if (_httpContextAccessor.HttpContext != null)
+        {
+            _httpContextAccessor.HttpContext.Session.Clear();
+            await _httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        }
     }
 
     public string HashPassword(string password)

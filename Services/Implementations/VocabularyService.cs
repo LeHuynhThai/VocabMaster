@@ -17,16 +17,18 @@ namespace VocabMaster.Services.Implementations
             _logger = logger;
         }
 
+        // get random word from database
         public async Task<Vocabulary> GetRandomVocabularyAsync()
         {
             try
             {
-                var vocabulary = await _repository.GetRandomAsync();
-                if (vocabulary == null)
+                var vocabulary = await _repository.GetRandomAsync(); // create random word by get random word from database
+                if (vocabulary == null) // if no vocabulary, return null
                 {
                     _logger.LogWarning("No vocabulary found");
                     return null;
                 }
+                // return random word
                 return vocabulary;
             }
             catch (Exception ex)

@@ -4,7 +4,7 @@ namespace VocabMaster.Services.Interfaces
 {
     public interface IDictionaryService
     {
-        Task<DictionaryResponse> GetWordDefinitionAsync(string word);
-        Task<DictionaryResponse> GetRandomWordAsync();
+        Task<DictionaryResponse> GetWordDefinitionAsync(string word); // Get word definition
+        Task<DictionaryResponse> GetRandomWordAsync(); // Get random word
     }
 }
