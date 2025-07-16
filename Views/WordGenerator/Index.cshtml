@@ -133,8 +133,40 @@
                             </div>
                         </div>
                     }
+
+                    <!-- Khu vực ghi chú từ vựng -->
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">
+                                <i class="bi bi-pencil-square text-primary me-2"></i>
+                                Ghi chú từ vựng
+                            </h5>
+                            <div class="form-group">
+                                <textarea id="vocabularyNotes" class="form-control" rows="5" 
+                                    placeholder="Gõ từ vựng hoặc ghi chú của bạn vào đây..."
+                                    style="resize: none; font-size: 16px; line-height: 1.5;"></textarea>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    #vocabularyNotes {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        transition: all 0.3s ease;
+    }
+
+    #vocabularyNotes:focus {
+        background-color: #fff;
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        outline: none;
+    }
+</style>
