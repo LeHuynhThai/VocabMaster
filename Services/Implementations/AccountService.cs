@@ -70,7 +70,11 @@ public class AccountService : IAccountService
 
     public async Task LogoutAsync()
     {
-        await _httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        if (_httpContextAccessor.HttpContext != null)
+        {
+            _httpContextAccessor.HttpContext.Session.Clear();
+            await _httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        }
     }
 
     public string HashPassword(string password)
