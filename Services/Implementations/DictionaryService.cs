@@ -24,13 +24,13 @@ namespace VocabMaster.Services.Implementations
         {
             try
             {
-                var vocabulary = await _vocabularyService.GetRandomVocabularyAsync();
-                if (vocabulary == null)
+                var vocabulary = await _vocabularyService.GetRandomVocabularyAsync(); // get random word from vocabulary service
+                if (vocabulary == null) // if no vocabulary, return null
                 {
                     _logger.LogWarning("No vocabulary found");
                     return null;
                 }
-                return await GetWordDefinitionAsync(vocabulary.Word);
+                return await GetWordDefinitionAsync(vocabulary.Word); // return random word and definition
             }
             catch (Exception ex)
             {
@@ -43,14 +43,18 @@ namespace VocabMaster.Services.Implementations
         {
             try
             {
+                // create response by get word definition from dictionary api
                 var response = await _httpClient.GetAsync($"{_dictionaryApiUrl}{word}");
-                if (!response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode) // if not success, return null
                 {
                     _logger.LogError($"Error getting word: {response.StatusCode}");
                     return null;
                 }
+                // get content from response
                 var content = await response.Content.ReadAsStringAsync();
+                // deserialize content to dictionary response
                 var dictionaryResponse = JsonSerializer.Deserialize<List<DictionaryResponse>>(content);
+                // return first dictionary response
                 return dictionaryResponse?.FirstOrDefault();
             }
             catch (Exception ex)
