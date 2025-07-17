@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using VocabMaster.Data;
-using VocabMaster.Repositories.Implementations;
+using VocabMaster.Models;
+using VocabMaster.Repositories;
 using VocabMaster.Services.Implementations;
 using VocabMaster.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -9,9 +11,15 @@ using VocabMaster.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register AppDbContext with DI container, using SQL Server.
+// Add services to the container.
+builder.Services.AddControllersWithViews();
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext") ?? throw new InvalidOperationException("Không tìm thấy")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddIdentity<User, IdentityRole>()
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
 
 // Add Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -25,22 +33,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 
-// Add Authentication
-builder.Services.AddControllersWithViews();
-
-builder.Services.AddSession();
-
-// Add repositories
-builder.Services.AddScoped<IVocabularyRepository, VocabularyRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-
-// Add services
+// Đăng ký Repository và Service
+builder.Services.AddScoped<ILearnedVocabularyRepository, LearnedVocabularyRepository>();
 builder.Services.AddScoped<IVocabularyService, VocabularyService>();
-builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<IDictionaryService, DictionaryService>();
-
-// Add HttpContextAccessor
-builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
