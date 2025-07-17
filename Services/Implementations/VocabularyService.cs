@@ -1,41 +1,68 @@
-﻿using VocabMaster.Entities;
-using VocabMaster.Repositories.Interfaces;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using VocabMaster.Models;
+using VocabMaster.Repositories;
 using VocabMaster.Services.Interfaces;
 
 namespace VocabMaster.Services.Implementations
 {
     public class VocabularyService : IVocabularyService
     {
-        private readonly IVocabularyRepository _repository;
-        private readonly ILogger<VocabularyService> _logger;
+        private readonly ILearnedVocabularyRepository _learnedVocabularyRepository;
 
-        public VocabularyService(
-            IVocabularyRepository repository,
-            ILogger<VocabularyService> logger)
+        public VocabularyService(ILearnedVocabularyRepository learnedVocabularyRepository)
         {
-            _repository = repository;
-            _logger = logger;
+            _learnedVocabularyRepository = learnedVocabularyRepository;
         }
 
-        // get random word from database
-        public async Task<Vocabulary> GetRandomVocabularyAsync()
+        public async Task<bool> MarkWordAsLearnedAsync(string userId, string word, string note = null)
         {
-            try
+            if (await IsWordLearnedAsync(userId, word))
             {
-                var vocabulary = await _repository.GetRandomAsync(); // create random word by get random word from database
-                if (vocabulary == null) // if no vocabulary, return null
-                {
-                    _logger.LogWarning("No vocabulary found");
-                    return null;
-                }
-                // return random word
-                return vocabulary;
+                return false; // Từ đã được học rồi
             }
-            catch (Exception ex)
+
+            var learnedVocabulary = new LearnedVocabulary
             {
-                _logger.LogError(ex, "Error getting random vocabulary");
-                throw;
+                UserId = userId,
+                Word = word,
+                Note = note,
+                LearnedDate = DateTime.UtcNow
+            };
+
+            return await _learnedVocabularyRepository.AddLearnedWordAsync(learnedVocabulary);
+        }
+
+        public async Task<string> GetRandomUnlearnedWordAsync(string userId, List<string> allWords)
+        {
+            var learnedWords = await _learnedVocabularyRepository.GetLearnedWordsAsync(userId);
+            var unlearnedWords = allWords.Except(learnedWords).ToList();
+
+            if (!unlearnedWords.Any())
+            {
+                return null; // Đã học hết tất cả các từ
             }
+
+            var random = new Random();
+            var randomIndex = random.Next(0, unlearnedWords.Count);
+            return unlearnedWords[randomIndex];
+        }
+
+        public async Task<List<LearnedVocabulary>> GetUserLearnedVocabulariesAsync(string userId)
+        {
+            return await _learnedVocabularyRepository.GetUserLearnedVocabulariesAsync(userId);
+        }
+
+        public async Task<bool> IsWordLearnedAsync(string userId, string word)
+        {
+            return await _learnedVocabularyRepository.IsWordLearnedAsync(userId, word);
+        }
+
+        public async Task<int> GetUserProgressAsync(string userId)
+        {
+            return await _learnedVocabularyRepository.GetTotalLearnedWordsAsync(userId);
         }
     }
 }

@@ -1,23 +1,25 @@
-﻿using Microsoft.EntityFrameworkCore;
-using VocabMaster.Entities;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using VocabMaster.Models;
 
 namespace VocabMaster.Data
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<User>
     {
-        public DbSet<User> Users { get; set; }
-        public DbSet<Vocabulary> Vocabularies { get; set; }
-
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) 
+        public AppDbContext(DbContextOptions<AppDbContext> options)
+            : base(options)
         {
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
+        public DbSet<LearnedVocabulary> LearnedVocabularies { get; set; }
 
-            modelBuilder.Entity<Vocabulary>()
-                .HasIndex(v => v.Word)
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            // Tạo composite index cho Word và UserId
+            builder.Entity<LearnedVocabulary>()
+                .HasIndex(lv => new { lv.Word, lv.UserId })
                 .IsUnique();
         }
     }
