@@ -12,7 +12,7 @@ namespace VocabMaster.Services.Implementations
     public class VocabularyService : IVocabularyService
     {
         private readonly ILearnedVocabularyRepository _learnedVocabularyRepository;
-        private readonly ILogger<VocabularyService> _logger;
+        private readonly ILogger<VocabularyService> _logger; // logger for logging errors
 
         public VocabularyService(
             ILearnedVocabularyRepository learnedVocabularyRepository,
@@ -22,6 +22,7 @@ namespace VocabMaster.Services.Implementations
             _logger = logger;
         }
 
+        // mark a word as learned for a specific user
         public async Task<bool> MarkWordAsLearnedAsync(int userId, string word)
         {
             try
@@ -31,14 +32,14 @@ namespace VocabMaster.Services.Implementations
                     _logger.LogWarning("Attempted to mark empty word as learned for user {UserId}", userId);
                     return false;
                 }
-
+                // create a new learned vocabulary
                 var learnedVocabulary = new LearnedVocabulary
                 {
                     UserId = userId,
                     Word = word.Trim()
                 };
 
-                return await _learnedVocabularyRepository.AddAsync(learnedVocabulary);
+                return await _learnedVocabularyRepository.AddAsync(learnedVocabulary); // AddAsync method in LearnedVocabularyRepository
             }
             catch (Exception ex)
             {
@@ -47,11 +48,12 @@ namespace VocabMaster.Services.Implementations
             }
         }
 
+        // get all learned vocabularies for a specific user
         public async Task<List<LearnedVocabulary>> GetUserLearnedVocabulariesAsync(int userId)
         {
             try
             {
-                return await _learnedVocabularyRepository.GetByUserIdAsync(userId);
+                return await _learnedVocabularyRepository.GetByUserIdAsync(userId); // GetByUserIdAsync method in LearnedVocabularyRepository
             }
             catch (Exception ex)
             {

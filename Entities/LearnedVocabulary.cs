@@ -17,6 +17,6 @@ namespace VocabMaster.Entities
         public int UserId { get; set; }
 
         [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        public virtual User User { get; set; } // navigation property to the user who learned the word
     }
 }
