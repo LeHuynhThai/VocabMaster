@@ -18,12 +18,12 @@ namespace VocabMaster.Data
         {
             base.OnModelCreating(builder);
 
-            // Tạo composite index cho Word và UserId
+            // Create composite index for Word and UserId
             builder.Entity<LearnedVocabulary>()
                 .HasIndex(lv => new { lv.Word, lv.UserId })
                 .IsUnique();
 
-            // Cấu hình relationship giữa User và LearnedVocabulary
+            // Configure relationship between User and LearnedVocabulary
             builder.Entity<User>()
                 .HasMany(u => u.LearnedVocabularies)
                 .WithOne(lv => lv.User)
