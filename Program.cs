@@ -1,25 +1,35 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using VocabMaster.Data;
+using VocabMaster.Entities;
 using VocabMaster.Models;
 using VocabMaster.Repositories;
+using VocabMaster.Repositories.Implementations;
+using VocabMaster.Repositories.Interfaces;
 using VocabMaster.Services.Implementations;
 using VocabMaster.Services.Interfaces;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using VocabMaster.Repositories.Interfaces;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Add HttpContext accessor
+builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddIdentity<User, IdentityRole>()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
+// Add Session services
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromDays(7);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext")));
 
 // Add Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -32,10 +42,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true; // reset the expiration time on each request
     });
 
-
 // Đăng ký Repository và Service
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ILearnedVocabularyRepository, LearnedVocabularyRepository>();
+builder.Services.AddScoped<IVocabularyRepository, VocabularyRepository>();
 builder.Services.AddScoped<IVocabularyService, VocabularyService>();
+builder.Services.AddScoped<IDictionaryService, DictionaryService>();
 
 var app = builder.Build();
 
@@ -55,6 +68,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Add Session middleware
 app.UseSession();
 
 app.MapControllerRoute(

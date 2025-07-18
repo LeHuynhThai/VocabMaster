@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using VocabMaster.Models;
-using VocabMaster.Repositories;
+using Microsoft.Extensions.Logging;
+using VocabMaster.Entities;
+using VocabMaster.Repositories.Interfaces;
 using VocabMaster.Services.Interfaces;
 
 namespace VocabMaster.Services.Implementations
@@ -11,58 +12,52 @@ namespace VocabMaster.Services.Implementations
     public class VocabularyService : IVocabularyService
     {
         private readonly ILearnedVocabularyRepository _learnedVocabularyRepository;
+        private readonly ILogger<VocabularyService> _logger;
 
-        public VocabularyService(ILearnedVocabularyRepository learnedVocabularyRepository)
+        public VocabularyService(
+            ILearnedVocabularyRepository learnedVocabularyRepository,
+            ILogger<VocabularyService> logger)
         {
             _learnedVocabularyRepository = learnedVocabularyRepository;
+            _logger = logger;
         }
 
-        public async Task<bool> MarkWordAsLearnedAsync(string userId, string word, string note = null)
+        public async Task<bool> MarkWordAsLearnedAsync(int userId, string word)
         {
-            if (await IsWordLearnedAsync(userId, word))
+            try
             {
-                return false; // Từ đã được học rồi
+                if (string.IsNullOrWhiteSpace(word))
+                {
+                    _logger.LogWarning("Attempted to mark empty word as learned for user {UserId}", userId);
+                    return false;
+                }
+
+                var learnedVocabulary = new LearnedVocabulary
+                {
+                    UserId = userId,
+                    Word = word.Trim()
+                };
+
+                return await _learnedVocabularyRepository.AddAsync(learnedVocabulary);
             }
-
-            var learnedVocabulary = new LearnedVocabulary
+            catch (Exception ex)
             {
-                UserId = userId,
-                Word = word,
-                Note = note,
-                LearnedDate = DateTime.UtcNow
-            };
-
-            return await _learnedVocabularyRepository.AddLearnedWordAsync(learnedVocabulary);
-        }
-
-        public async Task<string> GetRandomUnlearnedWordAsync(string userId, List<string> allWords)
-        {
-            var learnedWords = await _learnedVocabularyRepository.GetLearnedWordsAsync(userId);
-            var unlearnedWords = allWords.Except(learnedWords).ToList();
-
-            if (!unlearnedWords.Any())
-            {
-                return null; // Đã học hết tất cả các từ
+                _logger.LogError(ex, "Error marking word {Word} as learned for user {UserId}", word, userId);
+                return false;
             }
-
-            var random = new Random();
-            var randomIndex = random.Next(0, unlearnedWords.Count);
-            return unlearnedWords[randomIndex];
         }
 
-        public async Task<List<LearnedVocabulary>> GetUserLearnedVocabulariesAsync(string userId)
+        public async Task<List<LearnedVocabulary>> GetUserLearnedVocabulariesAsync(int userId)
         {
-            return await _learnedVocabularyRepository.GetUserLearnedVocabulariesAsync(userId);
-        }
-
-        public async Task<bool> IsWordLearnedAsync(string userId, string word)
-        {
-            return await _learnedVocabularyRepository.IsWordLearnedAsync(userId, word);
-        }
-
-        public async Task<int> GetUserProgressAsync(string userId)
-        {
-            return await _learnedVocabularyRepository.GetTotalLearnedWordsAsync(userId);
+            try
+            {
+                return await _learnedVocabularyRepository.GetByUserIdAsync(userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting learned vocabularies for user {UserId}", userId);
+                return new List<LearnedVocabulary>();
+            }
         }
     }
 }

@@ -1,16 +1,23 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using VocabMaster.Models;
+using VocabMaster.Entities;
 
 namespace VocabMaster.Services.Interfaces
 {
+    /// <summary>
+    /// Service interface for vocabulary management
+    /// </summary>
     public interface IVocabularyService
     {
-        Task<bool> MarkWordAsLearnedAsync(string userId, string word, string note = null);
-        Task<string> GetRandomUnlearnedWordAsync(string userId, List<string> allWords);
-        Task<List<LearnedVocabulary>> GetUserLearnedVocabulariesAsync(string userId);
-        Task<bool> IsWordLearnedAsync(string userId, string word);
-        Task<int> GetUserProgressAsync(string userId);
+        /// <summary>
+        /// Marks a word as learned for a specific user
+        /// </summary>
+        Task<bool> MarkWordAsLearnedAsync(int userId, string word);
+
+        /// <summary>
+        /// Gets all learned vocabularies for a specific user
+        /// </summary>
+        Task<List<LearnedVocabulary>> GetUserLearnedVocabulariesAsync(int userId);
     }
 }
 
