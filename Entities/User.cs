@@ -16,7 +16,16 @@ namespace VocabMaster.Entities
         public string Password { get; set; }
 
         public UserRole Role { get; set; } = UserRole.User;
+
+        // Navigation property
+        public virtual ICollection<LearnedVocabulary> LearnedVocabularies { get; set; }
+
+        public User()
+        {
+            LearnedVocabularies = new HashSet<LearnedVocabulary>();
+        }
     }
+
     public enum UserRole
     {
         User
