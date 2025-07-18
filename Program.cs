@@ -1,11 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using VocabMaster.Data;
-using VocabMaster.Entities;
-using VocabMaster.Models;
-using VocabMaster.Repositories;
 using VocabMaster.Repositories.Implementations;
 using VocabMaster.Repositories.Interfaces;
 using VocabMaster.Services.Implementations;
@@ -42,7 +37,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true; // reset the expiration time on each request
     });
 
-// Đăng ký Repository và Service
+// Register repositories and services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ILearnedVocabularyRepository, LearnedVocabularyRepository>();
