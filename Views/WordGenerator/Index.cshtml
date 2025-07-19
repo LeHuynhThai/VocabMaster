@@ -1,11 +1,17 @@
-﻿@using VocabMaster.Models
+﻿@using VocabMaster.Models.ViewModels
+@model List<LearnedVocabularyViewModel>
 @{
     ViewData["Title"] = "Từ vựng ngẫu nhiên";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/wordgenerator.css" />
+}
+
 <div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
+    <div class="row">
+        <!-- Cột bên trái: Từ vựng ngẫu nhiên -->
+        <div class="col-md-8">
             <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-center mb-4">
@@ -24,7 +30,8 @@
                         <!-- Form tra cứu từ -->
                         <form method="post" asp-action="GetWordDefinition" class="d-flex">
                             <div class="input-group">
-                                <input type="text" name="word" class="form-control rounded-start" placeholder="Nhập từ cần tra" required />
+                                <input type="text" name="word" class="form-control rounded-start" 
+                                       placeholder="Nhập từ cần tra" required />
                                 <button type="submit" class="btn btn-success rounded-end">
                                     <i class="bi bi-search me-1"></i>Tra từ
                                 </button>
@@ -32,7 +39,7 @@
                         </form>
                     </div>
 
-                    <!-- Hiển thị lỗi từ ModelState -->
+                    <!-- Hiển thị lỗi -->
                     @if (!ViewData.ModelState.IsValid)
                     {
                         <div class="alert alert-warning mb-4">
@@ -44,29 +51,24 @@
                             </ul>
                         </div>
                     }
-                    
-                    <!-- Hiển thị lỗi từ ViewBag -->
-                    @if (ViewBag.Error != null)
-                    {
-                        <div class="alert alert-warning mb-4">
-                            <i class="bi bi-exclamation-triangle me-2"></i>
-                            @ViewBag.Error
-                        </div>
-                    }
-                    
+
                     <!-- Hiển thị từ vựng -->
                     @if (ViewBag.RandomWord != null)
                     {
                         var word = ViewBag.RandomWord as DictionaryResponse;
-                        <div class="word-card">
+                        <div class="word-card mb-4">
                             <div class="card-body">
-                                <!-- Từ vựng và phiên âm -->
-                                <div class="word-header d-flex align-items-center mb-4">
-                                    <h2 class="text-primary mb-0 me-3">@word.Word</h2>
-                                    @if (!string.IsNullOrEmpty(word.Phonetic))
-                                    {
-                                        <span class="word-phonetic">/@word.Phonetic/</span>
-                                    }
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="word-header">
+                                        <h2 class="text-primary mb-0">@word.Word</h2>
+                                        @if (!string.IsNullOrEmpty(word.Phonetic))
+                                        {
+                                            <span class="word-phonetic text-muted">/@word.Phonetic/</span>
+                                        }
+                                    </div>
+                                    <button onclick="markAsLearned('@word.Word')" class="btn btn-outline-success">
+                                        <i class="bi bi-check2-circle me-1"></i>Đánh dấu đã học
+                                    </button>
                                 </div>
 
                                 <!-- Audio phát âm -->
@@ -133,19 +135,65 @@
                             </div>
                         </div>
                     }
+                </div>
+            </div>
+        </div>
 
-                    <!-- Khu vực ghi chú từ vựng -->
-                    <div class="card mt-4">
-                        <div class="card-body">
-                            <h5 class="card-title mb-3">
-                                <i class="bi bi-pencil-square text-primary me-2"></i>
-                                Ghi chú từ vựng
-                            </h5>
-                            <div class="form-group">
-                                <textarea id="vocabularyNotes" class="form-control" rows="5" 
-                                    placeholder="Gõ từ vựng hoặc ghi chú của bạn vào đây..."
-                                    style="resize: none; font-size: 16px; line-height: 1.5;"></textarea>
-                            </div>
+        <!-- Cột bên phải: Từ vựng đã học -->
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">
+                        <i class="bi bi-journal-check text-success me-2"></i>
+                        Từ vựng đã học
+                    </h3>
+                    
+                    <!-- Thanh tìm kiếm từ đã học -->
+                    <div class="input-group mb-4">
+                        <input type="text" id="searchLearned" class="form-control" 
+                               placeholder="Tìm từ đã học...">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                    </div>
+
+                    <!-- Danh sách từ đã học -->
+                    <div id="learnedWordsContainer" class="learned-words-list">
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var learnedWord in Model)
+                            {
+                                <div class="learned-word-item mb-3 p-3 border rounded">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0 word-text">@learnedWord.Word</h5>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-primary review-btn" 
+                                                    onclick="reviewWord('@learnedWord.Word')">
+                                                <i class="bi bi-book"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger remove-btn" 
+                                                    onclick="removeLearnedWord('@learnedWord.Word')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <!-- Thống kê -->
+                    <div class="mt-4 text-center">
+                        <div class="learned-stats">
+                            <h4 class="mb-2">Thống kê</h4>
+                            <p class="mb-1">
+                                <i class="bi bi-calendar-check text-primary me-2"></i>
+                                <span id="totalLearned">@(Model?.Count ?? 0)</span> từ đã học
+                            </p>
+                            <p class="mb-0">
+                                <i class="bi bi-calendar3 text-success me-2"></i>
+                                <span id="todayLearned">0</span> từ học hôm nay
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -154,19 +202,24 @@
     </div>
 </div>
 
-<style>
-    #vocabularyNotes {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 15px;
-        transition: all 0.3s ease;
-    }
+<!-- Template cho từ đã học -->
+<template id="learnedWordTemplate">
+    <div class="learned-word-item mb-3 p-3 border rounded">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 word-text"></h5>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary review-btn">
+                    <i class="bi bi-book"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger remove-btn">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
 
-    #vocabularyNotes:focus {
-        background-color: #fff;
-        border-color: #80bdff;
-        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-        outline: none;
-    }
-</style>
+@section Scripts {
+    <script src="~/js/wordgenerator.js"></script>
+    @Html.AntiForgeryToken()
+}
