@@ -22,29 +22,48 @@ namespace VocabMaster.Services.Implementations
             _logger = logger;
         }
 
-        // mark a word as learned for a specific user
-        public async Task<bool> MarkWordAsLearnedAsync(int userId, string word)
+        public class MarkWordResult
         {
+            public bool Success { get; set; }
+            public string ErrorMessage { get; set; }
+        }
+
+        public async Task<MarkWordResult> MarkWordAsLearnedAsync(int userId, string word)
+        {
+            if (string.IsNullOrWhiteSpace(word))
+                return new MarkWordResult { Success = false, ErrorMessage = "Từ vựng không được để trống" };
+
             try
             {
-                if (string.IsNullOrWhiteSpace(word))
+                // Kiểm tra đã học chưa
+                var learnedWords = await _learnedVocabularyRepository.GetByUserIdAsync(userId);
+                if (learnedWords.Any(lv => lv.Word.Equals(word, StringComparison.OrdinalIgnoreCase)))
                 {
-                    _logger.LogWarning("Attempted to mark empty word as learned for user {UserId}", userId);
-                    return false;
+                    _logger.LogWarning("User {UserId} tried to mark already learned word: {Word}", userId, word);
+                    return new MarkWordResult { Success = false, ErrorMessage = "Từ này đã được đánh dấu là đã học" };
                 }
-                // create a new learned vocabulary
+
                 var learnedVocabulary = new LearnedVocabulary
                 {
                     UserId = userId,
-                    Word = word.Trim()
+                    Word = word
                 };
 
-                return await _learnedVocabularyRepository.AddAsync(learnedVocabulary); // AddAsync method in LearnedVocabularyRepository
+                var addResult = await _learnedVocabularyRepository.AddAsync(learnedVocabulary);
+                if (addResult)
+                {
+                    return new MarkWordResult { Success = true };
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to add learned word for user {UserId}: {Word}", userId, word);
+                    return new MarkWordResult { Success = false, ErrorMessage = "Không thể lưu từ đã học. Vui lòng thử lại." };
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error marking word {Word} as learned for user {UserId}", word, userId);
-                return false;
+                _logger.LogError(ex, "Error marking word as learned for user {UserId}: {Word}", userId, word);
+                return new MarkWordResult { Success = false, ErrorMessage = "Đã xảy ra lỗi. Vui lòng thử lại." };
             }
         }
 
