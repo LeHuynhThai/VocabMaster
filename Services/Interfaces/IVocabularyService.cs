@@ -12,6 +12,9 @@ namespace VocabMaster.Services.Interfaces
 
         // Gets all learned vocabularies for a specific user
         Task<List<LearnedVocabulary>> GetUserLearnedVocabulariesAsync(int userId);
+        
+        // Remove a learned word for a specific user
+        Task<bool> RemoveLearnedWordAsync(int userId, string word);
     }
 }
 

@@ -1,5 +1,5 @@
-﻿@using VocabMaster.Models.ViewModels
-@model List<LearnedVocabularyViewModel>
+﻿@using VocabMaster.Entities
+@model List<LearnedVocabulary>
 @{
     ViewData["Title"] = "Từ vựng ngẫu nhiên";
 }
@@ -9,6 +9,23 @@
 }
 
 <div class="container mt-4">
+    <!-- Hiển thị thông báo từ TempData -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <div class="row">
         <!-- Cột bên trái: Từ vựng ngẫu nhiên -->
         <div class="col-md-8">
@@ -66,9 +83,12 @@
                                             <span class="word-phonetic text-muted">/@word.Phonetic/</span>
                                         }
                                     </div>
-                                    <button onclick="markAsLearned('@word.Word')" class="btn btn-outline-success">
-                                        <i class="bi bi-check2-circle me-1"></i>Đánh dấu đã học
-                                    </button>
+                                    <form method="post" asp-action="MarkAsLearned">
+                                        <input type="hidden" name="word" value="@word.Word" />
+                                        <button type="submit" class="btn btn-outline-success">
+                                            <i class="bi bi-check2-circle me-1"></i>Đánh dấu đã học
+                                        </button>
+                                    </form>
                                 </div>
 
                                 <!-- Audio phát âm -->
@@ -151,7 +171,7 @@
                     <!-- Thanh tìm kiếm từ đã học -->
                     <div class="input-group mb-4">
                         <input type="text" id="searchLearned" class="form-control" 
-                               placeholder="Tìm từ đã học...">
+                               placeholder="Tìm từ đã học..." oninput="searchLearnedWords()">
                         <span class="input-group-text">
                             <i class="bi bi-search"></i>
                         </span>
@@ -167,18 +187,30 @@
                                     <div class="d-flex justify-content-between align-items-center">
                                         <h5 class="mb-0 word-text">@learnedWord.Word</h5>
                                         <div class="btn-group">
-                                            <button class="btn btn-sm btn-outline-primary review-btn" 
-                                                    onclick="reviewWord('@learnedWord.Word')">
-                                                <i class="bi bi-book"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger remove-btn" 
-                                                    onclick="removeLearnedWord('@learnedWord.Word')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                            <form method="post" asp-action="GetWordDefinition" class="d-inline">
+                                                <input type="hidden" name="word" value="@learnedWord.Word" />
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-book"></i>
+                                                </button>
+                                            </form>
+                                            <form method="post" asp-action="RemoveLearnedWord" class="d-inline">
+                                                <input type="hidden" name="word" value="@learnedWord.Word" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                        onclick="return confirm('Bạn có chắc muốn xóa từ này khỏi danh sách đã học?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
                             }
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-journal-x fs-3 mb-2"></i>
+                                <p>Bạn chưa có từ vựng nào đã học</p>
+                            </div>
                         }
                     </div>
 
@@ -202,24 +234,7 @@
     </div>
 </div>
 
-<!-- Template cho từ đã học -->
-<template id="learnedWordTemplate">
-    <div class="learned-word-item mb-3 p-3 border rounded">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 word-text"></h5>
-            <div class="btn-group">
-                <button class="btn btn-sm btn-outline-primary review-btn">
-                    <i class="bi bi-book"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger remove-btn">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</template>
-
 @section Scripts {
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/wordgenerator.js"></script>
-    @Html.AntiForgeryToken()
 }
