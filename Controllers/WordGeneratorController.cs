@@ -12,7 +12,6 @@ namespace VocabMaster.Controllers
         private readonly IDictionaryService _dictionaryService; // service for random word
         private readonly IVocabularyService _vocabularyService; // service for learned vocabulary
         private readonly ILogger<WordGeneratorController> _logger;
-
         public WordGeneratorController(
             IDictionaryService dictionaryService,
             IVocabularyService vocabularyService,
@@ -38,9 +37,9 @@ namespace VocabMaster.Controllers
 
                 if (randomWord == null)
                 {
-                    _logger.LogWarning("No word found");
+                    _logger.LogError("No word found");
                     ModelState.AddModelError("", "No word found");
-                    return View("Index");   
+                    return View("Index");
                 }       
 
                 ViewBag.RandomWord = randomWord;
@@ -69,7 +68,6 @@ namespace VocabMaster.Controllers
 
                 if (definition == null)
                 {
-                    _logger.LogWarning($"No definition found for word: {word}");
                     TempData["Error"] = $"No definition found for word: {word}";
                     return View("Index");
                 }
@@ -79,7 +77,7 @@ namespace VocabMaster.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error getting word definition: {word}");
+                _logger.LogError(ex, "Error getting word definition: {Word}", word);
                 TempData["Error"] = "An error occurred. Please try again.";
                 return View("Index");
             }
@@ -89,8 +87,7 @@ namespace VocabMaster.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAsLearned(string word)
         {
-            _logger.LogInformation("MarkAsLearned called with word: {Word}", word);
-
+            // Check if word is empty
             if (string.IsNullOrWhiteSpace(word))
             {
                 TempData["Error"] = "Word cannot be empty";
@@ -101,38 +98,32 @@ namespace VocabMaster.Controllers
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
             if (userIdClaim == null)
             {
-                _logger.LogWarning("UserId not found in Claims");
+                _logger.LogError("UserId not found in Claims");
                 TempData["Error"] = "Please login again";
                 return View("Index");
             }
 
-            if (!int.TryParse(userIdClaim.Value, out int userId))
-            {
-                _logger.LogError("Invalid UserId: {UserId}", userIdClaim.Value);
-                TempData["Error"] = "Invalid user information";
-                return View("Index");
-            }
-
+            int userId = int.Parse(userIdClaim.Value);
+            
             try
             {
                 var result = await _vocabularyService.MarkWordAsLearnedAsync(userId, word.Trim());
                 if (result.Success)
                 {
-                    _logger.LogInformation("User {UserId} marked word '{Word}' as learned", userId, word);
                     TempData["Success"] = $"Word '{word}' has been marked as learned";
                 }
                 else
                 {
-                    _logger.LogWarning("User {UserId} failed to mark word '{Word}' as learned: {Reason}", userId, word, result.ErrorMessage);
+                    _logger.LogError("Cannot mark word as learned: {Word}", word);
                     TempData["Error"] = result.ErrorMessage ?? "Cannot mark word as learned. Please try again.";
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error marking word '{Word}' as learned", word);
+                _logger.LogError(ex,"Error marking word as learned: {Word}", word);
                 TempData["Error"] = "An error occurred. Please try again.";
+                return View("Index");
             }
-
             return RedirectToAction("Index");
         }
 
@@ -165,6 +156,7 @@ namespace VocabMaster.Controllers
                 }
                 else
                 {
+                    _logger.LogError("Cannot remove word: {Word}", word);
                     TempData["Error"] = $"Cannot remove word '{word}'. Please try again.";
                 }
             }
@@ -172,8 +164,8 @@ namespace VocabMaster.Controllers
             {
                 _logger.LogError(ex, "Error removing learned word: {Word}", word);
                 TempData["Error"] = "An error occurred. Please try again.";
+                return View("Index");
             }
-
             return RedirectToAction("Index");
         }
     }
