@@ -80,6 +80,36 @@ namespace VocabMaster.Services.Implementations
                 return new List<LearnedVocabulary>();
             }
         }
+        
+        // Remove a learned word for a specific user
+        public async Task<bool> RemoveLearnedWordAsync(int userId, string word)
+        {
+            if (string.IsNullOrWhiteSpace(word))
+                return false;
+                
+            try
+            {
+                // Kiểm tra từ có tồn tại không
+                var learnedWords = await _learnedVocabularyRepository.GetByUserIdAsync(userId);
+                var learnedWord = learnedWords.FirstOrDefault(lv => 
+                    lv.UserId == userId && 
+                    lv.Word.Equals(word, StringComparison.OrdinalIgnoreCase));
+                
+                if (learnedWord == null)
+                {
+                    _logger.LogWarning("User {UserId} tried to remove non-existent learned word: {Word}", userId, word);
+                    return false;
+                }
+                
+                // Xóa từ đã học
+                return await _learnedVocabularyRepository.DeleteAsync(learnedWord.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing learned word for user {UserId}: {Word}", userId, word);
+                return false;
+            }
+        }
     }
 }
 
