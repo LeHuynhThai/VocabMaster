@@ -12,6 +12,7 @@ namespace VocabMaster.Controllers
         private readonly IDictionaryService _dictionaryService; // service for random word
         private readonly IVocabularyService _vocabularyService; // service for learned vocabulary
         private readonly ILogger<WordGeneratorController> _logger;
+
         public WordGeneratorController(
             IDictionaryService dictionaryService,
             IVocabularyService vocabularyService,
@@ -82,7 +83,7 @@ namespace VocabMaster.Controllers
                 return View("Index");
             }
         }
-
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAsLearned(string word)
@@ -91,7 +92,7 @@ namespace VocabMaster.Controllers
             if (string.IsNullOrWhiteSpace(word))
             {
                 TempData["Error"] = "Word cannot be empty";
-                return View("Index");
+                return RedirectToAction("Index");
             }
 
             // Get UserId from Claims
@@ -100,11 +101,16 @@ namespace VocabMaster.Controllers
             {
                 _logger.LogError("UserId not found in Claims");
                 TempData["Error"] = "Please login again";
-                return View("Index");
+                return RedirectToAction("Index");
             }
 
-            int userId = int.Parse(userIdClaim.Value);
-            
+            if (!int.TryParse(userIdClaim.Value, out int userId))
+            {
+                _logger.LogError("UserId không hợp lệ: {UserId}", userIdClaim.Value);
+                TempData["Error"] = "Invalid user information";
+                return RedirectToAction("Index");
+            }
+
             try
             {
                 var result = await _vocabularyService.MarkWordAsLearnedAsync(userId, word.Trim());
@@ -122,49 +128,6 @@ namespace VocabMaster.Controllers
             {
                 _logger.LogError(ex,"Error marking word as learned: {Word}", word);
                 TempData["Error"] = "An error occurred. Please try again.";
-                return View("Index");
-            }
-            return RedirectToAction("Index");
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RemoveLearnedWord(string word)
-        {
-            if (string.IsNullOrWhiteSpace(word))
-            {
-                TempData["Error"] = "Word cannot be empty";
-                return View("Index");
-            }
-
-            // Get UserId from Claims
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-            {
-                TempData["Error"] = "Please login again";
-                return View("Index");
-            }
-
-            try
-            {
-                // Call service to remove learned word
-                bool result = await _vocabularyService.RemoveLearnedWordAsync(userId, word);
-                
-                if (result)
-                {
-                    TempData["Success"] = $"Word '{word}' has been removed from the learned list";
-                }
-                else
-                {
-                    _logger.LogError("Cannot remove word: {Word}", word);
-                    TempData["Error"] = $"Cannot remove word '{word}'. Please try again.";
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error removing learned word: {Word}", word);
-                TempData["Error"] = "An error occurred. Please try again.";
-                return View("Index");
             }
             return RedirectToAction("Index");
         }
