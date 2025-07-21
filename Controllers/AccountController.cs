@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using VocabMaster.Entities;
+using VocabMaster.Core.Entities;
 using VocabMaster.Models.User;
 using VocabMaster.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;

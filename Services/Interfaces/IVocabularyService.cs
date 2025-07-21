@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using VocabMaster.Entities;
+using VocabMaster.Core.Entities;
 using VocabMaster.Services.Implementations;
 
 namespace VocabMaster.Services.Interfaces

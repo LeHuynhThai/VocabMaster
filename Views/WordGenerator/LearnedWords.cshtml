@@ -1,4 +1,4 @@
-﻿@using VocabMaster.Entities
+﻿@using VocabMaster.Core.Entities
 @model List<LearnedVocabulary>
 @{
     ViewData["Title"] = "Từ vựng đã học";
@@ -49,6 +49,18 @@
                 <div class="stats-label">Tổng số từ đã học</div>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="stats-card text-center">
+                <div class="stats-number">@(Model.Count > 0 ? Model.Max(w => w.DateLearned).ToString("dd/MM/yyyy") : "N/A")</div>
+                <div class="stats-label">Ngày học gần nhất</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card text-center">
+                <div class="stats-number">@(DateTime.Now.Month)</div>
+                <div class="stats-label">Tháng hiện tại</div>
+            </div>
+        </div>
     </div>
 
     <!-- Tìm kiếm -->
@@ -79,6 +91,7 @@
                                     <tr>
                                         <th scope="col" width="5%">#</th>
                                         <th scope="col" width="30%">Từ vựng</th>
+                                        <th scope="col" width="25%">Ngày học</th>
                                         <th scope="col" width="20%">Thao tác</th>
                                     </tr>
                                 </thead>
@@ -89,6 +102,7 @@
                                         <tr>
                                             <td>@(i + 1)</td>
                                             <td class="word-text">@word.Word</td>
+                                            <td class="date-learned">@word.DateLearned.ToString("dd/MM/yyyy HH:mm")</td>
                                             <td>
                                                 <form method="post" asp-action="GetWordDefinition" class="d-inline">
                                                     <input type="hidden" name="word" value="@word.Word" />
