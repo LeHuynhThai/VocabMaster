@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using VocabMaster.Services.Interfaces;
 using System.Security.Claims;
-using VocabMaster.Entities;
+using VocabMaster.Core.Entities;
 
 namespace VocabMaster.Controllers
 {
@@ -164,7 +164,7 @@ namespace VocabMaster.Controllers
         {
             if (string.IsNullOrWhiteSpace(word))
             {
-                TempData["Error"] = "Word cannot be empty";
+                TempData["Error"] = "Từ vựng không được để trống";
                 return RedirectToAction("LearnedWords");
             }
 
@@ -172,8 +172,8 @@ namespace VocabMaster.Controllers
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
             {
-                _logger.LogError("Invalid user information");
-                TempData["Error"] = "Please login again";
+                _logger.LogError("UserId không hợp lệ hoặc không tìm thấy");
+                TempData["Error"] = "Vui lòng đăng nhập lại";
                 return RedirectToAction("LearnedWords");
             }
 
@@ -182,17 +182,17 @@ namespace VocabMaster.Controllers
                 var result = await _vocabularyService.RemoveLearnedWordAsync(userId, word.Trim());
                 if (result)
                 {
-                    TempData["Success"] = $"Word '{word}' has been removed from learned words";
+                    TempData["Success"] = $"Đã xóa từ '{word}' khỏi danh sách từ đã học";
                 }
                 else
                 {
-                    TempData["Error"] = "Cannot remove word. Please try again.";
+                    TempData["Error"] = "Không thể xóa từ. Vui lòng thử lại.";
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error removing learned word: {Word}", word);
-                TempData["Error"] = "An error occurred. Please try again.";
+                _logger.LogError(ex, "Lỗi khi xóa từ đã học: {Word}", word);
+                TempData["Error"] = "Đã xảy ra lỗi. Vui lòng thử lại.";
             }
 
             return RedirectToAction("LearnedWords");

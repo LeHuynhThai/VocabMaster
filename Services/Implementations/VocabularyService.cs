@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using VocabMaster.Entities;
+using VocabMaster.Core.Entities;
 using VocabMaster.Repositories.Interfaces;
 using VocabMaster.Services.Interfaces;
 

@@ -1,4 +1,4 @@
-﻿using VocabMaster.Entities;
+﻿using VocabMaster.Core.Entities;
 
 namespace VocabMaster.Repositories.Interfaces
 {

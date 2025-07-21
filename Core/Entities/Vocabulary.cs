@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace VocabMaster.Entities
+namespace VocabMaster.Core.Entities
 {
     public class Vocabulary
     {

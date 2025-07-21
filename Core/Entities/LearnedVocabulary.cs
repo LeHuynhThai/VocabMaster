@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace VocabMaster.Entities
+namespace VocabMaster.Core.Entities
 {
     public class LearnedVocabulary
     {

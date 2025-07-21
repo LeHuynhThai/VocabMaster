@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using VocabMaster.Entities;
+using VocabMaster.Core.Entities;
 
 namespace VocabMaster.Repositories.Interfaces
 {
