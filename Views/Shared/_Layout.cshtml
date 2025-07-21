@@ -85,10 +85,17 @@
                 </div>
                 <ul class="nav nav-pills flex-column">
                     <li class="nav-item mb-2">
-                        <a class="nav-link @(Context.Request.Path.Value.Contains("/WordGenerator") ? "active" : "")" 
+                        <a class="nav-link @(Context.Request.Path.Value.EndsWith("/WordGenerator") || Context.Request.Path.Value.EndsWith("/WordGenerator/Index") ? "active" : "")" 
                            asp-controller="WordGenerator" asp-action="Index">
                             <i class="bi bi-shuffle me-2"></i>
                             Từ vựng ngẫu nhiên
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link @(Context.Request.Path.Value.Contains("/WordGenerator/LearnedWords") ? "active" : "")" 
+                           asp-controller="WordGenerator" asp-action="LearnedWords">
+                            <i class="bi bi-journal-check me-2"></i>
+                            Từ vựng đã học
                         </a>
                     </li>
                     <li class="nav-item mb-2">
