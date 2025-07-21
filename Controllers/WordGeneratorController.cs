@@ -29,6 +29,32 @@ namespace VocabMaster.Controllers
             return View();
         }
 
+        [HttpGet]
+        public async Task<IActionResult> LearnedWords()
+        {
+            try
+            {
+                // Get UserId from Claims
+                var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    _logger.LogError("UserId not found in Claims");
+                    TempData["Error"] = "Please login again";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                // Get learned words
+                var learnedWords = await _vocabularyService.GetUserLearnedVocabulariesAsync(userId);
+                return View(learnedWords);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading learned words");
+                TempData["Error"] = "An error occurred. Please try again.";
+                return RedirectToAction("Index");
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> GenerateWord()
         {
@@ -130,6 +156,46 @@ namespace VocabMaster.Controllers
                 TempData["Error"] = "An error occurred. Please try again.";
             }
             return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveLearnedWord(string word)
+        {
+            if (string.IsNullOrWhiteSpace(word))
+            {
+                TempData["Error"] = "Word cannot be empty";
+                return RedirectToAction("LearnedWords");
+            }
+
+            // Get UserId from Claims
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                _logger.LogError("Invalid user information");
+                TempData["Error"] = "Please login again";
+                return RedirectToAction("LearnedWords");
+            }
+
+            try
+            {
+                var result = await _vocabularyService.RemoveLearnedWordAsync(userId, word.Trim());
+                if (result)
+                {
+                    TempData["Success"] = $"Word '{word}' has been removed from learned words";
+                }
+                else
+                {
+                    TempData["Error"] = "Cannot remove word. Please try again.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing learned word: {Word}", word);
+                TempData["Error"] = "An error occurred. Please try again.";
+            }
+
+            return RedirectToAction("LearnedWords");
         }
     }
 }
