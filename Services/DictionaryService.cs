@@ -1,4 +1,6 @@
 ﻿using System.Text.Json;
+using System.Collections.Generic;
+using System.Linq;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Core.Interfaces.Repositories;
@@ -10,15 +12,18 @@ namespace VocabMaster.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<DictionaryService> _logger;
         private readonly IVocabularyRepository _vocabularyRepository;
+        private readonly ILearnedVocabularyRepository _learnedVocabularyRepository;
         private readonly string _dictionaryApiUrl = "https://api.dictionaryapi.dev/api/v2/entries/en/";
 
         public DictionaryService(
             ILogger<DictionaryService> logger,
-            IVocabularyRepository vocabularyRepository)
+            IVocabularyRepository vocabularyRepository,
+            ILearnedVocabularyRepository learnedVocabularyRepository)
         {
             _httpClient = new HttpClient();
             _logger = logger;
             _vocabularyRepository = vocabularyRepository;
+            _learnedVocabularyRepository = learnedVocabularyRepository;
         }
 
         // get random word and its definition
@@ -37,6 +42,33 @@ namespace VocabMaster.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting random word");
+                return null;
+            }
+        }
+        
+        // get random word excluding learned words
+        public async Task<DictionaryResponseDto> GetRandomWordExcludeLearnedAsync(int userId)
+        {
+            try
+            {
+                // Get user's learned words
+                var learnedVocabularies = await _learnedVocabularyRepository.GetByUserIdAsync(userId);
+                var learnedWords = learnedVocabularies.Select(lv => lv.Word).ToList();
+                
+                // Get random word excluding learned words
+                var vocabulary = await _vocabularyRepository.GetRandomExcludeLearnedAsync(learnedWords);
+                if (vocabulary == null)
+                {
+                    _logger.LogWarning("No vocabulary found or all words have been learned");
+                    return null;
+                }
+                
+                // Get definition for the random word
+                return await GetWordDefinitionAsync(vocabulary.Word);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting random word excluding learned words");
                 return null;
             }
         }

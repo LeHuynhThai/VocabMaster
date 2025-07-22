@@ -1,4 +1,6 @@
-﻿using VocabMaster.Core.DTOs;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using VocabMaster.Core.DTOs;
 
 namespace VocabMaster.Core.Interfaces.Services
 {
@@ -6,5 +8,8 @@ namespace VocabMaster.Core.Interfaces.Services
     {
         Task<DictionaryResponseDto> GetWordDefinitionAsync(string word); // Get word definition
         Task<DictionaryResponseDto> GetRandomWordAsync(); // Get random word
+        
+        // Get random word excluding learned words
+        Task<DictionaryResponseDto> GetRandomWordExcludeLearnedAsync(int userId);
     }
 }

@@ -1,4 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
 
@@ -32,6 +36,31 @@ namespace VocabMaster.Data.Repositories
                 .Skip(skipCount)
                 .Take(1)
                 .FirstOrDefaultAsync();
+        }
+        
+        // get random word excluding learned words
+        public async Task<Vocabulary> GetRandomExcludeLearnedAsync(List<string> learnedWords)
+        {
+            // If no learned words, just return a random word
+            if (learnedWords == null || !learnedWords.Any())
+            {
+                return await GetRandomAsync();
+            }
+            
+            // Get all vocabulary words that are not in the learned words list
+            var availableWords = await _context.Vocabularies
+                .Where(v => !learnedWords.Contains(v.Word))
+                .ToListAsync();
+                
+            // If no available words, return null
+            if (availableWords.Count == 0)
+            {
+                return null;
+            }
+            
+            // Get a random word from the available words
+            var randomIndex = _random.Next(availableWords.Count);
+            return availableWords[randomIndex];
         }
     }
 }

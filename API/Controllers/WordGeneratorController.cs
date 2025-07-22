@@ -60,12 +60,22 @@ namespace VocabMaster.API.Controllers
         {
             try
             {
-                var randomWord = await _dictionaryService.GetRandomWordAsync();
+                // Get UserId from Claims
+                var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    _logger.LogError("UserId not found in Claims");
+                    TempData["Error"] = "Please login again";
+                    return RedirectToAction("Index", "Home");
+                }
+                
+                // Get random word excluding learned words
+                var randomWord = await _dictionaryService.GetRandomWordExcludeLearnedAsync(userId);
 
                 if (randomWord == null)
                 {
-                    _logger.LogError("No word found");
-                    ModelState.AddModelError("", "No word found");
+                    _logger.LogError("No word found or all words have been learned");
+                    TempData["Error"] = "No word found or all words have been learned";
                     return View("Index");
                 }       
 
@@ -75,7 +85,7 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating random word");
-                ModelState.AddModelError("", "An error occurred. Please try again.");
+                TempData["Error"] = "An error occurred. Please try again.";
                 return View("Index");
             }
         }
