@@ -28,14 +28,14 @@ namespace VocabMaster.Services
             public string ErrorMessage { get; set; }
         }
 
-        public async Task<MarkWordResult> MarkWordAsLearnedAsync(int userId, string word)
+        public async Task<MarkWordResult> MarkWordAsLearned(int userId, string word)
         {
             if (string.IsNullOrWhiteSpace(word))
                 return new MarkWordResult { Success = false, ErrorMessage = "Từ vựng không được để trống" };
 
             try
             {
-                var learnedWords = await _learnedVocabularyRepository.GetByUserIdAsync(userId);
+                var learnedWords = await _learnedVocabularyRepository.GetByUserId(userId);
                 if (learnedWords.Any(lv => lv.Word.Equals(word, StringComparison.OrdinalIgnoreCase)))
                 {
                     _logger.LogWarning("User {UserId} tried to mark already learned word: {Word}", userId, word);
@@ -48,7 +48,7 @@ namespace VocabMaster.Services
                     Word = word
                 };
 
-                var addResult = await _learnedVocabularyRepository.AddAsync(learnedVocabulary);
+                var addResult = await _learnedVocabularyRepository.Add(learnedVocabulary);
                 if (addResult)
                 {
                     return new MarkWordResult { Success = true };
@@ -67,11 +67,11 @@ namespace VocabMaster.Services
         }
 
         // get all learned vocabularies for a specific user
-        public async Task<List<LearnedVocabulary>> GetUserLearnedVocabulariesAsync(int userId)
+        public async Task<List<LearnedVocabulary>> GetUserLearnedVocabularies(int userId)
         {
             try
             {
-                return await _learnedVocabularyRepository.GetByUserIdAsync(userId); // GetByUserIdAsync method in LearnedVocabularyRepository
+                return await _learnedVocabularyRepository.GetByUserId(userId); // GetByUserIdAsync method in LearnedVocabularyRepository
             }
             catch (Exception ex)
             {
@@ -81,7 +81,7 @@ namespace VocabMaster.Services
         }
         
         // Remove a learned word for a specific user
-        public async Task<bool> RemoveLearnedWordAsync(int userId, string word)
+        public async Task<bool> RemoveLearnedWord(int userId, string word)
         {
             if (string.IsNullOrWhiteSpace(word))
                 return false;
@@ -89,7 +89,7 @@ namespace VocabMaster.Services
             try
             {
                 // Kiểm tra từ có tồn tại không
-                var learnedWords = await _learnedVocabularyRepository.GetByUserIdAsync(userId);
+                var learnedWords = await _learnedVocabularyRepository.GetByUserId(userId);
                 var learnedWord = learnedWords.FirstOrDefault(lv => 
                     lv.UserId == userId && 
                     lv.Word.Equals(word, StringComparison.OrdinalIgnoreCase));
@@ -101,7 +101,7 @@ namespace VocabMaster.Services
                 }
                 
                 // Xóa từ đã học
-                return await _learnedVocabularyRepository.DeleteAsync(learnedWord.Id);
+                return await _learnedVocabularyRepository.Delete(learnedWord.Id);
             }
             catch (Exception ex)
             {

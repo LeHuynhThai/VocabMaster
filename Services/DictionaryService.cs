@@ -27,17 +27,17 @@ namespace VocabMaster.Services
         }
 
         // get random word and its definition
-        public async Task<DictionaryResponseDto> GetRandomWordAsync()
+        public async Task<DictionaryResponseDto> GetRandomWord()
         {
             try
             {
-                var vocabulary = await _vocabularyRepository.GetRandomAsync();
+                var vocabulary = await _vocabularyRepository.GetRandom();
                 if (vocabulary == null)
                 {
                     _logger.LogWarning("No vocabulary found");
                     return null;
                 }
-                return await GetWordDefinitionAsync(vocabulary.Word); // return random word and definition
+                return await GetWordDefinition(vocabulary.Word); // return random word and definition
             }
             catch (Exception ex)
             {
@@ -47,16 +47,16 @@ namespace VocabMaster.Services
         }
         
         // get random word excluding learned words
-        public async Task<DictionaryResponseDto> GetRandomWordExcludeLearnedAsync(int userId)
+        public async Task<DictionaryResponseDto> GetRandomWordExcludeLearned(int userId)
         {
             try
             {
                 // Get user's learned words
-                var learnedVocabularies = await _learnedVocabularyRepository.GetByUserIdAsync(userId);
+                var learnedVocabularies = await _learnedVocabularyRepository.GetByUserId(userId);
                 var learnedWords = learnedVocabularies.Select(lv => lv.Word).ToList();
                 
                 // Get random word excluding learned words
-                var vocabulary = await _vocabularyRepository.GetRandomExcludeLearnedAsync(learnedWords);
+                var vocabulary = await _vocabularyRepository.GetRandomExcludeLearned(learnedWords);
                 if (vocabulary == null)
                 {
                     _logger.LogWarning("No vocabulary found or all words have been learned");
@@ -64,7 +64,7 @@ namespace VocabMaster.Services
                 }
                 
                 // Get definition for the random word
-                return await GetWordDefinitionAsync(vocabulary.Word);
+                return await GetWordDefinition(vocabulary.Word);
             }
             catch (Exception ex)
             {
@@ -74,7 +74,7 @@ namespace VocabMaster.Services
         }
 
         // get word definition from dictionary api
-        public async Task<DictionaryResponseDto> GetWordDefinitionAsync(string word)
+        public async Task<DictionaryResponseDto> GetWordDefinition(string word)
         {
             try
             {

@@ -20,9 +20,9 @@ public class AccountService : IAccountService
     }
 
     // Login
-    public async Task<User> LoginAsync(string name, string password)
+    public async Task<User> Login(string name, string password)
     {
-        var user = await _userRepository.ValidateUserAsync(name, password); // Validate user
+        var user = await _userRepository.ValidateUser(name, password); // Validate user
         if (user != null) // If user exists
         {
             var userClaims = CreateUserClaims(user); // Create user claims
@@ -58,18 +58,18 @@ public class AccountService : IAccountService
         };
     }
 
-    public async Task<bool> RegisterAsync(User user)
+    public async Task<bool> Register(User user)
     {
-        if (await _userRepository.IsNameExistsAsync(user.Name))
+        if (await _userRepository.IsNameExist(user.Name))
             return false;
 
         user.Password = HashPassword(user.Password);
 
-        await _userRepository.AddAsync(user);
+        await _userRepository.Add(user);
         return true;
     }
 
-    public async Task LogoutAsync()
+    public async Task Logout()
     {
         if (_httpContextAccessor.HttpContext != null)
         {

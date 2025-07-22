@@ -6,10 +6,10 @@ namespace VocabMaster.Core.Interfaces.Repositories
 {
     public interface IVocabularyRepository
     {
-        Task<Vocabulary> GetRandomAsync(); // Get random vocabulary
-        Task<int> CountAsync(); // Get total count of vocabularies
+        Task<Vocabulary> GetRandom(); // Get random vocabulary
+        Task<int> Count(); // Get total count of vocabularies
         
         // Get random vocabulary excluding learned words
-        Task<Vocabulary> GetRandomExcludeLearnedAsync(List<string> learnedWords);
+        Task<Vocabulary> GetRandomExcludeLearned(List<string> learnedWords);
     }
 }

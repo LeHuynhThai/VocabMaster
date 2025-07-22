@@ -19,13 +19,13 @@ namespace VocabMaster.Data.Repositories
         }
 
         // get total count of vocabulary
-        public async Task<int> CountAsync()
+        public async Task<int> Count()
         {
             return await _context.Vocabularies.CountAsync();
         }
 
         // get random word
-        public async Task<Vocabulary> GetRandomAsync()
+        public async Task<Vocabulary> GetRandom()
         {
             var count = await _context.Vocabularies.CountAsync(); // get total count of vocabulary
             if (count == 0) return null; // if no vocabulary, return null
@@ -39,12 +39,12 @@ namespace VocabMaster.Data.Repositories
         }
         
         // get random word excluding learned words
-        public async Task<Vocabulary> GetRandomExcludeLearnedAsync(List<string> learnedWords)
+        public async Task<Vocabulary> GetRandomExcludeLearned(List<string> learnedWords)
         {
             // If no learned words, just return a random word
             if (learnedWords == null || !learnedWords.Any())
             {
-                return await GetRandomAsync();
+                return await GetRandom();
             }
             
             // Get all vocabulary words that are not in the learned words list

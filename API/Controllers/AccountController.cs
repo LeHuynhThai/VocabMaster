@@ -29,7 +29,7 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var user = await _accountService.LoginAsync(model.Name, model.Password);
+        var user = await _accountService.Login(model.Name, model.Password);
         if (user != null)
         {
             return RedirectToAction("Index", "Home");
@@ -61,7 +61,7 @@ public class AccountController : Controller
         };
 
         // Register user
-        if (await _accountService.RegisterAsync(user))
+        if (await _accountService.Register(user))
         {
             TempData["SuccessMessage"] = "Register successfully";
             return RedirectToAction("Login"); // Redirect to login page
@@ -74,7 +74,7 @@ public class AccountController : Controller
     [HttpGet]
     public async Task<IActionResult> Logout()
     {
-        await _accountService.LogoutAsync();
+        await _accountService.Logout();
         return RedirectToAction("Login");
     }
 }

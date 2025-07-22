@@ -8,13 +8,13 @@ namespace VocabMaster.Core.Interfaces.Services
     public interface IVocabularyService
     {
         // mark a word as learned for a specific user
-        Task<VocabularyService.MarkWordResult> MarkWordAsLearnedAsync(int userId, string word);
+        Task<VocabularyService.MarkWordResult> MarkWordAsLearned(int userId, string word);
 
         // Gets all learned vocabularies for a specific user
-        Task<List<LearnedVocabulary>> GetUserLearnedVocabulariesAsync(int userId);
+        Task<List<LearnedVocabulary>> GetUserLearnedVocabularies(int userId);
         
         // Remove a learned word for a specific user
-        Task<bool> RemoveLearnedWordAsync(int userId, string word);
+        Task<bool> RemoveLearnedWord(int userId, string word);
     }
 }
 

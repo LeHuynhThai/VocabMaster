@@ -17,7 +17,7 @@ namespace VocabMaster.Data.Repositories
             _context = context;
         }
         // get a learned vocabulary by its ID
-        public async Task<LearnedVocabulary> GetByIdAsync(int id)
+        public async Task<LearnedVocabulary> GetById(int id)
         {
             return await _context.LearnedVocabularies
                 .Include(lv => lv.User)
@@ -25,7 +25,7 @@ namespace VocabMaster.Data.Repositories
         }
 
         // get all learned vocabularies by user ID
-        public async Task<List<LearnedVocabulary>> GetByUserIdAsync(int userId)
+        public async Task<List<LearnedVocabulary>> GetByUserId(int userId)
         {
             return await _context.LearnedVocabularies
                 .Where(lv => lv.UserId == userId)
@@ -33,7 +33,7 @@ namespace VocabMaster.Data.Repositories
                 .ToListAsync();
         }
         // add a learned vocabulary
-        public async Task<bool> AddAsync(LearnedVocabulary learnedVocabulary)
+        public async Task<bool> Add(LearnedVocabulary learnedVocabulary)
         {
             try
             {
@@ -47,7 +47,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
         // delete a learned vocabulary by its ID
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> Delete(int id)
         {
             try
             {
