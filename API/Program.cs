@@ -23,8 +23,9 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Use default connection string
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext")));
+    options.UseSqlServer("Server=localhost;Database=VocabMaster;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"));
 
 // Add Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
