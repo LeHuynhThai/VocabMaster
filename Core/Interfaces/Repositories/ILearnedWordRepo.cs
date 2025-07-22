@@ -4,7 +4,7 @@ using VocabMaster.Core.Entities;
 
 namespace VocabMaster.Core.Interfaces.Repositories
 {
-    public interface ILearnedVocabularyRepository
+    public interface ILearnedWordRepo
     {
         Task<LearnedWord> GetById(int id); // get a learned vocabulary by its ID
         Task<List<LearnedWord>> GetByUserId(int userId); // get all learned vocabularies by user ID

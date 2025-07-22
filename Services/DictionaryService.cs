@@ -11,14 +11,14 @@ namespace VocabMaster.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<DictionaryService> _logger;
-        private readonly IVocabularyRepository _vocabularyRepository;
-        private readonly ILearnedVocabularyRepository _learnedVocabularyRepository;
+        private readonly IVocabularyRepo _vocabularyRepository;
+        private readonly ILearnedWordRepo _learnedVocabularyRepository;
         private readonly string _dictionaryApiUrl = "https://api.dictionaryapi.dev/api/v2/entries/en/";
 
         public DictionaryService(
             ILogger<DictionaryService> logger,
-            IVocabularyRepository vocabularyRepository,
-            ILearnedVocabularyRepository learnedVocabularyRepository)
+            IVocabularyRepo vocabularyRepository,
+            ILearnedWordRepo learnedVocabularyRepository)
         {
             _httpClient = new HttpClient();
             _logger = logger;

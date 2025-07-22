@@ -8,7 +8,7 @@ using VocabMaster.Core.Interfaces.Repositories;
 
 namespace VocabMaster.Data.Repositories
 {
-    public class LearnedWordRepo : ILearnedVocabularyRepository
+    public class LearnedWordRepo : ILearnedWordRepo
     {
         private readonly AppDbContext _context;
         
