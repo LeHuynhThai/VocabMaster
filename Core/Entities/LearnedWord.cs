@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace VocabMaster.Core.Entities
 {
-    public class LearnedVocabulary
+    public class LearnedWord
     {
         [Key]
         public int Id { get; set; }

@@ -12,7 +12,7 @@ namespace VocabMaster.Data
         }
 
         public DbSet<User> Users { get; set; }
-        public DbSet<LearnedVocabulary> LearnedVocabularies { get; set; }
+        public DbSet<LearnedWord> LearnedVocabularies { get; set; }
         public DbSet<Vocabulary> Vocabularies { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -20,7 +20,7 @@ namespace VocabMaster.Data
             base.OnModelCreating(builder);
 
             // Create composite index for Word and UserId
-            builder.Entity<LearnedVocabulary>()
+            builder.Entity<LearnedWord>()
                 .HasIndex(lv => new { lv.Word, lv.UserId })
                 .IsUnique();
 

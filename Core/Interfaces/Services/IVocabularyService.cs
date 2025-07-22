@@ -11,7 +11,7 @@ namespace VocabMaster.Core.Interfaces.Services
         Task<VocabularyService.MarkWordResult> MarkWordAsLearned(int userId, string word);
 
         // Gets all learned vocabularies for a specific user
-        Task<List<LearnedVocabulary>> GetUserLearnedVocabularies(int userId);
+        Task<List<LearnedWord>> GetUserLearnedVocabularies(int userId);
         
         // Remove a learned word for a specific user
         Task<bool> RemoveLearnedWord(int userId, string word);
