@@ -35,7 +35,6 @@ namespace VocabMaster.Services
 
             try
             {
-                // Kiểm tra đã học chưa
                 var learnedWords = await _learnedVocabularyRepository.GetByUserIdAsync(userId);
                 if (learnedWords.Any(lv => lv.Word.Equals(word, StringComparison.OrdinalIgnoreCase)))
                 {
