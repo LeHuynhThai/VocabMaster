@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "VocabMaster": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:53313;http://localhost:53314"
+    }
+  }
+}
