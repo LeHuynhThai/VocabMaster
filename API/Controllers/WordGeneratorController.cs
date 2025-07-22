@@ -44,7 +44,7 @@ namespace VocabMaster.API.Controllers
                 }
 
                 // Get learned words
-                var learnedWords = await _vocabularyService.GetUserLearnedVocabulariesAsync(userId);
+                var learnedWords = await _vocabularyService.GetUserLearnedVocabularies(userId);
                 return View(learnedWords);
             }
             catch (Exception ex)
@@ -70,7 +70,7 @@ namespace VocabMaster.API.Controllers
                 }
                 
                 // Get random word excluding learned words
-                var randomWord = await _dictionaryService.GetRandomWordExcludeLearnedAsync(userId);
+                var randomWord = await _dictionaryService.GetRandomWordExcludeLearned(userId);
 
                 if (randomWord == null)
                 {
@@ -101,7 +101,7 @@ namespace VocabMaster.API.Controllers
 
             try
             {
-                var definition = await _dictionaryService.GetWordDefinitionAsync(word);
+                var definition = await _dictionaryService.GetWordDefinition(word);
 
                 if (definition == null)
                 {
@@ -149,7 +149,7 @@ namespace VocabMaster.API.Controllers
 
             try
             {
-                var result = await _vocabularyService.MarkWordAsLearnedAsync(userId, word.Trim());
+                var result = await _vocabularyService.MarkWordAsLearned(userId, word.Trim());
                 if (result.Success)
                 {
                     TempData["Success"] = $"Word '{word}' has been marked as learned";
@@ -189,7 +189,7 @@ namespace VocabMaster.API.Controllers
 
             try
             {
-                var result = await _vocabularyService.RemoveLearnedWordAsync(userId, word.Trim());
+                var result = await _vocabularyService.RemoveLearnedWord(userId, word.Trim());
                 if (result)
                 {
                     TempData["Success"] = $"Đã xóa từ '{word}' khỏi danh sách từ đã học";

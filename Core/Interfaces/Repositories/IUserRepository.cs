@@ -2,8 +2,8 @@
 
 public interface IUserRepository
 {
-    Task<User> GetByNameAsync(string name); // Get user by name
-    Task<bool> IsNameExistsAsync(string name); // Check if user name exists
-    Task AddAsync(User user); // Add user
-    Task<User>  ValidateUserAsync(string name, string password); // Validate user
+    Task<User> GetByName(string name); // Get user by name
+    Task<bool> IsNameExist(string name); // Check if user name exists
+    Task Add(User user); // Add user
+    Task<User>  ValidateUser(string name, string password); // Validate user
 }
