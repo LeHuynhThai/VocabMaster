@@ -1,6 +1,6 @@
 ﻿using VocabMaster.Core.Entities;
 
-namespace VocabMaster.Services.Interfaces;
+namespace VocabMaster.Core.Interfaces.Services;
 
 public interface IAccountService
 {

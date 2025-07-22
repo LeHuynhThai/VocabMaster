@@ -1,9 +1,7 @@
-using System.Diagnostics;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using VocabMaster.Models;
-using Microsoft.AspNetCore.Authorization;
 
-namespace VocabMaster.Controllers
+namespace VocabMaster.API.Controllers
 {
     [Authorize]
     public class HomeController : Controller

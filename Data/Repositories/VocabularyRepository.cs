@@ -1,9 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
-using VocabMaster.Data;
 
-namespace VocabMaster.Repositories.Implementations
+namespace VocabMaster.Data.Repositories
 {
     public class VocabularyRepository : IVocabularyRepository
     {

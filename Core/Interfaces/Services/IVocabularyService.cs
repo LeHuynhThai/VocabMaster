@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using VocabMaster.Core.Entities;
-using VocabMaster.Services.Implementations;
+using VocabMaster.Services;
 
-namespace VocabMaster.Services.Interfaces
+namespace VocabMaster.Core.Interfaces.Services
 {
     public interface IVocabularyService
     {

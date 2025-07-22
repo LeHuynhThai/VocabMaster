@@ -1,6 +1,6 @@
 ﻿using VocabMaster.Core.Entities;
 
-namespace VocabMaster.Repositories.Interfaces
+namespace VocabMaster.Core.Interfaces.Repositories
 {
     public interface IVocabularyRepository
     {

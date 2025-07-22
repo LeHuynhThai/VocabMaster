@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using VocabMaster.Core.Entities;
+using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services;
-using VocabMaster.Repositories.Interfaces;
 
-namespace VocabMaster.Services.Implementations
+namespace VocabMaster.Services
 {
     public class VocabularyService : IVocabularyService
     {

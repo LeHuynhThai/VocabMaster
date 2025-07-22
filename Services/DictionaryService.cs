@@ -1,9 +1,9 @@
 ﻿using System.Text.Json;
-using VocabMaster.Models;
-using VocabMaster.Repositories.Interfaces;
+using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Interfaces.Services;
+using VocabMaster.Core.Interfaces.Repositories;
 
-namespace VocabMaster.Services.Implementations
+namespace VocabMaster.Services
 {
     public class DictionaryService : IDictionaryService
     {
@@ -22,7 +22,7 @@ namespace VocabMaster.Services.Implementations
         }
 
         // get random word and its definition
-        public async Task<DictionaryResponse> GetRandomWordAsync()
+        public async Task<DictionaryResponseDto> GetRandomWordAsync()
         {
             try
             {
@@ -42,7 +42,7 @@ namespace VocabMaster.Services.Implementations
         }
 
         // get word definition from dictionary api
-        public async Task<DictionaryResponse> GetWordDefinitionAsync(string word)
+        public async Task<DictionaryResponseDto> GetWordDefinitionAsync(string word)
         {
             try
             {
@@ -56,7 +56,7 @@ namespace VocabMaster.Services.Implementations
                 // get content from response
                 var content = await response.Content.ReadAsStringAsync();
                 // deserialize content to dictionary response
-                var dictionaryResponse = JsonSerializer.Deserialize<List<DictionaryResponse>>(content);
+                var dictionaryResponse = JsonSerializer.Deserialize<List<DictionaryResponseDto>>(content);
                 // return first dictionary response
                 return dictionaryResponse?.FirstOrDefault();
             }
