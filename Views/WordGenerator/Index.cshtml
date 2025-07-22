@@ -1,5 +1,5 @@
 ﻿@using VocabMaster.Core.Entities
-@using VocabMaster.Entities
+@using VocabMaster.Core.DTOs
 @model List<LearnedVocabulary>
 @{
     ViewData["Title"] = "Từ vựng ngẫu nhiên";
@@ -73,7 +73,7 @@
                     <!-- Hiển thị từ vựng -->
                     @if (ViewBag.RandomWord != null)
                     {
-                        var word = ViewBag.RandomWord as DictionaryResponse;
+                        var word = ViewBag.RandomWord as DictionaryResponseDto;
                         <div class="word-card mb-4">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-3">

@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using VocabMaster.Core.Entities;
-using VocabMaster.Models.User;
+using VocabMaster.Core.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using VocabMaster.Core.Interfaces.Services;
 
-namespace VocabMaster.Controllers;
+namespace VocabMaster.API.Controllers;
 
 public class AccountController : Controller
 {
@@ -22,7 +22,7 @@ public class AccountController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Login(LoginViewModel model)
+    public async Task<IActionResult> Login(LoginRequestDto model)
     {
         if (!ModelState.IsValid)
         {
@@ -46,7 +46,7 @@ public class AccountController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Register(RegisterViewModel model)
+    public async Task<IActionResult> Register(RegisterRequestDto model)
     {
         if (!ModelState.IsValid)
         {

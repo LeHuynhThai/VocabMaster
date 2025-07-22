@@ -1,10 +1,10 @@
-﻿using VocabMaster.Models;
+﻿using VocabMaster.Core.DTOs;
 
-namespace VocabMaster.Services.Interfaces
+namespace VocabMaster.Core.Interfaces.Services
 {
     public interface IDictionaryService
     {
-        Task<DictionaryResponse> GetWordDefinitionAsync(string word); // Get word definition
-        Task<DictionaryResponse> GetRandomWordAsync(); // Get random word
+        Task<DictionaryResponseDto> GetWordDefinitionAsync(string word); // Get word definition
+        Task<DictionaryResponseDto> GetRandomWordAsync(); // Get random word
     }
 }

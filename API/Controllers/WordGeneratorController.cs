@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using VocabMaster.Services.Interfaces;
 using System.Security.Claims;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Services;
 
-namespace VocabMaster.Controllers
+namespace VocabMaster.API.Controllers
 {
     [Authorize]
     public class WordGeneratorController : Controller

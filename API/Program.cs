@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Data;
-using VocabMaster.Repositories.Implementations;
-using VocabMaster.Repositories.Interfaces;
-using VocabMaster.Services.Implementations;
-using VocabMaster.Services.Interfaces;
+using VocabMaster.Data.Repositories;
+using VocabMaster.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

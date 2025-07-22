@@ -4,7 +4,7 @@ using System.Security.Claims;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Services;
 
-namespace VocabMaster.Services.Implementations;
+namespace VocabMaster.Services;
 
 public class AccountService : IAccountService
 {
