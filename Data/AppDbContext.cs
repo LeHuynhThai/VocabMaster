@@ -6,29 +6,14 @@ namespace VocabMaster.Data
 {
     public class AppDbContext : DbContext
     {
-        
-        public AppDbContext()
-        {
-        }
-
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
-            // Ensure the database is created
-            Database.EnsureCreated();
         }
 
         public DbSet<User> Users { get; set; }
         public DbSet<LearnedVocabulary> LearnedVocabularies { get; set; }
         public DbSet<Vocabulary> Vocabularies { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-                optionsBuilder.UseSqlServer("Server=localhost;Database=VocabMaster;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
-            }
-        }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

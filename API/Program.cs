@@ -5,8 +5,21 @@ using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Data;
 using VocabMaster.Data.Repositories;
 using VocabMaster.Services;
+using System.IO;
 
-var builder = WebApplication.CreateBuilder(args);
+// Set the content root path and web root path
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    ContentRootPath = Directory.GetCurrentDirectory(),
+    WebRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"),
+    Args = args
+});
+
+// Add configuration
+builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("API/appsettings.json", optional: false)
+    .AddJsonFile($"API/appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -23,9 +36,9 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Use default connection string
+// Use connection string from appsettings.json
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer("Server=localhost;Database=VocabMaster;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext")));
 
 // Add Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
