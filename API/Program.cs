@@ -52,10 +52,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 // Register repositories and services
-builder.Services.AddScoped<IUserRepository, UserRepo>();
+builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<ILearnedVocabularyRepository, LearnedWordRepo>();
-builder.Services.AddScoped<IVocabularyRepository, VocabRepo>();
+builder.Services.AddScoped<ILearnedWordRepo, LearnedWordRepo>();
+builder.Services.AddScoped<IVocabularyRepo, VocabRepo>();
 builder.Services.AddScoped<IVocabularyService, VocabularyService>();
 builder.Services.AddScoped<IDictionaryService, DictionaryService>();
 

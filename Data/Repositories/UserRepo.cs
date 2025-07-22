@@ -2,7 +2,7 @@
 using VocabMaster.Core.Entities;
 using VocabMaster.Data;
 
-public class UserRepo : IUserRepository
+public class UserRepo : IUserRepo
 {
     private readonly AppDbContext _context;
 

@@ -8,7 +8,7 @@ using VocabMaster.Core.Interfaces.Repositories;
 
 namespace VocabMaster.Data.Repositories
 {
-    public class VocabRepo : IVocabularyRepository
+    public class VocabRepo : IVocabularyRepo
     {
         private readonly AppDbContext _context;
         private readonly Random _random = new Random();

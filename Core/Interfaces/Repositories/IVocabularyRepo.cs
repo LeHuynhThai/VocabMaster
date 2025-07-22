@@ -4,7 +4,7 @@ using VocabMaster.Core.Entities;
 
 namespace VocabMaster.Core.Interfaces.Repositories
 {
-    public interface IVocabularyRepository
+    public interface IVocabularyRepo
     {
         Task<Vocabulary> GetRandom(); // Get random vocabulary
         Task<int> Count(); // Get total count of vocabularies

@@ -11,11 +11,11 @@ namespace VocabMaster.Services
 {
     public class VocabularyService : IVocabularyService
     {
-        private readonly ILearnedVocabularyRepository _learnedVocabularyRepository;
+        private readonly ILearnedWordRepo _learnedVocabularyRepository;
         private readonly ILogger<VocabularyService> _logger; // logger for logging errors
 
         public VocabularyService(
-            ILearnedVocabularyRepository learnedVocabularyRepository,
+            ILearnedWordRepo learnedVocabularyRepository,
             ILogger<VocabularyService> logger)
         {
             _learnedVocabularyRepository = learnedVocabularyRepository;

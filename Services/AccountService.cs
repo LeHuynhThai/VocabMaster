@@ -8,11 +8,11 @@ namespace VocabMaster.Services;
 
 public class AccountService : IAccountService
 {
-    private readonly IUserRepository _userRepository; // User repository
+    private readonly IUserRepo _userRepository; // User repository
     private readonly IHttpContextAccessor _httpContextAccessor; // Http context accessor
 
     // Constructor
-    public AccountService(IUserRepository userRepository,
+    public AccountService(IUserRepo userRepository,
                          IHttpContextAccessor httpContextAccessor)
     {
         _userRepository = userRepository;
