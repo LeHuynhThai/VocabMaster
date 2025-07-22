@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using VocabMaster.Services.Interfaces;
 using System.Security.Claims;
 using VocabMaster.Core.Entities;
+using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Controllers
 {

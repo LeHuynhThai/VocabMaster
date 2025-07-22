@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Data;
 using VocabMaster.Repositories.Implementations;
 using VocabMaster.Repositories.Interfaces;

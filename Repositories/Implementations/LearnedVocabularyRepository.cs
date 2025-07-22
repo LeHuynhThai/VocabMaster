@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VocabMaster.Data;
-using VocabMaster.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using VocabMaster.Core.Entities;
+using VocabMaster.Core.Interfaces.Repositories;
 
 namespace VocabMaster.Repositories.Implementations
 {

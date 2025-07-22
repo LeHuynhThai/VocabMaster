@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using VocabMaster.Models;
-using VocabMaster.Services.Interfaces;
 using VocabMaster.Repositories.Interfaces;
+using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Services.Implementations
 {

@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using VocabMaster.Core.Entities;
+using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Repositories.Interfaces;
-using VocabMaster.Services.Interfaces;
 
 namespace VocabMaster.Services.Implementations
 {
