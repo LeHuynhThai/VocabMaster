@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using VocabMaster.Core.Entities;
 using VocabMaster.Models.User;
-using VocabMaster.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Controllers;
 

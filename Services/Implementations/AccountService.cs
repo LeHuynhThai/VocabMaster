@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 using VocabMaster.Core.Entities;
-using VocabMaster.Services.Interfaces;
+using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Services.Implementations;
 
