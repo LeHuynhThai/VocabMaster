@@ -18,12 +18,12 @@ namespace VocabMaster.Core.Entities
         public UserRole Role { get; set; } = UserRole.User;
 
         // Navigation property
-        public virtual ICollection<LearnedVocabulary> LearnedVocabularies { get; set; }
+        public virtual ICollection<LearnedWord> LearnedVocabularies { get; set; }
 
         
         public User()
         {
-            LearnedVocabularies = new HashSet<LearnedVocabulary>();
+            LearnedVocabularies = new HashSet<LearnedWord>();
         }
     }
 

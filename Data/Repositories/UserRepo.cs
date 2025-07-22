@@ -2,11 +2,11 @@
 using VocabMaster.Core.Entities;
 using VocabMaster.Data;
 
-public class UserRepository : IUserRepository
+public class UserRepo : IUserRepository
 {
     private readonly AppDbContext _context;
 
-    public UserRepository(AppDbContext context)
+    public UserRepo(AppDbContext context)
     {
         _context = context;
     }

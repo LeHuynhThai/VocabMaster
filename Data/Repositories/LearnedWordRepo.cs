@@ -8,16 +8,16 @@ using VocabMaster.Core.Interfaces.Repositories;
 
 namespace VocabMaster.Data.Repositories
 {
-    public class LearnedVocabularyRepository : ILearnedVocabularyRepository
+    public class LearnedWordRepo : ILearnedVocabularyRepository
     {
         private readonly AppDbContext _context;
         
-        public LearnedVocabularyRepository(AppDbContext context)
+        public LearnedWordRepo(AppDbContext context)
         {
             _context = context;
         }
         // get a learned vocabulary by its ID
-        public async Task<LearnedVocabulary> GetById(int id)
+        public async Task<LearnedWord> GetById(int id)
         {
             return await _context.LearnedVocabularies
                 .Include(lv => lv.User)
@@ -25,7 +25,7 @@ namespace VocabMaster.Data.Repositories
         }
 
         // get all learned vocabularies by user ID
-        public async Task<List<LearnedVocabulary>> GetByUserId(int userId)
+        public async Task<List<LearnedWord>> GetByUserId(int userId)
         {
             return await _context.LearnedVocabularies
                 .Where(lv => lv.UserId == userId)
@@ -33,7 +33,7 @@ namespace VocabMaster.Data.Repositories
                 .ToListAsync();
         }
         // add a learned vocabulary
-        public async Task<bool> Add(LearnedVocabulary learnedVocabulary)
+        public async Task<bool> Add(LearnedWord learnedVocabulary)
         {
             try
             {

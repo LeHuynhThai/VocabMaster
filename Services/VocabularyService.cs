@@ -42,7 +42,7 @@ namespace VocabMaster.Services
                     return new MarkWordResult { Success = false, ErrorMessage = "Từ này đã được đánh dấu là đã học" };
                 }
 
-                var learnedVocabulary = new LearnedVocabulary
+                var learnedVocabulary = new LearnedWord
                 {
                     UserId = userId,
                     Word = word
@@ -67,7 +67,7 @@ namespace VocabMaster.Services
         }
 
         // get all learned vocabularies for a specific user
-        public async Task<List<LearnedVocabulary>> GetUserLearnedVocabularies(int userId)
+        public async Task<List<LearnedWord>> GetUserLearnedVocabularies(int userId)
         {
             try
             {
@@ -76,7 +76,7 @@ namespace VocabMaster.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting learned vocabularies for user {UserId}", userId);
-                return new List<LearnedVocabulary>();
+                return new List<LearnedWord>();
             }
         }
         
@@ -88,7 +88,6 @@ namespace VocabMaster.Services
                 
             try
             {
-                // Kiểm tra từ có tồn tại không
                 var learnedWords = await _learnedVocabularyRepository.GetByUserId(userId);
                 var learnedWord = learnedWords.FirstOrDefault(lv => 
                     lv.UserId == userId && 
@@ -100,7 +99,6 @@ namespace VocabMaster.Services
                     return false;
                 }
                 
-                // Xóa từ đã học
                 return await _learnedVocabularyRepository.Delete(learnedWord.Id);
             }
             catch (Exception ex)
