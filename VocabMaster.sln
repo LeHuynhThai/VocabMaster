@@ -1,9 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36221.1 d17.14
+VisualStudioVersion = 17.14.36221.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VocabMaster", "VocabMaster.csproj", "{68CDE4F1-8AA7-4EC5-AD41-3E8365B80170}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VocabMaster.API", "VocabMaster.API\VocabMaster.API.csproj", "{8ECA7985-EE80-4588-B3A0-973848DBF275}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VocabMaster.Services", "VocabMaster.Services\VocabMaster.Services.csproj", "{D2202506-48ED-43A4-8DCD-BB2A8C7C6841}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VocabMaster.Data", "VocabMaster.Data\VocabMaster.Data.csproj", "{84199AEE-61E1-4C90-8CB5-657BD584E3E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VocabMaster.Core", "VocabMaster.Core\VocabMaster.Core.csproj", "{79C1CF73-2D08-4A9F-90E9-CF0A283F9192}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +17,27 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{68CDE4F1-8AA7-4EC5-AD41-3E8365B80170}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{68CDE4F1-8AA7-4EC5-AD41-3E8365B80170}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{68CDE4F1-8AA7-4EC5-AD41-3E8365B80170}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{68CDE4F1-8AA7-4EC5-AD41-3E8365B80170}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8ECA7985-EE80-4588-B3A0-973848DBF275}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8ECA7985-EE80-4588-B3A0-973848DBF275}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8ECA7985-EE80-4588-B3A0-973848DBF275}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8ECA7985-EE80-4588-B3A0-973848DBF275}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2202506-48ED-43A4-8DCD-BB2A8C7C6841}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2202506-48ED-43A4-8DCD-BB2A8C7C6841}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2202506-48ED-43A4-8DCD-BB2A8C7C6841}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2202506-48ED-43A4-8DCD-BB2A8C7C6841}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84199AEE-61E1-4C90-8CB5-657BD584E3E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84199AEE-61E1-4C90-8CB5-657BD584E3E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84199AEE-61E1-4C90-8CB5-657BD584E3E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84199AEE-61E1-4C90-8CB5-657BD584E3E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79C1CF73-2D08-4A9F-90E9-CF0A283F9192}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79C1CF73-2D08-4A9F-90E9-CF0A283F9192}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79C1CF73-2D08-4A9F-90E9-CF0A283F9192}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79C1CF73-2D08-4A9F-90E9-CF0A283F9192}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {D6423D7D-311A-40A4-B929-16769005E5A9}
+		SolutionGuid = {4E79E668-6014-4F9E-808D-C8318DF8737A}
 	EndGlobalSection
 EndGlobal

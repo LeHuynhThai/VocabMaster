@@ -1,6 +1,10 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Core.Interfaces.Repositories;

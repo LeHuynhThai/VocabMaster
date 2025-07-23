@@ -22,12 +22,6 @@ namespace VocabMaster.Services
             _logger = logger;
         }
 
-        public class MarkWordResult
-        {
-            public bool Success { get; set; }
-            public string ErrorMessage { get; set; }
-        }
-
         public async Task<MarkWordResult> MarkWordAsLearned(int userId, string word)
         {
             if (string.IsNullOrWhiteSpace(word))
