@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.API.Controllers
