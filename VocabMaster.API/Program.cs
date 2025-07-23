@@ -1,18 +1,20 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Data;
 using VocabMaster.Data.Repositories;
 using VocabMaster.Services;
+using System;
 using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add configuration
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("API/appsettings.json", optional: false)
-    .AddJsonFile($"API/appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
     .AddEnvironmentVariables();
 
 // Add services to the container.
