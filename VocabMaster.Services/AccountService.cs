@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using AutoMapper;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Core.Interfaces.Repositories;
@@ -12,13 +13,16 @@ public class AccountService : IAccountService
 {
     private readonly IUserRepo _userRepository; // User repository
     private readonly IHttpContextAccessor _httpContextAccessor; // Http context accessor
+    private readonly IMapper _mapper; // AutoMapper
 
     // Constructor
     public AccountService(IUserRepo userRepository,
-                         IHttpContextAccessor httpContextAccessor)
+                         IHttpContextAccessor httpContextAccessor,
+                         IMapper mapper)
     {
         _userRepository = userRepository;
         _httpContextAccessor = httpContextAccessor;
+        _mapper = mapper;
     }
 
     // Login
@@ -83,6 +87,23 @@ public class AccountService : IAccountService
     public string HashPassword(string password)
     {
         return BCrypt.Net.BCrypt.HashPassword(password);
+    }
+
+    public async Task<User> GetCurrentUser()
+    {
+        if (_httpContextAccessor.HttpContext == null || !_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+        {
+            return null;
+        }
+
+        var userId = _httpContextAccessor.HttpContext.User.FindFirst("UserId")?.Value;
+        if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int id))
+        {
+            return null;
+        }
+
+        var user = await _userRepository.GetById(id);
+        return user;
     }
 }
 

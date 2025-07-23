@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VocabMaster.Data", "VocabMa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VocabMaster.Core", "VocabMaster.Core\VocabMaster.Core.csproj", "{79C1CF73-2D08-4A9F-90E9-CF0A283F9192}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VocabMaster.Tests", "VocabMaster.Tests\VocabMaster.Tests.csproj", "{CAF16CDF-8265-4719-8756-17FE7BA357DD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{79C1CF73-2D08-4A9F-90E9-CF0A283F9192}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79C1CF73-2D08-4A9F-90E9-CF0A283F9192}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79C1CF73-2D08-4A9F-90E9-CF0A283F9192}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAF16CDF-8265-4719-8756-17FE7BA357DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAF16CDF-8265-4719-8756-17FE7BA357DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAF16CDF-8265-4719-8756-17FE7BA357DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAF16CDF-8265-4719-8756-17FE7BA357DD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

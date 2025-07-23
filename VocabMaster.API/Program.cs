@@ -8,6 +8,7 @@ using VocabMaster.Data.Repositories;
 using VocabMaster.Services;
 using System;
 using System.IO;
+using VocabMaster.Core.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,9 @@ builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Add AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
 // Add HttpContext accessor
 builder.Services.AddHttpContextAccessor();

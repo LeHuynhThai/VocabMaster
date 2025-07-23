@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.API.Controllers
 {
@@ -7,15 +8,20 @@ namespace VocabMaster.API.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IAccountService _accountService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(
+            ILogger<HomeController> logger,
+            IAccountService accountService)
         {
             _logger = logger;
+            _accountService = accountService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var user = await _accountService.GetCurrentUser();
+            return View(user);
         }
     }
 }
