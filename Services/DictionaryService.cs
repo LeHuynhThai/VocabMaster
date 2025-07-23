@@ -31,7 +31,7 @@ namespace VocabMaster.Services
         {
             try
             {
-                var vocabulary = await _vocabularyRepository.GetRandom();
+                var vocabulary = await _vocabularyRepository.GetRandom(); // GetRandom method in VocabularyRepo
                 if (vocabulary == null)
                 {
                     _logger.LogWarning("No vocabulary found");
@@ -52,11 +52,11 @@ namespace VocabMaster.Services
             try
             {
                 // Get user's learned words
-                var learnedVocabularies = await _learnedVocabularyRepository.GetByUserId(userId);
+                var learnedVocabularies = await _learnedVocabularyRepository.GetByUserId(userId); // GetByUserId method in LearnedWordRepo
                 var learnedWords = learnedVocabularies.Select(lv => lv.Word).ToList();
                 
                 // Get random word excluding learned words
-                var vocabulary = await _vocabularyRepository.GetRandomExcludeLearned(learnedWords);
+                var vocabulary = await _vocabularyRepository.GetRandomExcludeLearned(learnedWords); // GetRandomExcludeLearned method in VocabularyRepo
                 if (vocabulary == null)
                 {
                     _logger.LogWarning("No vocabulary found or all words have been learned");

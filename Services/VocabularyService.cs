@@ -35,7 +35,7 @@ namespace VocabMaster.Services
 
             try
             {
-                var learnedWords = await _learnedVocabularyRepository.GetByUserId(userId);
+                var learnedWords = await _learnedVocabularyRepository.GetByUserId(userId); // GetByUserIdAsync method in LearnedWordRepo
                 if (learnedWords.Any(lv => lv.Word.Equals(word, StringComparison.OrdinalIgnoreCase)))
                 {
                     _logger.LogWarning("User {UserId} tried to mark already learned word: {Word}", userId, word);
@@ -48,7 +48,7 @@ namespace VocabMaster.Services
                     Word = word
                 };
 
-                var addResult = await _learnedVocabularyRepository.Add(learnedVocabulary);
+                var addResult = await _learnedVocabularyRepository.Add(learnedVocabulary); // Add method in LearnedWordRepo
                 if (addResult)
                 {
                     return new MarkWordResult { Success = true };
@@ -71,7 +71,7 @@ namespace VocabMaster.Services
         {
             try
             {
-                return await _learnedVocabularyRepository.GetByUserId(userId); // GetByUserIdAsync method in LearnedVocabularyRepository
+                return await _learnedVocabularyRepository.GetByUserId(userId); // GetByUserId method in LearnedWordRepo
             }
             catch (Exception ex)
             {
@@ -88,7 +88,7 @@ namespace VocabMaster.Services
                 
             try
             {
-                var learnedWords = await _learnedVocabularyRepository.GetByUserId(userId);
+                var learnedWords = await _learnedVocabularyRepository.GetByUserId(userId); // GetByUserId method in LearnedWordRepo
                 var learnedWord = learnedWords.FirstOrDefault(lv => 
                     lv.UserId == userId && 
                     lv.Word.Equals(word, StringComparison.OrdinalIgnoreCase));
@@ -99,7 +99,7 @@ namespace VocabMaster.Services
                     return false;
                 }
                 
-                return await _learnedVocabularyRepository.Delete(learnedWord.Id);
+                return await _learnedVocabularyRepository.Delete(learnedWord.Id); // Delete method in LearnedWordRepo
             }
             catch (Exception ex)
             {

@@ -7,13 +7,7 @@ using VocabMaster.Data.Repositories;
 using VocabMaster.Services;
 using System.IO;
 
-// Set the content root path and web root path
-var builder = WebApplication.CreateBuilder(new WebApplicationOptions
-{
-    ContentRootPath = Directory.GetCurrentDirectory(),
-    WebRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"),
-    Args = args
-});
+var builder = WebApplication.CreateBuilder(args);
 
 // Add configuration
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
