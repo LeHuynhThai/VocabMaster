@@ -20,6 +20,14 @@ namespace VocabMaster.Data.Repositories
             return await _context.Users.FirstOrDefaultAsync(u => u.Name == name); // find
         }
 
+        // get user by id
+        public async Task<User> GetById(int id)
+        {
+            return await _context.Users
+                .Include(u => u.LearnedVocabularies)
+                .FirstOrDefaultAsync(u => u.Id == id);
+        }
+
         // check if user name exists
         public async Task<bool> IsNameExist(string name)
         {

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using AutoMapper;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Services;
@@ -8,10 +9,12 @@ namespace VocabMaster.API.Controllers;
 public class AccountController : Controller
 {
     private readonly IAccountService _accountService;
+    private readonly IMapper _mapper;
 
-    public AccountController(IAccountService accountService)
+    public AccountController(IAccountService accountService, IMapper mapper)
     {
         _accountService = accountService;
+        _mapper = mapper;
     }
 
     [HttpGet]
@@ -52,12 +55,8 @@ public class AccountController : Controller
             return View(model);
         }
 
-        // Create user
-        var user = new User
-        {
-            Name = model.Name, // Set name
-            Password = model.Password // Set password
-        };
+        // Sử dụng AutoMapper để map từ RegisterRequestDto sang User
+        var user = _mapper.Map<User>(model);
 
         // Register user
         if (await _accountService.Register(user))
