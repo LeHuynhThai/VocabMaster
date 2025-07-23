@@ -102,7 +102,7 @@
                                             <td>@(i + 1)</td>
                                             <td class="word-text">@word.Word</td>
                                             <td>
-                                                <form method="post" asp-action="GetWordDefinition" class="d-inline">
+                                                <form method="post" asp-controller="WordGenerator" asp-action="GetWordDefinition" class="d-inline">
                                                     <input type="hidden" name="word" value="@word.Word" />
                                                     <button type="submit" class="btn btn-lookup btn-action" title="Tra từ">
                                                         <i class="bi bi-search"></i>

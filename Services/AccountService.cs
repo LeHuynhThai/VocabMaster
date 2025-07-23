@@ -22,7 +22,7 @@ public class AccountService : IAccountService
     // Login
     public async Task<User> Login(string name, string password)
     {
-        var user = await _userRepository.ValidateUser(name, password); // Validate user
+        var user = await _userRepository.ValidateUser(name, password); // ValidateUser method in UserRepo
         if (user != null) // If user exists
         {
             var userClaims = CreateUserClaims(user); // Create user claims
@@ -60,12 +60,12 @@ public class AccountService : IAccountService
 
     public async Task<bool> Register(User user)
     {
-        if (await _userRepository.IsNameExist(user.Name))
+        if (await _userRepository.IsNameExist(user.Name)) // IsNameExist method in UserRepo
             return false;
 
         user.Password = HashPassword(user.Password);
 
-        await _userRepository.Add(user);
+        await _userRepository.Add(user); // Add method in UserRepo
         return true;
     }
 

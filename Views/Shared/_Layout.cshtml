@@ -92,8 +92,8 @@
                         </a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a class="nav-link @(Context.Request.Path.Value.Contains("/WordGenerator/LearnedWords") ? "active" : "")" 
-                           asp-controller="WordGenerator" asp-action="LearnedWords">
+                        <a class="nav-link @(Context.Request.Path.Value.Contains("/LearnedWord") ? "active" : "")" 
+                           asp-controller="LearnedWord" asp-action="Index">
                             <i class="bi bi-journal-check me-2"></i>
                             Từ vựng đã học
                         </a>

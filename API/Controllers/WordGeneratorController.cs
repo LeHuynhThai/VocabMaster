@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.API.Controllers
@@ -29,32 +27,6 @@ namespace VocabMaster.API.Controllers
             return View();
         }
 
-        [HttpGet]
-        public async Task<IActionResult> LearnedWords()
-        {
-            try
-            {
-                // Get UserId from Claims
-                var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
-                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    _logger.LogError("UserId not found in Claims");
-                    TempData["Error"] = "Please login again";
-                    return RedirectToAction("Index", "Home");
-                }
-
-                // Get learned words
-                var learnedWords = await _vocabularyService.GetUserLearnedVocabularies(userId);
-                return View(learnedWords);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading learned words");
-                TempData["Error"] = "An error occurred. Please try again.";
-                return RedirectToAction("Index");
-            }
-        }
-
         [HttpPost]
         public async Task<IActionResult> GenerateWord()
         {
@@ -68,7 +40,7 @@ namespace VocabMaster.API.Controllers
                     TempData["Error"] = "Please login again";
                     return RedirectToAction("Index", "Home");
                 }
-                
+
                 // Get random word excluding learned words
                 var randomWord = await _dictionaryService.GetRandomWordExcludeLearned(userId);
 
@@ -77,7 +49,7 @@ namespace VocabMaster.API.Controllers
                     _logger.LogError("No word found or all words have been learned");
                     TempData["Error"] = "No word found or all words have been learned";
                     return View("Index");
-                }       
+                }
 
                 ViewBag.RandomWord = randomWord;
                 return View("Index");
@@ -119,7 +91,7 @@ namespace VocabMaster.API.Controllers
                 return View("Index");
             }
         }
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAsLearned(string word)
@@ -162,50 +134,10 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,"Error marking word as learned: {Word}", word);
+                _logger.LogError(ex, "Error marking word as learned: {Word}", word);
                 TempData["Error"] = "An error occurred. Please try again.";
             }
             return RedirectToAction("Index");
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RemoveLearnedWord(string word)
-        {
-            if (string.IsNullOrWhiteSpace(word))
-            {
-                TempData["Error"] = "Từ vựng không được để trống";
-                return RedirectToAction("LearnedWords");
-            }
-
-            // Get UserId from Claims
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-            {
-                _logger.LogError("UserId không hợp lệ hoặc không tìm thấy");
-                TempData["Error"] = "Vui lòng đăng nhập lại";
-                return RedirectToAction("LearnedWords");
-            }
-
-            try
-            {
-                var result = await _vocabularyService.RemoveLearnedWord(userId, word.Trim());
-                if (result)
-                {
-                    TempData["Success"] = $"Đã xóa từ '{word}' khỏi danh sách từ đã học";
-                }
-                else
-                {
-                    TempData["Error"] = "Không thể xóa từ. Vui lòng thử lại.";
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi xóa từ đã học: {Word}", word);
-                TempData["Error"] = "Đã xảy ra lỗi. Vui lòng thử lại.";
-            }
-
-            return RedirectToAction("LearnedWords");
         }
     }
 }
