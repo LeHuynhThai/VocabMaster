@@ -9,6 +9,7 @@ using VocabMaster.Services;
 using System;
 using System.IO;
 using VocabMaster.Core.Mapping;
+using VocabMaster.Data.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,5 +84,8 @@ app.UseSession();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// Seed the database
+await app.SeedDatabaseAsync();
 
 app.Run();
