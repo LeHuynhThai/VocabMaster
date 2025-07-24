@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 
