@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Card, Table, Button, Alert, Spinner } from 'react-bootstrap';
 import vocabularyService from '../services/vocabularyService';
 import { LearnedWord } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * LearnedWords page component
@@ -11,11 +12,16 @@ const LearnedWordsPage: React.FC = () => {
   const [words, setWords] = useState<LearnedWord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuth();
 
   /**
    * Fetch all learned words for the current user
    */
   const fetchLearnedWords = async () => {
+    if (!isAuthenticated) {
+      return; // do not call API if not authenticated
+    }
+    
     setIsLoading(true);
     setError(null);
     
@@ -37,9 +43,13 @@ const LearnedWordsPage: React.FC = () => {
     setIsLoading(true);
     
     try {
-      await vocabularyService.removeLearnedWord(id);
-      // Update the state by removing the word
-      setWords(words.filter(word => word.id !== id));
+      const result = await vocabularyService.removeLearnedWord(id);
+      if (result.success) {
+        // update the state by removing the word
+        setWords(words.filter(word => word.id !== id));
+      } else {
+        setError(result.error || 'Không thể xóa từ này. Vui lòng thử lại sau.');
+      }
     } catch (err) {
       setError('Không thể xóa từ này. Vui lòng thử lại sau.');
       console.error('Error removing word:', err);
@@ -48,10 +58,17 @@ const LearnedWordsPage: React.FC = () => {
     }
   };
 
-  // Load learned words when component mounts
+  // load learned words when component mounts or authentication changes
   useEffect(() => {
+    if (isAuthenticated) {
+      fetchLearnedWords();
+    }
+  }, [isAuthenticated]);
+
+  // retry loading if there was an error
+  const handleRetry = () => {
     fetchLearnedWords();
-  }, []);
+  };
 
   return (
     <Container className="py-4">
@@ -62,11 +79,18 @@ const LearnedWordsPage: React.FC = () => {
         </p>
       </div>
       
-      {error && <Alert variant="danger">{error}</Alert>}
+      {error && (
+        <Alert variant="danger" className="d-flex justify-content-between align-items-center">
+          <div>{error}</div>
+          <Button variant="outline-danger" size="sm" onClick={handleRetry}>
+            Thử lại
+          </Button>
+        </Alert>
+      )}
       
       <Card className="word-card">
         <Card.Body>
-          {isLoading && words.length === 0 ? (
+          {isLoading ? (
             <div className="text-center py-5">
               <Spinner animation="border" role="status" variant="primary">
                 <span className="visually-hidden">Đang tải...</span>
@@ -92,7 +116,7 @@ const LearnedWordsPage: React.FC = () => {
                 </thead>
                 <tbody>
                   {words.map((word, index) => (
-                    <tr key={word.id}>
+                    <tr key={word.id || index}>
                       <td>{index + 1}</td>
                       <td>{word.word}</td>
                       <td className="text-end">
