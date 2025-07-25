@@ -7,6 +7,7 @@
   flex-direction: column;
   gap: 10px;
   max-width: 350px;
+  pointer-events: none; /* Cho phép click xuyên qua container */
 }
 
 .toast-item {
@@ -18,6 +19,20 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   animation: slide-in 0.3s ease-out;
   min-width: 250px;
+  transition: all 0.3s ease;
+  pointer-events: auto; /* Cho phép click trên toast item */
+  overflow: hidden;
+  max-height: 200px;
+}
+
+.toast-exiting {
+  opacity: 0;
+  transform: translateX(100%);
+  max-height: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .toast-success {
@@ -61,6 +76,7 @@
   margin-left: 10px;
   opacity: 0.7;
   transition: opacity 0.2s;
+  pointer-events: auto;
 }
 
 .toast-close:hover {
@@ -71,9 +87,11 @@
   from {
     transform: translateX(100%);
     opacity: 0;
+    max-height: 0;
   }
   to {
     transform: translateX(0);
     opacity: 1;
+    max-height: 200px;
   }
 } 

@@ -290,6 +290,69 @@ namespace VocabMaster.API.Controllers
                 return StatusCode(500, new { message = "An error occurred while checking if the word is learned" });
             }
         }
+
+        /// <summary>
+        /// Adds a word to the user's learned words list
+        /// </summary>
+        /// <param name="word">The word to add to learned list</param>
+        /// <returns>Result of the operation</returns>
+        /// <response code="200">Returns success status</response>
+        /// <response code="400">If the word parameter is null or empty</response>
+        /// <response code="401">If the user is not authenticated</response>
+        /// <response code="500">If an error occurs during processing</response>
+        [HttpPost("learned/{word}")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 400)]
+        [ProducesResponseType(typeof(object), 401)]
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> AddLearnedWord(string word)
+        {
+            if (string.IsNullOrWhiteSpace(word))
+            {
+                _logger.LogWarning("Word parameter is null or empty");
+                return BadRequest(new { message = "Word cannot be empty" });
+            }
+
+            try
+            {
+                var userId = GetUserIdFromClaims();
+                if (userId <= 0)
+                {
+                    _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
+                    return Unauthorized(new { message = "Invalid user authentication" });
+                }
+
+                // Normalize the word
+                word = word.Trim().ToLowerInvariant();
+
+                _logger.LogInformation("Adding word '{Word}' to learned list for user {UserId}", word, userId);
+                var result = await _vocabularyService.AddLearnedWord(userId, word);
+
+                if (result)
+                {
+                    // Invalidate caches that might be affected
+                    if (_cache != null)
+                    {
+                        _cache.Remove($"{RandomWordCacheKey}{userId}");
+                        _cache.Remove($"{LookupCacheKey}{word}_{userId}");
+                        _logger.LogInformation("Invalidated caches for user {UserId} after adding learned word", userId);
+                    }
+
+                    _logger.LogInformation("Successfully added word '{Word}' to learned list for user {UserId}", word, userId);
+                    return Ok(new { success = true, message = $"Word '{word}' added to learned words" });
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to add word '{Word}' to learned list for user {UserId}", word, userId);
+                    return BadRequest(new { success = false, message = $"Failed to add word '{word}' to learned words" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding word '{Word}' to learned list", word);
+                return StatusCode(500, new { success = false, message = "An error occurred while adding the word to learned list" });
+            }
+        }
         
         /// <summary>
         /// Gets the user ID from the claims principal
