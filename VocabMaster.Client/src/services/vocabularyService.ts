@@ -68,8 +68,20 @@ const vocabularyService = {
    * @returns Result of the operation
    */
   addLearnedWord: async (word: string): Promise<any> => {
-    const response = await api.post('/api/learnedword', { word });
-    return response.data;
+    try {
+      const response = await api.post(`/api/wordgenerator/learned/${encodeURIComponent(word)}`);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error: any) {
+      console.error('Error adding learned word:', error);
+      // Trả về đối tượng lỗi thay vì ném ngoại lệ
+      return {
+        success: false,
+        error: error?.response?.data?.message || 'Không thể lưu từ vựng'
+      };
+    }
   },
 
   /**

@@ -9,7 +9,7 @@ interface ToastProps {
 
 const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
   return (
-    <div className={`toast-item toast-${toast.type}`}>
+    <div className={`toast-item toast-${toast.type} ${toast.isExiting ? 'toast-exiting' : ''}`}>
       <div className="toast-content">
         <span className="toast-message">{toast.message}</span>
       </div>

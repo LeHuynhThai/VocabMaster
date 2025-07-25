@@ -26,6 +26,7 @@ const WordGeneratorPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searching, setSearching] = useState(false);
+  const [saving, setSaving] = useState(false);
   const { addToast } = useToast();
 
   const fetchRandomWord = useCallback(async () => {
@@ -79,22 +80,31 @@ const WordGeneratorPage: React.FC = () => {
     }
   };
 
-  const handleSaveWord = async () => {
-    if (!word) return;
+  const handleSaveWord = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (!word || saving) return;
+    
+    setSaving(true);
     
     try {
-      await vocabularyService.addLearnedWord(word.word);
-      addToast({
-        type: 'success',
-        message: `Đã lưu từ "${word.word}" vào danh sách từ đã học.`
-      });
+      const result = await vocabularyService.addLearnedWord(word.word);
       
-      // Refresh word to update isLearned status
-      if (searchTerm) {
-        const updatedWord = await vocabularyService.lookup(word.word);
+      if (result.success) {
+        // Cập nhật trạng thái từ hiện tại
+        const updatedWord = { ...word, isLearned: true };
         setWord(updatedWord);
+        
+        // Hiển thị thông báo thành công
+        addToast({
+          type: 'success',
+          message: `Đã lưu từ "${word.word}" vào danh sách từ đã học.`
+        });
       } else {
-        fetchNewRandomWord();
+        // Hiển thị thông báo lỗi
+        addToast({
+          type: 'error',
+          message: result.error || 'Không thể lưu từ vựng. Vui lòng thử lại sau.'
+        });
       }
     } catch (error) {
       console.error('Error saving word:', error);
@@ -102,6 +112,8 @@ const WordGeneratorPage: React.FC = () => {
         type: 'error',
         message: 'Không thể lưu từ vựng. Vui lòng thử lại sau.'
       });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -149,8 +161,14 @@ const WordGeneratorPage: React.FC = () => {
         <div className="word-container">
           <div className="word-header">
             <h2 className="word-title">{word.word}</h2>
-            
-            {word.pronunciations && word.pronunciations.length > 0 && (
+          </div>
+
+          {word.pronunciations && word.pronunciations.length > 0 && (
+            <div className="pronunciation-section">
+              <h3 className="pronunciation-title">
+                <i className="bi bi-volume-up me-2"></i>
+                Phát âm
+              </h3>
               <div className="pronunciation-container">
                 {word.pronunciations.map((pronunciation: Pronunciation, index: number) => (
                   <div key={index} className="pronunciation-item">
@@ -163,14 +181,14 @@ const WordGeneratorPage: React.FC = () => {
                         className="pronunciation-button"
                         onClick={() => playAudio(pronunciation.audio)}
                       >
-                        <i className="bi bi-volume-up"></i>
+                        <i className="bi bi-play-circle-fill"></i>
                       </Button>
                     )}
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {word.meanings && word.meanings.length > 0 && (
             <div className="meanings-container">
@@ -227,10 +245,14 @@ const WordGeneratorPage: React.FC = () => {
             <Button 
               variant={word.isLearned ? "success" : "outline-success"} 
               onClick={handleSaveWord}
-              disabled={word.isLearned || loading}
+              disabled={word.isLearned || loading || saving}
             >
-              <i className={`bi ${word.isLearned ? "bi-check-circle-fill" : "bi-plus-circle"} me-1`}></i>
-              {word.isLearned ? 'Đã lưu' : 'Lưu từ này'}
+              {saving ? (
+                <Spinner animation="border" size="sm" className="me-1" />
+              ) : (
+                <i className={`bi ${word.isLearned ? "bi-check-circle-fill" : "bi-plus-circle"} me-1`}></i>
+              )}
+              {word.isLearned ? 'Đã lưu' : saving ? 'Đang lưu...' : 'Lưu từ này'}
             </Button>
           </div>
         </div>

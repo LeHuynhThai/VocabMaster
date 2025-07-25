@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || '';
 
@@ -15,7 +15,12 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // You can add auth token here if needed
+    // Ngăn chặn các sự kiện mặc định có thể gây reload trang
+    if (config.method?.toLowerCase() === 'post' || config.method?.toLowerCase() === 'put') {
+      if (config.headers) {
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+      }
+    }
     return config;
   },
   (error) => {
@@ -26,17 +31,24 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // Không tự động chuyển hướng khi 401 để tránh vòng lặp vô tận
-    // Chỉ log lỗi và để component xử lý
-    if (error.response) {
+  (error: AxiosError) => {
+    // Ngăn chặn các hành vi mặc định có thể gây reload trang
+    if (error.config && error.response) {
+      // Ghi log lỗi nhưng không làm gián đoạn luồng ứng dụng
       console.log(`API Error: ${error.response.status} - ${error.response.statusText}`);
+      
+      // Xử lý lỗi 401 Unauthorized mà không reload trang
+      if (error.response.status === 401) {
+        console.log('Authentication error - not redirecting automatically');
+        // Không tự động chuyển hướng, để component xử lý
+      }
     } else if (error.request) {
       console.log('API Error: No response received');
     } else {
       console.log('API Error:', error.message);
     }
     
+    // Trả về lỗi để component có thể xử lý
     return Promise.reject(error);
   }
 );
