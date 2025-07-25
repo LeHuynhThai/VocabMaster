@@ -1,26 +1,36 @@
 /**
- * Application constants
+ * Application routes
  */
+export const ROUTES = {
+  HOME: '/home',
+  LOGIN: '/login',
+  REGISTER: '/register',
+  WORD_GENERATOR: '/word-generator',
+  LEARNED_WORDS: '/learned-words',
+  NOT_FOUND: '/not-found'
+};
 
-// API endpoints
+/**
+ * API endpoints
+ */
 export const API_ENDPOINTS = {
   LOGIN: '/api/account/login',
   REGISTER: '/api/account/register',
   LOGOUT: '/api/account/logout',
   CURRENT_USER: '/api/account/currentuser',
   RANDOM_WORD: '/api/wordgenerator/getrandomword',
-  LOOKUP_WORD: (word: string) => `/api/wordgenerator/lookup/${word}`,
-  LEARNED_WORDS: '/api/learnedword',
-  DELETE_LEARNED_WORD: (id: number) => `/api/learnedword/${id}`
+  NEW_RANDOM_WORD: '/api/wordgenerator/getnewrandomword',
+  LOOKUP_WORD: '/api/wordgenerator/lookup',
+  IS_LEARNED: '/api/wordgenerator/islearned',
+  LEARNED_WORDS: '/api/learnedword'
 };
 
-// Routes
-export const ROUTES = {
-  HOME: '/',
-  LOGIN: '/login',
-  REGISTER: '/register',
-  WORD_GENERATOR: '/wordgenerator',
-  LEARNED_WORDS: '/learnedwords'
+/**
+ * Local storage keys
+ */
+export const STORAGE_KEYS = {
+  AUTH_TOKEN: 'auth_token',
+  USER: 'user_info'
 };
 
 // Messages

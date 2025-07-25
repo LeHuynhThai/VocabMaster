@@ -1,308 +1,246 @@
-import React, { useState } from 'react';
-import { Container, Card, Button, Spinner, ListGroup, Row, Col, Form, InputGroup } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Container, Row, Col, Button, Form, InputGroup, Spinner } from 'react-bootstrap';
+import { useToast } from '../contexts/ToastContext';
 import vocabularyService from '../services/vocabularyService';
-import { Vocabulary, DictionaryResponse } from '../types';
-import Toast, { ToastProps } from '../components/ui/Toast';
-import ToastContainer from '../components/ui/ToastContainer';
+import { Vocabulary, Pronunciation, Meaning } from '../types';
 import './WordGeneratorPage.css';
 
-/**
- * WordGenerator page component
- * Allows users to get random words and look up their definitions
- */
-const WordGeneratorPage: React.FC = () => {
-  const [currentWord, setCurrentWord] = useState<Vocabulary | null>(null);
-  const [wordDetails, setWordDetails] = useState<DictionaryResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+// Hàm lấy class CSS dựa trên loại từ
+const getPartOfSpeechClass = (partOfSpeech: string): string => {
+  const pos = partOfSpeech.toLowerCase();
   
-  // Toast notification state
-  const [toast, setToast] = useState<{
-    show: boolean;
-    type: ToastProps['type'];
-    message: string;
-  }>({
-    show: false,
-    type: 'success',
-    message: ''
-  });
+  if (pos.includes('noun')) return 'pos-noun';
+  if (pos.includes('verb')) return 'pos-verb';
+  if (pos.includes('adjective')) return 'pos-adjective';
+  if (pos.includes('adverb')) return 'pos-adverb';
+  if (pos.includes('pronoun')) return 'pos-pronoun';
+  if (pos.includes('preposition')) return 'pos-preposition';
+  if (pos.includes('conjunction')) return 'pos-conjunction';
+  if (pos.includes('interjection')) return 'pos-interjection';
+  
+  return '';
+};
 
-  /**
-   * Fetch a random word from the API
-   */
-  const fetchRandomWord = async () => {
-    setIsLoading(true);
-    setError(null);
-    setSearchTerm('');
-    
+const WordGeneratorPage: React.FC = () => {
+  const [word, setWord] = useState<Vocabulary | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searching, setSearching] = useState(false);
+  const { addToast } = useToast();
+
+  const fetchRandomWord = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await vocabularyService.getRandomWord();
-      setCurrentWord(response);
-      
-      // If response already contains dictionary information, use it directly
-      if (response.phonetic && response.meanings) {
-        setWordDetails({
-          word: response.word,
-          phonetic: response.phonetic,
-          phonetics: response.phonetics || [],
-          meanings: response.meanings || []
-        });
-      } else {
-        // Otherwise, look up the word definition
-        await lookupWord(response.word);
-      }
-    } catch (err) {
-      setError('Không thể tải từ ngẫu nhiên. Vui lòng thử lại sau.');
-      console.error('Error fetching random word:', err);
+      const data = await vocabularyService.getRandomWord();
+      setWord(data);
+    } catch (error) {
+      console.error('Error fetching random word:', error);
+      addToast({
+        type: 'error',
+        message: 'Không thể lấy từ vựng ngẫu nhiên. Vui lòng thử lại sau.'
+      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  };
+  }, [addToast]);
 
-  /**
-   * Look up the definition of a word
-   * @param word - The word to look up
-   */
-  const lookupWord = async (word: string) => {
-    setIsLoading(true);
-    setError(null);
-    
+  const fetchNewRandomWord = useCallback(async () => {
+    setLoading(true);
     try {
-      const details = await vocabularyService.lookupWord(word);
-      setWordDetails(details);
-      setCurrentWord({ id: 0, word: details.word });
-    } catch (err) {
-      setError('Không thể tìm định nghĩa cho từ này.');
-      console.error('Error looking up word:', err);
+      const data = await vocabularyService.getNewRandomWord();
+      setWord(data);
+    } catch (error) {
+      console.error('Error fetching new random word:', error);
+      addToast({
+        type: 'error',
+        message: 'Không thể lấy từ vựng mới. Vui lòng thử lại sau.'
+      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  };
+  }, [addToast]);
 
-  /**
-   * Handle search form submission
-   */
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchTerm.trim()) {
-      lookupWord(searchTerm.trim());
-    }
-  };
-
-  /**
-   * Save current word to user's learned words
-   */
-  const saveWord = async () => {
-    if (!currentWord) return;
+    if (!searchTerm.trim()) return;
     
-    setIsLoading(true);
+    setSearching(true);
     try {
-      await vocabularyService.addLearnedWord(currentWord.word);
-      
-      // Show success toast notification
-      setToast({
-        show: true,
-        type: 'success',
-        message: `Từ "${currentWord.word}" đã được lưu vào danh sách từ đã học.`
-      });
-      
-    } catch (err) {
-      setError('Không thể lưu từ này. Vui lòng thử lại sau.');
-      console.error('Error saving word:', err);
-      
-      // Show error toast notification
-      setToast({
-        show: true,
-        type: 'danger',
-        message: 'Không thể lưu từ này. Vui lòng thử lại sau.'
+      const data = await vocabularyService.lookup(searchTerm.trim());
+      setWord(data);
+    } catch (error) {
+      console.error('Error searching for word:', error);
+      addToast({
+        type: 'error',
+        message: `Không tìm thấy từ "${searchTerm}". Vui lòng kiểm tra lại.`
       });
     } finally {
-      setIsLoading(false);
+      setSearching(false);
     }
   };
 
-  /**
-   * Handle toast close event
-   */
-  const handleToastClose = () => {
-    setToast(prev => ({ ...prev, show: false }));
+  const handleSaveWord = async () => {
+    if (!word) return;
+    
+    try {
+      await vocabularyService.addLearnedWord(word.word);
+      addToast({
+        type: 'success',
+        message: `Đã lưu từ "${word.word}" vào danh sách từ đã học.`
+      });
+      
+      // Refresh word to update isLearned status
+      if (searchTerm) {
+        const updatedWord = await vocabularyService.lookup(word.word);
+        setWord(updatedWord);
+      } else {
+        fetchNewRandomWord();
+      }
+    } catch (error) {
+      console.error('Error saving word:', error);
+      addToast({
+        type: 'error',
+        message: 'Không thể lưu từ vựng. Vui lòng thử lại sau.'
+      });
+    }
   };
+
+  const playAudio = (audioUrl: string) => {
+    if (!audioUrl) return;
+    
+    const audio = new Audio(audioUrl);
+    audio.play().catch(error => {
+      console.error('Error playing audio:', error);
+      addToast({
+        type: 'error',
+        message: 'Không thể phát âm thanh. Vui lòng thử lại sau.'
+      });
+    });
+  };
+
+  useEffect(() => {
+    fetchRandomWord();
+  }, [fetchRandomWord]);
 
   return (
-    <Container className="py-4">
-      {/* Page title */}
-      <div className="page-header">
-        <h1 className="page-title">Từ vựng mới</h1>
-        <p className="page-description">
-          Học từ mới mỗi ngày để cải thiện vốn từ vựng của bạn
-        </p>
-      </div>
+    <Container className="word-generator-page">
+      <h1 className="page-title">Từ Vựng Mới</h1>
       
-      {/* Search form */}
-      <Card className="search-card mb-4">
-        <Card.Body>
-          <Form onSubmit={handleSearch}>
-            <Form.Group>
-              <Form.Label>Tra từ điển</Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type="text"
-                  placeholder="Nhập từ cần tra cứu..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <Button 
-                  variant="primary" 
-                  type="submit"
-                  disabled={isLoading || !searchTerm.trim()}
-                >
-                  <i className="bi bi-search me-1"></i> Tra cứu
-                </Button>
-              </InputGroup>
-            </Form.Group>
-          </Form>
-        </Card.Body>
-      </Card>
-      
-      {/* Word card */}
-      <Card className="word-card mb-4">
-        <Card.Body>
-          {isLoading ? (
-            <div className="text-center py-5">
-              <Spinner animation="border" role="status" variant="primary">
-                <span className="visually-hidden">Đang tải...</span>
-              </Spinner>
-            </div>
-          ) : error ? (
-            <div className="text-center py-4">
-              <p className="text-danger">{error}</p>
-              <Button variant="primary" onClick={fetchRandomWord} className="action-button-primary">
-                Thử lại
-              </Button>
-            </div>
-          ) : !currentWord ? (
-            <div className="text-center py-5">
-              <p className="mb-4">Nhấn nút bên dưới để bắt đầu học từ mới</p>
-              <Button 
-                variant="primary" 
-                onClick={fetchRandomWord}
-                className="action-button-primary"
-                size="lg"
-              >
-                <i className="bi bi-play-circle me-2"></i>
-                Bắt đầu
-              </Button>
-            </div>
-          ) : (
-            <div>
-              {/* Word header section */}
-              <div className="word-header text-center mb-4">
-                <h2 className="word-title">{currentWord.word}</h2>
-                {wordDetails?.phonetic && (
-                  <p className="word-phonetic">{wordDetails.phonetic}</p>
-                )}
-                
-                {/* Audio pronunciation */}
-                {wordDetails?.phonetics && wordDetails.phonetics.some(p => p.audio) && (
-                  <div className="audio-container">
-                    <audio controls className="audio-player">
-                      <source 
-                        src={wordDetails.phonetics.find(p => p.audio)?.audio} 
-                        type="audio/mpeg" 
-                      />
-                      Trình duyệt của bạn không hỗ trợ phát âm thanh.
-                    </audio>
+      <Form onSubmit={handleSearch} className="search-form mb-4">
+        <InputGroup>
+          <Form.Control
+            type="text"
+            placeholder="Nhập từ cần tra cứu..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <Button variant="primary" type="submit" disabled={searching}>
+            {searching ? <Spinner animation="border" size="sm" /> : 'Tra cứu'}
+          </Button>
+        </InputGroup>
+      </Form>
+
+      {loading ? (
+        <div className="text-center my-5">
+          <Spinner animation="border" />
+          <p className="mt-2">Đang tải từ vựng...</p>
+        </div>
+      ) : word ? (
+        <div className="word-container">
+          <div className="word-header">
+            <h2 className="word-title">{word.word}</h2>
+            
+            {word.pronunciations && word.pronunciations.length > 0 && (
+              <div className="pronunciation-container">
+                {word.pronunciations.map((pronunciation: Pronunciation, index: number) => (
+                  <div key={index} className="pronunciation-item">
+                    {pronunciation.text && (
+                      <span className="pronunciation-text">{pronunciation.text}</span>
+                    )}
+                    {pronunciation.audio && (
+                      <Button 
+                        variant="link" 
+                        className="pronunciation-button"
+                        onClick={() => playAudio(pronunciation.audio)}
+                      >
+                        <i className="bi bi-volume-up"></i>
+                      </Button>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
-              
-              {/* Word definitions */}
-              {wordDetails && wordDetails.meanings && (
-                <div className="word-meanings">
-                  {wordDetails.meanings.map((meaning, index) => (
-                    <div key={index} className="meaning-section">
-                      <h5 className="part-of-speech">
-                        <span className="badge">{meaning.partOfSpeech}</span>
-                      </h5>
+            )}
+          </div>
+
+          {word.meanings && word.meanings.length > 0 && (
+            <div className="meanings-container">
+              {word.meanings.map((meaning: Meaning, index: number) => (
+                <div key={index} className="meaning-item">
+                  <div className="part-of-speech-container">
+                    <span className={`part-of-speech ${getPartOfSpeechClass(meaning.partOfSpeech)}`}>
+                      {meaning.partOfSpeech}
+                    </span>
+                  </div>
+                  
+                  {meaning.definitions.map((definition, defIndex) => (
+                    <div key={defIndex} className="definition-item">
+                      <p className="definition-text">
+                        <span className="definition-number">{defIndex + 1}.</span> {definition.text}
+                      </p>
                       
-                      <ListGroup variant="flush" className="definitions-list">
-                        {meaning.definitions.map((def, defIndex) => (
-                          <ListGroup.Item key={defIndex} className="definition-item">
-                            <div className="definition-text">{def.text}</div>
-                            
-                            {def.example && (
-                              <div className="definition-example">
-                                "{def.example}"
-                              </div>
-                            )}
-                            
-                            {/* Synonyms */}
-                            {def.synonyms && def.synonyms.length > 0 && (
-                              <div className="definition-synonyms">
-                                <strong>Từ đồng nghĩa:</strong> {def.synonyms.join(', ')}
-                              </div>
-                            )}
-                            
-                            {/* Antonyms */}
-                            {def.antonyms && def.antonyms.length > 0 && (
-                              <div className="definition-antonyms">
-                                <strong>Từ trái nghĩa:</strong> {def.antonyms.join(', ')}
-                              </div>
-                            )}
-                          </ListGroup.Item>
-                        ))}
-                      </ListGroup>
+                      {definition.example && (
+                        <p className="definition-example">
+                          <i className="bi bi-quote"></i> {definition.example}
+                        </p>
+                      )}
+                      
+                      {definition.synonyms && definition.synonyms.length > 0 && (
+                        <div className="synonyms">
+                          <span className="synonyms-label">Từ đồng nghĩa:</span>
+                          <span className="synonyms-list">{definition.synonyms.join(', ')}</span>
+                        </div>
+                      )}
+                      
+                      {definition.antonyms && definition.antonyms.length > 0 && (
+                        <div className="antonyms">
+                          <span className="antonyms-label">Từ trái nghĩa:</span>
+                          <span className="antonyms-list">{definition.antonyms.join(', ')}</span>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
-              )}
+              ))}
             </div>
           )}
-        </Card.Body>
-        
-        {/* Card footer with actions */}
-        {currentWord && (
-          <Card.Footer className="word-actions">
-            <Row>
-              <Col xs={12} md={6} className="mb-2 mb-md-0">
-                <Button 
-                  variant="outline-primary" 
-                  className="action-button"
-                  onClick={fetchRandomWord}
-                  disabled={isLoading}
-                >
-                  <i className="bi bi-arrow-repeat me-2"></i>
-                  Từ khác
-                </Button>
-              </Col>
-              
-              <Col xs={12} md={6}>
-                <Button 
-                  variant="primary"
-                  className="action-button"
-                  onClick={saveWord}
-                  disabled={isLoading || !currentWord}
-                >
-                  <i className="bi bi-bookmark-plus me-2"></i>
-                  Lưu từ này
-                </Button>
-              </Col>
-            </Row>
-          </Card.Footer>
-        )}
-      </Card>
-      
-      {/* Toast notification */}
-      {toast.show && (
-        <ToastContainer>
-          <Toast 
-            show={toast.show}
-            type={toast.type}
-            message={toast.message}
-            onClose={handleToastClose}
-          />
-        </ToastContainer>
+
+          <div className="word-actions mt-4">
+            <Button 
+              variant="primary" 
+              onClick={fetchNewRandomWord}
+              disabled={loading}
+              className="me-2"
+            >
+              <i className="bi bi-shuffle me-1"></i> Từ vựng mới
+            </Button>
+            
+            <Button 
+              variant={word.isLearned ? "success" : "outline-success"} 
+              onClick={handleSaveWord}
+              disabled={word.isLearned || loading}
+            >
+              <i className={`bi ${word.isLearned ? "bi-check-circle-fill" : "bi-plus-circle"} me-1`}></i>
+              {word.isLearned ? 'Đã lưu' : 'Lưu từ này'}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center my-5">
+          <p>Không tìm thấy từ vựng. Vui lòng thử lại.</p>
+          <Button variant="primary" onClick={fetchRandomWord}>
+            Tải từ vựng ngẫu nhiên
+          </Button>
+        </div>
       )}
     </Container>
   );

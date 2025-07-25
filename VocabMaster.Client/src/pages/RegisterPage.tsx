@@ -35,7 +35,7 @@ const RegisterPage: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const success = await register({ name: username, password });
+      const success = await register({ name: username, password, confirmPassword });
       if (success) {
         // Redirect to login with success message
         navigate('/login', { 

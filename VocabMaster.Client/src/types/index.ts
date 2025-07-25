@@ -1,4 +1,6 @@
-// User related types
+/**
+ * User information
+ */
 export interface User {
   id: number;
   name: string;
@@ -6,52 +8,76 @@ export interface User {
   learnedWordsCount?: number;
 }
 
-export interface LoginRequest {
-  name: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  name: string;
-  password: string;
-}
-
-// Vocabulary related types
-export interface Vocabulary {
-  id: number;
-  word: string;
-  phonetic?: string;
-  phonetics?: Phonetic[];
-  meanings?: Meaning[];
-}
-
-export interface LearnedWord {
-  id: number;
-  word: string;
-  userId: number;
-}
-
-// Dictionary response types
-export interface DictionaryResponse {
-  word: string;
-  phonetic: string;
-  phonetics: Phonetic[];
-  meanings: Meaning[];
-}
-
-export interface Phonetic {
+/**
+ * Pronunciation information
+ */
+export interface Pronunciation {
   text: string;
   audio: string;
 }
 
-export interface Meaning {
-  partOfSpeech: string;
-  definitions: Definition[];
-}
-
+/**
+ * Definition information
+ */
 export interface Definition {
   text: string;
   example: string;
   synonyms: string[];
   antonyms: string[];
+}
+
+/**
+ * Meaning information
+ */
+export interface Meaning {
+  partOfSpeech: string;
+  definitions: Definition[];
+}
+
+/**
+ * Vocabulary information
+ */
+export interface Vocabulary {
+  id: number;
+  word: string;
+  phonetic: string;
+  pronunciations: Pronunciation[];
+  meanings: Meaning[];
+  isLearned: boolean;
+}
+
+/**
+ * Learned word information
+ */
+export interface LearnedWord {
+  id: number;
+  word: string;
+  learnedDate?: string;
+}
+
+/**
+ * Login request information
+ */
+export interface LoginRequest {
+  name: string;
+  password: string;
+}
+
+/**
+ * Register request information
+ */
+export interface RegisterRequest {
+  name: string;
+  password: string;
+  confirmPassword: string;
+}
+
+/**
+ * Toast notification information
+ */
+export interface Toast {
+  id: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+  message: string;
+  duration?: number;
 } 
