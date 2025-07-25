@@ -1,7 +1,9 @@
 import React from 'react';
 import { Container } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { getAvatarText } from '../../utils/helpers';
+import { ROUTES, MESSAGES } from '../../utils/constants';
 import './Header.css';
 
 /**
@@ -19,9 +21,9 @@ const Header: React.FC = () => {
     e.preventDefault();
     try {
       await logout();
-      console.log("Đăng xuất thành công");
+      console.log(MESSAGES.LOGOUT_SUCCESS);
       // Redirect to login page after successful logout
-      navigate('/login');
+      navigate(ROUTES.LOGIN);
     } catch (error) {
       console.error("Lỗi đăng xuất:", error);
     }
@@ -32,7 +34,7 @@ const Header: React.FC = () => {
       <Container fluid className="header-container">
         {/* App Logo and Brand */}
         <div className="header-brand">
-          <Link to="/" className="navbar-brand d-flex align-items-center">
+          <Link to={ROUTES.HOME} className="navbar-brand d-flex align-items-center">
             <div className="logo-container">
               <i className="bi bi-book-half"></i>
             </div>
@@ -60,10 +62,10 @@ const Header: React.FC = () => {
             </div>
           ) : (
             <div className="auth-buttons">
-              <Link to="/login" className="login-button">
+              <Link to={ROUTES.LOGIN} className="login-button">
                 <i className="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
               </Link>
-              <Link to="/register" className="register-button">
+              <Link to={ROUTES.REGISTER} className="register-button">
                 <i className="bi bi-person-plus me-1"></i> Đăng ký
               </Link>
             </div>

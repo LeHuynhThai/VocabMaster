@@ -1,0 +1,25 @@
+.app-footer {
+  background-color: var(--gray-100);
+  color: var(--gray-700);
+  margin-top: var(--spacing-xl);
+  border-top: 1px solid var(--gray-200);
+  padding: var(--spacing-md) 0;
+  height: var(--footer-height);
+  display: flex;
+  align-items: center;
+}
+
+.footer-logo {
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  color: var(--primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-footer {
+    padding: var(--spacing-sm) 0;
+    height: 60px;
+  }
+} 

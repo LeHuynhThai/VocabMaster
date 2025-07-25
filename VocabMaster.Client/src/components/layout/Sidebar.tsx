@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { getAvatarText } from '../../utils/helpers';
+import { ROUTES } from '../../utils/constants';
 import './Sidebar.css';
 
 /**
@@ -32,7 +34,7 @@ const Sidebar: React.FC = () => {
           <div className="sidebar-profile">
             <div className="avatar-container">
               <div className="avatar">
-                {user.name.charAt(0).toUpperCase()}
+                {getAvatarText(user.name)}
               </div>
             </div>
             <div className="user-info">
@@ -45,22 +47,22 @@ const Sidebar: React.FC = () => {
         <nav className="sidebar-nav">
           <h6 className="nav-title">Menu</h6>
           <ul className="nav-list">
-            <li className={`nav-item ${isActive('/') ? 'active' : ''}`}>
-              <Link to="/" className="nav-link">
+            <li className={`nav-item ${isActive(ROUTES.HOME) ? 'active' : ''}`}>
+              <Link to={ROUTES.HOME} className="nav-link">
                 <i className="bi bi-house-door"></i>
                 <span>Trang chủ</span>
               </Link>
             </li>
             
-            <li className={`nav-item ${isActive('/wordgenerator') ? 'active' : ''}`}>
-              <Link to="/wordgenerator" className="nav-link">
+            <li className={`nav-item ${isActive(ROUTES.WORD_GENERATOR) ? 'active' : ''}`}>
+              <Link to={ROUTES.WORD_GENERATOR} className="nav-link">
                 <i className="bi bi-translate"></i>
                 <span>Từ vựng mới</span>
               </Link>
             </li>
             
-            <li className={`nav-item ${isActive('/learnedwords') ? 'active' : ''}`}>
-              <Link to="/learnedwords" className="nav-link">
+            <li className={`nav-item ${isActive(ROUTES.LEARNED_WORDS) ? 'active' : ''}`}>
+              <Link to={ROUTES.LEARNED_WORDS} className="nav-link">
                 <i className="bi bi-journal-text"></i>
                 <span>Từ đã học</span>
               </Link>
