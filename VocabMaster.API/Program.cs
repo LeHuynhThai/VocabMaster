@@ -19,6 +19,18 @@ builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
     .AddEnvironmentVariables();
 
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ReactAppPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -49,6 +61,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LogoutPath = "/Account/Logout";
         options.Cookie.Name = "VocabMaster.Auth";
         options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
         options.SlidingExpiration = true; // reset the expiration time on each request
     });
 
@@ -73,6 +86,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
+// Add CORS middleware
+app.UseCors("ReactAppPolicy");
 
 // Add Authentication & Authorization middleware
 app.UseAuthentication();
