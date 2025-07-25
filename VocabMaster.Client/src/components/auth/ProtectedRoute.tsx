@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../utils/constants';
@@ -12,9 +12,27 @@ interface ProtectedRouteProps {
  */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ element }) => {
   const { isAuthenticated, isLoading } = useAuth();
+  const [showLoader, setShowLoader] = useState<boolean>(true);
+  const [initialCheckDone, setInitialCheckDone] = useState<boolean>(false);
   
-  // While checking authentication status, show loading
-  if (isLoading) {
+  // only show loading spinner after a short delay to avoid UI flickering when loading quickly
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowLoader(false);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // mark when auth check is done
+  useEffect(() => {
+    if (!isLoading) {
+      setInitialCheckDone(true);
+    }
+  }, [isLoading]);
+  
+  // when loading and not done yet, show spinner
+  if ((isLoading || !initialCheckDone) && showLoader) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
         <div className="spinner-border text-primary" role="status">
@@ -24,12 +42,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ element }) => {
     );
   }
   
-  // Redirect to login if not authenticated
-  return isAuthenticated ? (
-    <>{element}</>
-  ) : (
-    <Navigate to={ROUTES.LOGIN} replace state={{ message: "Vui lòng đăng nhập để tiếp tục" }} />
-  );
+  // if auth check is done and not authenticated, redirect to login page
+  if (initialCheckDone && !isAuthenticated) {
+    return <Navigate to={ROUTES.LOGIN} replace state={{ message: "Vui lòng đăng nhập để tiếp tục" }} />;
+  }
+  
+  // if loading is done or authenticated, show content
+  return <>{element}</>;
 };
 
 export default ProtectedRoute; 
