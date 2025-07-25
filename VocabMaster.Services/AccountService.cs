@@ -79,7 +79,7 @@ public class AccountService : IAccountService
     {
         if (_httpContextAccessor.HttpContext != null)
         {
-            _httpContextAccessor.HttpContext.Session.Clear();
+            // Cookie Authentication
             await _httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         }
     }

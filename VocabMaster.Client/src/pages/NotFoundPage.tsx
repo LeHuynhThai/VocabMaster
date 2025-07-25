@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
 /**
@@ -16,10 +16,10 @@ const NotFoundPage: React.FC = () => {
           <p className="lead mb-5">
             Trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.
           </p>
-          <Button as={Link} to="/" variant="primary" size="lg">
+          <Link to="/" className="btn btn-primary btn-lg">
             <i className="bi bi-house-door me-2"></i>
             Trở về trang chủ
-          </Button>
+          </Link>
         </Col>
       </Row>
     </Container>

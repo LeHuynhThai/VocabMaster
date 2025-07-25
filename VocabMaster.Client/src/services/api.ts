@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || '';
 
@@ -9,6 +9,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true, // Important for cookies/auth
+  timeout: 10000, // 10 seconds timeout
 });
 
 // Request interceptor
@@ -26,12 +27,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const { response } = error;
-    
-    // Handle common errors
-    if (response && response.status === 401) {
-      // Unauthorized - redirect to login
-      window.location.href = '/login';
+    // Không tự động chuyển hướng khi 401 để tránh vòng lặp vô tận
+    // Chỉ log lỗi và để component xử lý
+    if (error.response) {
+      console.log(`API Error: ${error.response.status} - ${error.response.statusText}`);
+    } else if (error.request) {
+      console.log('API Error: No response received');
+    } else {
+      console.log('API Error:', error.message);
     }
     
     return Promise.reject(error);

@@ -32,7 +32,11 @@ builder.Services.AddCors(options =>
 });
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllers();
+
+// Add Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
@@ -47,23 +51,36 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromDays(7);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
-
-// Use connection string from appsettings.json
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext")));
 
 // Add Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Account/Login";
-        options.LogoutPath = "/Account/Logout";
+        options.LoginPath = "/api/account/login";
+        options.LogoutPath = "/api/account/logout";
         options.Cookie.Name = "VocabMaster.Auth";
         options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SameSite = SameSiteMode.None; // change to None to allow cross-origin requests
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // make sure the cookie is secure
         options.SlidingExpiration = true; // reset the expiration time on each request
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
     });
+
+// Use connection string from appsettings.json
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext")));
 
 // Register repositories and services
 builder.Services.AddScoped<IUserRepo, UserRepo>();
@@ -76,32 +93,34 @@ builder.Services.AddScoped<IDictionaryService, DictionaryService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+else
+{
+    app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
 
 // Add CORS middleware
 app.UseCors("ReactAppPolicy");
+
+// Add Session middleware
+app.UseSession();
 
 // Add Authentication & Authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Add Session middleware
-app.UseSession();
+// Map API controllers
+app.MapControllers();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-
-// Seed the database
+// Initialize seed data
 await app.SeedDatabaseAsync();
 
 app.Run();

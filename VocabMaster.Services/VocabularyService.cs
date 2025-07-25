@@ -101,6 +101,28 @@ namespace VocabMaster.Services
                 return false;
             }
         }
+
+        // Remove a learned word by ID
+        public async Task<bool> RemoveLearnedWordById(int userId, int wordId)
+        {
+            try
+            {
+                // Kiểm tra xem từ vựng có thuộc về người dùng không
+                var learnedWord = await _learnedVocabularyRepository.GetById(wordId);
+                if (learnedWord == null || learnedWord.UserId != userId)
+                {
+                    _logger.LogWarning("User {UserId} tried to remove learned word with ID {WordId} that doesn't exist or doesn't belong to them", userId, wordId);
+                    return false;
+                }
+                
+                return await _learnedVocabularyRepository.Delete(wordId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing learned word by ID: {WordId} for user {UserId}", wordId, userId);
+                return false;
+            }
+        }
     }
 }
 

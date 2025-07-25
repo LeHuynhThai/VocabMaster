@@ -8,7 +8,9 @@ using System.Threading.Tasks;
 
 namespace VocabMaster.API.Controllers;
 
-public class AccountController : Controller
+[ApiController]
+[Route("api/[controller]")]
+public class AccountController : ControllerBase
 {
     private readonly IAccountService _accountService;
     private readonly IMapper _mapper;
@@ -19,36 +21,10 @@ public class AccountController : Controller
         _mapper = mapper;
     }
 
-    // MVC View Login
-    [HttpGet]
-    public IActionResult Login()
-    {
-        return View();
-    }
-
-    // MVC Login POST
-    [HttpPost]
-    public async Task<IActionResult> Login(LoginRequestDto model)
-    {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
-
-        var user = await _accountService.Login(model.Name, model.Password);
-        if (user != null)
-        {
-            return RedirectToAction("Index", "Home");
-        }
-
-        ModelState.AddModelError("", "Username or password is incorrect");
-        return View(model);
-    }
-
     // API Login POST
-    [HttpPost("api/account/login")]
+    [HttpPost("login")]
     [Produces("application/json")]
-    public async Task<IActionResult> ApiLogin([FromBody] LoginRequestDto model)
+    public async Task<IActionResult> Login([FromBody] LoginRequestDto model)
     {
         if (!ModelState.IsValid)
         {
@@ -68,40 +44,10 @@ public class AccountController : Controller
         return Unauthorized(new { message = "Invalid username or password" });
     }
 
-    // MVC Register View
-    [HttpGet]
-    public IActionResult Register()
-    {
-        return View();
-    }
-
-    // MVC Register POST
-    [HttpPost]
-    public async Task<IActionResult> Register(RegisterRequestDto model)
-    {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
-
-        // Sử dụng AutoMapper để map từ RegisterRequestDto sang User
-        var user = _mapper.Map<User>(model);
-
-        // Register user
-        if (await _accountService.Register(user))
-        {
-            TempData["SuccessMessage"] = "Register successfully";
-            return RedirectToAction("Login"); // Redirect to login page
-        }
-
-        ModelState.AddModelError("", "Username already exists");
-        return View(model);
-    }
-
     // API Register POST
-    [HttpPost("api/account/register")]
+    [HttpPost("register")]
     [Produces("application/json")]
-    public async Task<IActionResult> ApiRegister([FromBody] RegisterRequestDto model)
+    public async Task<IActionResult> Register([FromBody] RegisterRequestDto model)
     {
         if (!ModelState.IsValid)
         {
@@ -118,25 +64,17 @@ public class AccountController : Controller
         return BadRequest(new { message = "Username already exists" });
     }
 
-    // MVC Logout
-    [HttpGet]
-    public async Task<IActionResult> Logout()
-    {
-        await _accountService.Logout();
-        return RedirectToAction("Login");
-    }
-
     // API Logout
-    [HttpGet("api/account/logout")]
+    [HttpGet("logout")]
     [Authorize]
-    public async Task<IActionResult> ApiLogout()
+    public async Task<IActionResult> Logout()
     {
         await _accountService.Logout();
         return Ok(new { success = true });
     }
 
     // API Get Current User
-    [HttpGet("api/account/currentuser")]
+    [HttpGet("currentuser")]
     [Authorize]
     public async Task<IActionResult> GetCurrentUser()
     {

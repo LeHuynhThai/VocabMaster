@@ -1,28 +1,46 @@
-.App {
-  min-height: 100vh;
+.app-container {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
-.App-header {
-  background-color: #282c34;
-  padding: 20px;
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-.container {
+.app-main {
   flex: 1;
+  padding-top: 70px; /* Match with header height */
+  padding-left: 250px; /* Match with sidebar width */
+  transition: padding-left 0.3s ease;
 }
 
+/* Utility classes */
+.text-gradient {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-gradient {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+}
+
+/* Form container */
 .form-container {
   max-width: 500px;
-  margin: 0 auto;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: #f9f9f9;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-main {
+    padding-top: 60px; /* Smaller header on mobile */
+    padding-left: 0; /* No sidebar padding on mobile */
+  }
+  
+  /* Login and Register pages should not have sidebar padding */
+  .auth-page {
+    padding-left: 0 !important;
+  }
 } 

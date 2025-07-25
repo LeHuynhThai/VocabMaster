@@ -24,7 +24,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "install:ci": "npm ci --no-package-lock",
+    "install:clean": "npm install --no-package-lock"
   },
   "eslintConfig": {
     "extends": [
@@ -44,5 +46,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "https://localhost:7171"
+  "proxy": "https://localhost:64732"
 } 

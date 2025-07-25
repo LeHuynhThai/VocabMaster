@@ -1,115 +1,122 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Alert, Card, Container, Row, Col } from 'react-bootstrap';
+import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
- * Registration page component
- * Allows users to create a new account
+ * Register page component
  */
 const RegisterPage: React.FC = () => {
-  // Form state
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Hooks
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
   useEffect(() => {
+    // If already authenticated, redirect to home
     if (isAuthenticated) {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
 
-  /**
-   * Handle form submission
-   * Attempts to register a new user with the provided credentials
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setIsSubmitting(true);
+    setError(null);
+    
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      setError('Mật khẩu không khớp');
+      return;
+    }
+    
+    setIsLoading(true);
     
     try {
-      const success = await register({ name, password });
-      
+      const success = await register({ name: username, password });
       if (success) {
-        // Redirect to login page with success message
+        // Redirect to login with success message
         navigate('/login', { 
-          state: { successMessage: 'Đăng ký thành công' } 
+          state: { message: 'Đăng ký thành công! Vui lòng đăng nhập.' }
         });
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Tên đăng nhập đã tồn tại');
+      setError(err.message || 'Đăng ký thất bại. Vui lòng thử lại.');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <Container>
-      <Row className="justify-content-center">
-        <Col md={4}>
-          <Card>
-            <Card.Body>
-              <h2 className="card-title text-center">Đăng ký tài khoản</h2>
+    <Container className="auth-page">
+      <div className="form-container">
+        <Card className="border-0 shadow">
+          <Card.Body className="p-4">
+            <div className="text-center mb-4">
+              <h2 className="fw-bold">Đăng ký</h2>
+              <p className="text-muted">Tạo tài khoản mới</p>
+            </div>
+            
+            {error && (
+              <Alert variant="danger" className="mb-4">
+                {error}
+              </Alert>
+            )}
+            
+            <Form onSubmit={handleSubmit}>
+              <Form.Group className="mb-3" controlId="username">
+                <Form.Label>Tên đăng nhập</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Chọn tên đăng nhập"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </Form.Group>
               
-              {/* Error message */}
-              {error && <Alert variant="danger">{error}</Alert>}
+              <Form.Group className="mb-3" controlId="password">
+                <Form.Label>Mật khẩu</Form.Label>
+                <Form.Control
+                  type="password"
+                  placeholder="Nhập mật khẩu"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </Form.Group>
               
-              <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3" controlId="formName">
-                  <Form.Label>Tên đăng nhập</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    minLength={3}
-                    maxLength={50}
-                  />
-                  <Form.Text className="text-muted">
-                    Tên đăng nhập có độ dài từ 3-50 ký tự
-                  </Form.Text>
-                </Form.Group>
-
-                <Form.Group className="mb-3" controlId="formPassword">
-                  <Form.Label>Mật khẩu</Form.Label>
-                  <Form.Control
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={3}
-                    maxLength={8}
-                  />
-                  <Form.Text className="text-muted">
-                    Mật khẩu có độ dài từ 3-8 ký tự
-                  </Form.Text>
-                </Form.Group>
-
-                <div className="text-center">
-                  <Button 
-                    variant="primary" 
-                    type="submit" 
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Đang xử lý...' : 'Đăng ký'}
-                  </Button>
-                </div>
-              </Form>
+              <Form.Group className="mb-4" controlId="confirmPassword">
+                <Form.Label>Xác nhận mật khẩu</Form.Label>
+                <Form.Control
+                  type="password"
+                  placeholder="Nhập lại mật khẩu"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </Form.Group>
               
-              <div className="text-center mt-3">
-                <p>Đã có tài khoản? <Link to="/login">Đăng nhập</Link></p>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+              <Button 
+                variant="primary" 
+                type="submit" 
+                className="w-100 py-2"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Đang xử lý...' : 'Đăng ký'}
+              </Button>
+            </Form>
+            
+            <div className="text-center mt-4">
+              <p className="mb-0">
+                Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
+              </p>
+            </div>
+          </Card.Body>
+        </Card>
+      </div>
     </Container>
   );
 };
