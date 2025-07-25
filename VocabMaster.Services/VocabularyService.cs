@@ -107,7 +107,6 @@ namespace VocabMaster.Services
         {
             try
             {
-                // Kiểm tra xem từ vựng có thuộc về người dùng không
                 var learnedWord = await _learnedVocabularyRepository.GetById(wordId);
                 if (learnedWord == null || learnedWord.UserId != userId)
                 {
