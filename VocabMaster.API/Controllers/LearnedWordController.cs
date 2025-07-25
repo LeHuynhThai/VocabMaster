@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Core.DTOs;
+using AutoMapper;
 
 namespace VocabMaster.API.Controllers
 {
@@ -26,6 +27,7 @@ namespace VocabMaster.API.Controllers
         private readonly IDictionaryService _dictionaryService;
         private readonly ILogger<LearnedWordController> _logger;
         private readonly IMemoryCache _cache;
+        private readonly IMapper _mapper;
         private const string LearnedWordsListCacheKey = "LearnedWordsList_";
         private const int CacheExpirationMinutes = 5;
 
@@ -35,16 +37,19 @@ namespace VocabMaster.API.Controllers
         /// <param name="vocabularyService">Service for vocabulary operations</param>
         /// <param name="dictionaryService">Service for dictionary operations</param>
         /// <param name="logger">Logger for the controller</param>
+        /// <param name="mapper">AutoMapper instance</param>
         /// <param name="cache">Memory cache for improved performance</param>
         public LearnedWordController(
             IVocabularyService vocabularyService,
             IDictionaryService dictionaryService,
             ILogger<LearnedWordController> logger,
+            IMapper mapper,
             IMemoryCache cache = null)
         {
             _vocabularyService = vocabularyService ?? throw new ArgumentNullException(nameof(vocabularyService));
             _dictionaryService = dictionaryService ?? throw new ArgumentNullException(nameof(dictionaryService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _cache = cache;
         }
 
@@ -56,7 +61,7 @@ namespace VocabMaster.API.Controllers
         /// <response code="401">If the user is not authenticated</response>
         /// <response code="500">If an error occurs during processing</response>
         [HttpGet]
-        [ProducesResponseType(typeof(List<LearnedWordResponseDto>), 200)]
+        [ProducesResponseType(typeof(List<LearnedWordDto>), 200)]
         [ProducesResponseType(typeof(object), 401)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetLearnedWords()
@@ -73,7 +78,7 @@ namespace VocabMaster.API.Controllers
 
                 // Try to get from cache first
                 string cacheKey = $"{LearnedWordsListCacheKey}{userId}";
-                if (_cache != null && _cache.TryGetValue(cacheKey, out List<LearnedWordResponseDto> cachedWords))
+                if (_cache != null && _cache.TryGetValue(cacheKey, out List<LearnedWordDto> cachedWords))
                 {
                     _logger.LogInformation("Retrieved learned words from cache for user {UserId}", userId);
                     return Ok(cachedWords);
@@ -82,20 +87,16 @@ namespace VocabMaster.API.Controllers
                 // Get learned words
                 _logger.LogInformation("Getting learned words for user {UserId}", userId);
                 var learnedWords = await _vocabularyService.GetUserLearnedVocabularies(userId);
-
+                
                 // if no words, return empty list instead of error
                 if (learnedWords == null)
                 {
                     _logger.LogInformation("No learned words found for user {UserId}", userId);
-                    return Ok(new List<LearnedWordResponseDto>());
+                    return Ok(new List<LearnedWordDto>());
                 }
                 
-                // Convert to response DTOs
-                var response = learnedWords.Select(lw => new LearnedWordResponseDto
-                {
-                    Id = lw.Id,
-                    Word = lw.Word,
-                }).ToList();
+                // Convert to response DTOs using AutoMapper
+                var response = _mapper.Map<List<LearnedWordDto>>(learnedWords);
                 
                 // Cache the result
                 if (_cache != null)
@@ -113,7 +114,7 @@ namespace VocabMaster.API.Controllers
             {
                 _logger.LogError(ex, "Error loading learned words");
                 // return empty list instead of error 500 to avoid client error
-                return Ok(new List<LearnedWordResponseDto>());
+                return Ok(new List<LearnedWordDto>());
             }
         }
 
@@ -155,11 +156,7 @@ namespace VocabMaster.API.Controllers
                 if (wordDetails == null)
                 {
                     // Return basic information if detailed information is not available
-                    return Ok(new LearnedWordResponseDto
-                    {
-                        Id = learnedWord.Id,
-                        Word = learnedWord.Word,
-                    });
+                    return Ok(_mapper.Map<LearnedWordDto>(learnedWord));
                 }
 
                 // Convert to vocabulary response
@@ -188,7 +185,7 @@ namespace VocabMaster.API.Controllers
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 401)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> AddLearnedWord([FromBody] AddLearnedWordRequest request)
+        public async Task<IActionResult> AddLearnedWord([FromBody] AddLearnedWordDto request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.Word))
             {
@@ -315,37 +312,5 @@ namespace VocabMaster.API.Controllers
                 _cache.Remove(cacheKey);
             }
         }
-    }
-
-    /// <summary>
-    /// Request model for adding a learned word
-    /// </summary>
-    public class AddLearnedWordRequest
-    {
-        /// <summary>
-        /// Word to add to learned list
-        /// </summary>
-        public string Word { get; set; }
-    }
-    
-    /// <summary>
-    /// Response model for learned words
-    /// </summary>
-    public class LearnedWordResponseDto
-    {
-        /// <summary>
-        /// ID of the learned word
-        /// </summary>
-        public int Id { get; set; }
-        
-        /// <summary>
-        /// The word text
-        /// </summary>
-        public string Word { get; set; }
-        
-        /// <summary>
-        /// Date and time when the word was learned
-        /// </summary>
-        public DateTime LearnedDate { get; set; }
     }
 }
