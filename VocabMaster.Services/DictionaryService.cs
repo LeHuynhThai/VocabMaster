@@ -22,6 +22,8 @@ namespace VocabMaster.Services
         private readonly IVocabularyRepo _vocabularyRepository;
         private readonly ILearnedWordRepo _learnedWordRepository;
         private readonly string _dictionaryApiUrl;
+        private readonly Random _random = new Random();
+        private const int MAX_ATTEMPTS = 5;
         
         /// <summary>
         /// Initializes a new instance of the DictionaryService
@@ -77,7 +79,7 @@ namespace VocabMaster.Services
         }
         
         /// <summary>
-        /// Gets a random word excluding words already learned by the user
+        /// Gets a random word, optionally trying to exclude words already learned by the user
         /// </summary>
         /// <param name="userId">ID of the user</param>
         /// <returns>Dictionary response with word details or null if not found</returns>
@@ -85,24 +87,66 @@ namespace VocabMaster.Services
         {
             try
             {
-                _logger.LogInformation("Getting learned words for user {UserId}", userId);
-                var learnedVocabularies = await _learnedWordRepository.GetByUserId(userId);
+                // First try to get a word excluding learned ones
+                var result = await TryGetRandomWordExcludeLearned(userId);
                 
-                if (learnedVocabularies == null)
+                // If no unlearned word is found or there's an issue, fall back to any random word
+                if (result == null)
                 {
-                    _logger.LogWarning("No learned vocabularies found for user {UserId}", userId);
+                    _logger.LogInformation("Falling back to any random word for user {UserId}", userId);
                     return await GetRandomWord();
                 }
                 
-                var learnedWords = learnedVocabularies.Select(lv => lv.Word).ToList();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetRandomWordExcludeLearned for user {UserId}, falling back to any random word", userId);
+                // In case of any error, still try to return a random word
+                return await GetRandomWord();
+            }
+        }
+        
+        /// <summary>
+        /// Helper method to try getting a random word excluding learned ones
+        /// </summary>
+        private async Task<DictionaryResponseDto> TryGetRandomWordExcludeLearned(int userId)
+        {
+            try
+            {
+                _logger.LogInformation("Getting learned words for user {UserId}", userId);
+                var learnedVocabularies = await _learnedWordRepository.GetByUserId(userId);
+                
+                if (learnedVocabularies == null || !learnedVocabularies.Any())
+                {
+                    _logger.LogInformation("No learned vocabularies found for user {UserId}, returning any random word", userId);
+                    return await GetRandomWord();
+                }
+                
+                var learnedWords = learnedVocabularies.Select(lv => lv.Word.ToLowerInvariant()).ToHashSet();
                 _logger.LogInformation("User {UserId} has learned {Count} words", userId, learnedWords.Count);
                 
-                var vocabulary = await _vocabularyRepository.GetRandomExcludeLearned(learnedWords);
+                // Try to get an unlearned word
+                var vocabulary = await _vocabularyRepository.GetRandomExcludeLearned(learnedWords.ToList());
                 
                 if (vocabulary == null)
                 {
-                    _logger.LogInformation("No unlearned words found for user {UserId}", userId);
-                    return null;
+                    _logger.LogInformation("No unlearned words found for user {UserId} in the first attempt", userId);
+                    
+                    // If all words from the repository are learned, try multiple random words
+                    // until we find one that's not in the learned list
+                    for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++)
+                    {
+                        var randomVocab = await _vocabularyRepository.GetRandom();
+                        if (randomVocab != null && !learnedWords.Contains(randomVocab.Word.ToLowerInvariant()))
+                        {
+                            _logger.LogInformation("Found unlearned random word on attempt {Attempt}: {Word}", attempt + 1, randomVocab.Word);
+                            return await GetWordDefinition(randomVocab.Word);
+                        }
+                    }
+                    
+                    _logger.LogInformation("All attempts to find unlearned word failed, returning any random word");
+                    return await GetRandomWord();
                 }
                 
                 _logger.LogInformation("Found random unlearned word: {Word}", vocabulary.Word);
@@ -110,7 +154,7 @@ namespace VocabMaster.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting random word excluding learned words for user {UserId}", userId);
+                _logger.LogError(ex, "Error in TryGetRandomWordExcludeLearned for user {UserId}", userId);
                 return null;
             }
         }

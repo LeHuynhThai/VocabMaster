@@ -87,6 +87,9 @@ builder.Services.AddHttpClient("DictionaryApi", client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+// Add memory caching
+builder.Services.AddMemoryCache();
+
 // Use connection string from appsettings.json
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext")));
