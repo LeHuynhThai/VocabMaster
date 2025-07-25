@@ -78,6 +78,15 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         };
     });
 
+// Add HttpClient services
+builder.Services.AddHttpClient("DictionaryApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("DictionaryApiUrl") ?? 
+                                "https://api.dictionaryapi.dev/api/v2/entries/en/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
 // Use connection string from appsettings.json
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext")));

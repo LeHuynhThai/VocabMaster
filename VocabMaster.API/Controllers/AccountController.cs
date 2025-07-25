@@ -74,7 +74,7 @@ public class AccountController : ControllerBase
     }
 
     // API Get Current User
-    [HttpGet("currentuser")]
+    [HttpPost("current-user")]
     [Authorize]
     public async Task<IActionResult> GetCurrentUser()
     {

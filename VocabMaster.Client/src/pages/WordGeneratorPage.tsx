@@ -3,6 +3,7 @@ import { Container, Card, Button, Spinner, ListGroup, Row, Col, Form, InputGroup
 import vocabularyService from '../services/vocabularyService';
 import { Vocabulary, DictionaryResponse } from '../types';
 import Toast, { ToastProps } from '../components/ui/Toast';
+import ToastContainer from '../components/ui/ToastContainer';
 import './WordGeneratorPage.css';
 
 /**
@@ -293,12 +294,16 @@ const WordGeneratorPage: React.FC = () => {
       </Card>
       
       {/* Toast notification */}
-      <Toast 
-        show={toast.show}
-        type={toast.type}
-        message={toast.message}
-        onClose={handleToastClose}
-      />
+      {toast.show && (
+        <ToastContainer>
+          <Toast 
+            show={toast.show}
+            type={toast.type}
+            message={toast.message}
+            onClose={handleToastClose}
+          />
+        </ToastContainer>
+      )}
     </Container>
   );
 };
