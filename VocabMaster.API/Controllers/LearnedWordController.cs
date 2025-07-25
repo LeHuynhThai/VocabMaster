@@ -82,6 +82,13 @@ namespace VocabMaster.API.Controllers
                 // Get learned words
                 _logger.LogInformation("Getting learned words for user {UserId}", userId);
                 var learnedWords = await _vocabularyService.GetUserLearnedVocabularies(userId);
+
+                // if no words, return empty list instead of error
+                if (learnedWords == null)
+                {
+                    _logger.LogInformation("No learned words found for user {UserId}", userId);
+                    return Ok(new List<LearnedWordResponseDto>());
+                }
                 
                 // Convert to response DTOs
                 var response = learnedWords.Select(lw => new LearnedWordResponseDto
@@ -105,7 +112,8 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading learned words");
-                return StatusCode(500, new { message = "An error occurred while retrieving learned words" });
+                // return empty list instead of error 500 to avoid client error
+                return Ok(new List<LearnedWordResponseDto>());
             }
         }
 

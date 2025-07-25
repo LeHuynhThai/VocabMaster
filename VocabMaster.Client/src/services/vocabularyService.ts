@@ -48,8 +48,14 @@ const vocabularyService = {
    * @returns List of learned words
    */
   getLearnedWords: async (): Promise<LearnedWord[]> => {
-    const response = await api.get('/api/learnedword');
-    return response.data;
+    try {
+      const response = await api.get('/api/learnedword');
+      return response.data || [];
+    } catch (error: any) {
+      console.error('Error fetching learned words:', error);
+      // return empty array if error
+      return [];
+    }
   },
 
   /**
@@ -58,8 +64,13 @@ const vocabularyService = {
    * @returns Learned word details
    */
   getLearnedWord: async (id: number): Promise<Vocabulary> => {
-    const response = await api.get(`/api/learnedword/${id}`);
-    return response.data;
+    try {
+      const response = await api.get(`/api/learnedword/${id}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching learned word details:', error);
+      throw error;
+    }
   },
 
   /**
@@ -76,7 +87,7 @@ const vocabularyService = {
       };
     } catch (error: any) {
       console.error('Error adding learned word:', error);
-      // Trả về đối tượng lỗi thay vì ném ngoại lệ
+      // return error object instead of throwing exception
       return {
         success: false,
         error: error?.response?.data?.message || 'Không thể lưu từ vựng'
@@ -90,8 +101,19 @@ const vocabularyService = {
    * @returns Result of the operation
    */
   removeLearnedWord: async (id: number): Promise<any> => {
-    const response = await api.delete(`/api/learnedword/${id}`);
-    return response.data;
+    try {
+      const response = await api.delete(`/api/learnedword/${id}`);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error: any) {
+      console.error('Error removing learned word:', error);
+      return {
+        success: false,
+        error: error?.response?.data?.message || 'Không thể xóa từ vựng'
+      };
+    }
   }
 };
 
