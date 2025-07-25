@@ -3,6 +3,24 @@ import { Container, Card, Table, Button, Alert, Spinner } from 'react-bootstrap'
 import vocabularyService from '../services/vocabularyService';
 import { LearnedWord } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+  
+/**
+ * format date
+ */
+const formatDate = (dateString?: string): string => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(date);
+  } catch (error) {
+    return '';
+  }
+};
 
 /**
  * LearnedWords page component

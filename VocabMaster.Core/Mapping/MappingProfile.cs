@@ -17,6 +17,13 @@ namespace VocabMaster.Core.Mapping
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.UserId, opt => opt.Ignore())
                 .ForMember(dest => dest.User, opt => opt.Ignore());
+                
+            // LearnedWord mappings
+            CreateMap<LearnedWord, LearnedWordDto>();
+            CreateMap<AddLearnedWordDto, LearnedWord>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.UserId, opt => opt.Ignore())
+                .ForMember(dest => dest.User, opt => opt.Ignore());
         }
     }
 } 
