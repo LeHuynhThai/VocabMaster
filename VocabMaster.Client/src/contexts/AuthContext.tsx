@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const loadUser = async () => {
-      // Nếu đã có lỗi xác thực, không gọi API liên tục
+      // If there is an authentication error, do not call the API continuously
       if (authError) {
         setIsLoading(false);
         return;
@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(currentUser);
       } catch (error) {
         console.error('Failed to load user:', error);
-        // Đánh dấu là đã có lỗi xác thực để không gọi API liên tục
+        // Mark as an authentication error to prevent continuous API calls
         setAuthError(true);
       } finally {
         setIsLoading(false);

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Card, Button, Spinner, ListGroup, Row, Col, Form, InputGroup } from 'react-bootstrap';
 import vocabularyService from '../services/vocabularyService';
 import { Vocabulary, DictionaryResponse } from '../types';
-import Toast, { ToastType } from '../components/Toast';
+import Toast, { ToastProps } from '../components/ui/Toast';
 import './WordGeneratorPage.css';
 
 /**
@@ -17,9 +17,13 @@ const WordGeneratorPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
   // Toast notification state
-  const [toast, setToast] = useState({
+  const [toast, setToast] = useState<{
+    show: boolean;
+    type: ToastProps['type'];
+    message: string;
+  }>({
     show: false,
-    type: 'success' as ToastType,
+    type: 'success',
     message: ''
   });
 
