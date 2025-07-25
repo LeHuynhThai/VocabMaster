@@ -51,8 +51,8 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromDays(7);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.Cookie.SameSite = SameSiteMode.None;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax; // change from None to Lax
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // change from Always to SameAsRequest
 });
 
 // Add Authentication
@@ -63,8 +63,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LogoutPath = "/api/account/logout";
         options.Cookie.Name = "VocabMaster.Auth";
         options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.None; // change to None to allow cross-origin requests
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // make sure the cookie is secure
+        options.Cookie.SameSite = SameSiteMode.Lax; // change from None to Lax
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // change from Always to SameAsRequest
+        options.ExpireTimeSpan = TimeSpan.FromDays(30); // increase expiration time
         options.SlidingExpiration = true; // reset the expiration time on each request
         options.Events.OnRedirectToLogin = context =>
         {
