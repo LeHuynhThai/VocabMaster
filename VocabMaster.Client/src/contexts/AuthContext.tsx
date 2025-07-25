@@ -35,18 +35,45 @@ const getAuthState = (): boolean => {
   return localStorage.getItem('isAuthenticated') === 'true';
 };
 
+// save user state to localStorage
+const saveUserState = (user: User | null) => {
+  if (user) {
+    localStorage.setItem('user', JSON.stringify(user));
+  } else {
+    localStorage.removeItem('user');
+  }
+};
+
+// read user state from localStorage
+const getUserState = (): User | null => {
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // initialize with value from localStorage to avoid UI flickering
+  const [user, setUser] = useState<User | null>(getUserState());
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<boolean>(false);
   const [lastAuthCheck, setLastAuthCheck] = useState<number>(0);
 
+  // update user state in localStorage when changed
   useEffect(() => {
-    const loadUser = async () => {
+    saveUserState(user);
+  }, [user]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
       // if there is an auth error or a recent check, do not call API continuously
       const now = Date.now();
       if (authError || (now - lastAuthCheck < 60000)) { // 60 seconds
-        setIsLoading(false);
         return;
       }
       
@@ -55,10 +82,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // if localStorage does not have auth state or is not authenticated, do not call API
       if (!getAuthState()) {
-        setUser(null);
-        setIsLoading(false);
+        if (user !== null) {
+          setUser(null);
+        }
         return;
       }
+      
+      // only set loading state when actually checking auth
+      setIsLoading(true);
       
       try {
         const currentUser = await authService.getCurrentUser();
@@ -80,17 +111,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    loadUser();
-  }, [authError, lastAuthCheck]);
+    checkAuth();
+    
+    // set interval to check auth periodically
+    const intervalId = setInterval(checkAuth, 300000); // 5 minutes
+    
+    return () => clearInterval(intervalId);
+  }, [authError, lastAuthCheck, user]);
 
   const login = async (credentials: LoginRequest) => {
     setIsLoading(true);
     try {
       const loggedInUser = await authService.login(credentials);
       setUser(loggedInUser);
-      // Đặt lại lỗi xác thực khi đăng nhập thành công
+      // reset auth error when login is successful
       setAuthError(false);
-      // Lưu trạng thái đăng nhập
+      // save auth state
       saveAuthState(true);
     } catch (error) {
       console.error('Login failed:', error);

@@ -16,12 +16,15 @@ const LoginPage: React.FC = () => {
   const location = useLocation();
   
   // Get success message from location state (e.g., after registration)
-  const successMessage = location.state?.message;
+  // only get message if it is not a redirect message
+  const successMessage = location.state?.message && 
+    !location.state.message.includes("Vui lòng đăng nhập") ? 
+    location.state.message : null;
 
   useEffect(() => {
-    // If already authenticated, redirect to home
+    // if already authenticated, redirect to home silently
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -32,7 +35,7 @@ const LoginPage: React.FC = () => {
     
     try {
       await login({ name: username, password });
-      navigate('/');
+      navigate('/', { replace: true });
     } catch (err: any) {
       setError(err.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
     } finally {
