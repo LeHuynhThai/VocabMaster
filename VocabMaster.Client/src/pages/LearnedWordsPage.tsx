@@ -55,11 +55,16 @@ const LearnedWordsPage: React.FC = () => {
 
   return (
     <Container className="py-4">
-      <h1 className="mb-4 text-center">Từ vựng đã học</h1>
+      <div className="page-header">
+        <h1 className="page-title">Từ vựng đã học</h1>
+        <p className="page-description">
+          Danh sách các từ vựng bạn đã lưu
+        </p>
+      </div>
       
       {error && <Alert variant="danger">{error}</Alert>}
       
-      <Card className="shadow-sm">
+      <Card className="word-card">
         <Card.Body>
           {isLoading && words.length === 0 ? (
             <div className="text-center py-5">

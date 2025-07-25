@@ -8,8 +8,10 @@ using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.API.Controllers
 {
+    [ApiController]
     [Authorize]
-    public class LearnedWordController : Controller
+    [Route("api/[controller]")]
+    public class LearnedWordController : ControllerBase
     {
         private readonly IVocabularyService _vocabularyService;
         private readonly ILogger<LearnedWordController> _logger;
@@ -20,8 +22,10 @@ namespace VocabMaster.API.Controllers
             _logger = logger;
         }
 
+        // API endpoint to get user's learned words
         [HttpGet]
-        public async Task<IActionResult> Index()
+        [Produces("application/json")]
+        public async Task<IActionResult> GetLearnedWords()
         {
             try
             {
@@ -30,60 +34,101 @@ namespace VocabMaster.API.Controllers
                 if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                 {
                     _logger.LogError("UserId not found in Claims");
-                    TempData["Error"] = "Please login again";
-                    return RedirectToAction("Index", "Home");
+                    return Unauthorized();
                 }
 
                 // Get learned words
                 var learnedWords = await _vocabularyService.GetUserLearnedVocabularies(userId);
-                return View(learnedWords);
+                return Ok(learnedWords);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading learned words");
-                TempData["Error"] = "An error occurred. Please try again.";
-                return RedirectToAction("Index", "Home");
+                return StatusCode(500, new { message = "An error occurred. Please try again." });
             }
         }
 
+        // API endpoint to add a word to learned words
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RemoveLearnedWord(string word)
+        [Produces("application/json")]
+        public async Task<IActionResult> AddLearnedWord([FromBody] AddLearnedWordRequest request)
         {
-            if (string.IsNullOrWhiteSpace(word))
+            if (request == null || string.IsNullOrWhiteSpace(request.Word))
             {
-                TempData["Error"] = "Từ vựng không được để trống";
-                return RedirectToAction("Index");
+                return BadRequest(new { message = "Word cannot be empty" });
             }
 
             // Get UserId from Claims
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
             {
-                _logger.LogError("UserId không hợp lệ hoặc không tìm thấy");
-                TempData["Error"] = "Vui lòng đăng nhập lại";
-                return RedirectToAction("Index");
+                _logger.LogError("UserId not found in Claims");
+                return Unauthorized();
             }
 
             try
             {
-                var result = await _vocabularyService.RemoveLearnedWord(userId, word.Trim());
-                if (result)
+                var result = await _vocabularyService.MarkWordAsLearned(userId, request.Word.Trim());
+                if (result.Success)
                 {
-                    TempData["Success"] = $"Đã xóa từ '{word}' khỏi danh sách từ đã học";
+                    return Ok(new { 
+                        id = result.Data?.Id ?? 0, 
+                        word = request.Word.Trim(),
+                        userId = userId 
+                    });
                 }
                 else
                 {
-                    TempData["Error"] = "Không thể xóa từ. Vui lòng thử lại.";
+                    return BadRequest(new { message = result.ErrorMessage ?? "Cannot mark word as learned. Please try again." });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi xóa từ đã học: {Word}", word);
-                TempData["Error"] = "Đã xảy ra lỗi. Vui lòng thử lại.";
+                _logger.LogError(ex, "Error marking word as learned: {Word}", request.Word);
+                return StatusCode(500, new { message = "An error occurred. Please try again." });
+            }
+        }
+
+        // API endpoint to remove a learned word
+        [HttpDelete("{id}")]
+        [Produces("application/json")]
+        public async Task<IActionResult> DeleteLearnedWord(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { message = "Invalid word ID" });
             }
 
-            return RedirectToAction("Index");
+            // Get UserId from Claims
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                _logger.LogError("UserId not found in Claims");
+                return Unauthorized();
+            }
+
+            try
+            {
+                var result = await _vocabularyService.RemoveLearnedWordById(userId, id);
+                if (result)
+                {
+                    return Ok(new { success = true });
+                }
+                else
+                {
+                    return NotFound(new { message = "Word not found or you don't have permission to remove it." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing learned word: {Id}", id);
+                return StatusCode(500, new { message = "An error occurred. Please try again." });
+            }
         }
+    }
+
+    public class AddLearnedWordRequest
+    {
+        public string Word { get; set; }
     }
 }

@@ -5,14 +5,17 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using VocabMaster.Core.Interfaces.Services;
+using VocabMaster.Core.Entities;
 
 namespace VocabMaster.API.Controllers
 {
+    [ApiController]
     [Authorize]
-    public class WordGeneratorController : Controller
+    [Route("api/[controller]")]
+    public class WordGeneratorController : ControllerBase
     {
-        private readonly IDictionaryService _dictionaryService; // service for random word
-        private readonly IVocabularyService _vocabularyService; // service for learned vocabulary
+        private readonly IDictionaryService _dictionaryService;
+        private readonly IVocabularyService _vocabularyService;
         private readonly ILogger<WordGeneratorController> _logger;
 
         public WordGeneratorController(
@@ -25,14 +28,10 @@ namespace VocabMaster.API.Controllers
             _logger = logger;
         }
 
-        [HttpGet]
-        public IActionResult Index()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> GenerateWord()
+        // API endpoint for getting a random word
+        [HttpGet("getrandomword")]
+        [Produces("application/json")]
+        public async Task<IActionResult> GetRandomWord()
         {
             try
             {
@@ -41,8 +40,7 @@ namespace VocabMaster.API.Controllers
                 if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                 {
                     _logger.LogError("UserId not found in Claims");
-                    TempData["Error"] = "Please login again";
-                    return RedirectToAction("Index", "Home");
+                    return Unauthorized();
                 }
 
                 // Get random word excluding learned words
@@ -50,29 +48,33 @@ namespace VocabMaster.API.Controllers
 
                 if (randomWord == null)
                 {
-                    _logger.LogError("No word found or all words have been learned");
-                    TempData["Error"] = "No word found or all words have been learned";
-                    return View("Index");
+                    return NotFound(new { message = "No word found or all words have been learned" });
                 }
 
-                ViewBag.RandomWord = randomWord;
-                return View("Index");
+                // Return all DictionaryResponseDto properties
+                return Ok(new { 
+                    id = 0, // Add id to match client
+                    word = randomWord.Word,
+                    phonetic = randomWord.Phonetic,
+                    phonetics = randomWord.Phonetics,
+                    meanings = randomWord.Meanings
+                });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating random word");
-                TempData["Error"] = "An error occurred. Please try again.";
-                return View("Index");
+                return StatusCode(500, new { message = "An error occurred. Please try again." });
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> GetWordDefinition(string word)
+        // API endpoint for looking up a word definition
+        [HttpGet("lookup/{word}")]
+        [Produces("application/json")]
+        public async Task<IActionResult> Lookup(string word)
         {
             if (string.IsNullOrEmpty(word))
             {
-                TempData["Error"] = "Word cannot be empty";
-                return View("Index");
+                return BadRequest(new { message = "Word cannot be empty" });
             }
 
             try
@@ -81,67 +83,16 @@ namespace VocabMaster.API.Controllers
 
                 if (definition == null)
                 {
-                    TempData["Error"] = $"No definition found for word: {word}";
-                    return View("Index");
+                    return NotFound(new { message = $"No definition found for word: {word}" });
                 }
 
-                ViewBag.RandomWord = definition;
-                return View("Index");
+                return Ok(definition);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting word definition: {Word}", word);
-                TempData["Error"] = "An error occurred. Please try again.";
-                return View("Index");
+                return StatusCode(500, new { message = "An error occurred. Please try again." });
             }
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MarkAsLearned(string word)
-        {
-            // Check if word is empty
-            if (string.IsNullOrWhiteSpace(word))
-            {
-                TempData["Error"] = "Word cannot be empty";
-                return RedirectToAction("Index");
-            }
-
-            // Get UserId from Claims
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
-            if (userIdClaim == null)
-            {
-                _logger.LogError("UserId not found in Claims");
-                TempData["Error"] = "Please login again";
-                return RedirectToAction("Index");
-            }
-
-            if (!int.TryParse(userIdClaim.Value, out int userId))
-            {
-                _logger.LogError("UserId không hợp lệ: {UserId}", userIdClaim.Value);
-                TempData["Error"] = "Invalid user information";
-                return RedirectToAction("Index");
-            }
-
-            try
-            {
-                var result = await _vocabularyService.MarkWordAsLearned(userId, word.Trim());
-                if (result.Success)
-                {
-                    TempData["Success"] = $"Word '{word}' has been marked as learned";
-                }
-                else
-                {
-                    _logger.LogError("Cannot mark word as learned: {Word}", word);
-                    TempData["Error"] = result.ErrorMessage ?? "Cannot mark word as learned. Please try again.";
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error marking word as learned: {Word}", word);
-                TempData["Error"] = "An error occurred. Please try again.";
-            }
-            return RedirectToAction("Index");
         }
     }
 }

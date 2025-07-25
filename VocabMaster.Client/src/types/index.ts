@@ -3,6 +3,7 @@ export interface User {
   id: number;
   name: string;
   role: string;
+  learnedWordsCount?: number;
 }
 
 export interface LoginRequest {
@@ -19,6 +20,9 @@ export interface RegisterRequest {
 export interface Vocabulary {
   id: number;
   word: string;
+  phonetic?: string;
+  phonetics?: Phonetic[];
+  meanings?: Meaning[];
 }
 
 export interface LearnedWord {

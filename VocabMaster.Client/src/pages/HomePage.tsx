@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/HomePage.css';
@@ -32,15 +32,7 @@ const HomePage: React.FC = () => {
                 VocabMaster
               </h1>
               <p className="lead mb-4">
-                {isAuthenticated && user ? (
-                  <>
-                    Xin chào, <strong>{user.name}</strong>!
-                    <br />
-                    Bạn đã học được <strong>{user.learnedWordsCount || 0}</strong> từ vựng.
-                  </>
-                ) : (
-                  <>Trang web giúp bạn học từ vựng tiếng Anh mỗi ngày</>
-                )}
+                Trang web giúp bạn học từ vựng tiếng Anh mỗi ngày
                 <br />
                 <br />
                 <span className="highlight-text">Dễ dàng - Hiệu quả - Miễn phí</span>
@@ -93,15 +85,15 @@ const HomePage: React.FC = () => {
             {/* Call to Action Button */}
             <div className="text-center">
               {isAuthenticated ? (
-                <Button as={Link} to="/wordgenerator" variant="primary" className="btn-lg px-5 py-3 rounded-pill start-button">
+                <Link to="/wordgenerator" className="btn btn-primary btn-lg px-5 py-3 rounded-pill start-button">
                   <i className="bi bi-play-circle me-2"></i>
                   Bắt đầu học từ mới
-                </Button>
+                </Link>
               ) : (
-                <Button as={Link} to="/login" variant="primary" className="btn-lg px-5 py-3 rounded-pill start-button">
+                <Link to="/login" className="btn btn-primary btn-lg px-5 py-3 rounded-pill start-button">
                   <i className="bi bi-box-arrow-in-right me-2"></i>
                   Đăng nhập để bắt đầu
-                </Button>
+                </Link>
               )}
             </div>
           </Card.Body>
