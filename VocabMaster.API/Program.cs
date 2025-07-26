@@ -88,6 +88,15 @@ builder.Services.AddHttpClient("DictionaryApi", client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+// Add HttpClient for Translation API
+builder.Services.AddHttpClient("TranslationApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("TranslationApiUrl") ?? 
+                                "https://libretranslate.com/translate");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
 // Add memory caching
 builder.Services.AddMemoryCache();
 
@@ -102,6 +111,7 @@ builder.Services.AddScoped<ILearnedWordRepo, LearnedWordRepo>();
 builder.Services.AddScoped<IVocabularyRepo, VocabRepo>();
 builder.Services.AddScoped<IVocabularyService, VocabularyService>();
 builder.Services.AddScoped<IDictionaryService, DictionaryService>();
+builder.Services.AddScoped<ITranslationService, TranslationService>();
 
 var app = builder.Build();
 

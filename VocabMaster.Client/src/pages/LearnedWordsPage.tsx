@@ -3,6 +3,7 @@ import { Container, Card, Table, Button, Alert, Spinner } from 'react-bootstrap'
 import vocabularyService from '../services/vocabularyService';
 import { LearnedWord } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { ROUTES } from '../utils/constants';
   
 /**
  * format date
@@ -147,7 +148,7 @@ const LearnedWordsPage: React.FC = () => {
           ) : words.length === 0 ? (
             <div className="text-center py-5">
               <p className="text-muted mb-4">Bạn chưa lưu từ vựng nào.</p>
-              <Button variant="primary" href="/wordgenerator">
+              <Button variant="primary" href={ROUTES.WORD_GENERATOR}>
                 <i className="bi bi-plus-circle me-2"></i>
                 Bắt đầu học từ mới
               </Button>

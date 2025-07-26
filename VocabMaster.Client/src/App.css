@@ -4,11 +4,15 @@
   min-height: 100vh;
 }
 
-.app-main {
+.content-wrapper {
+  display: flex;
   flex: 1;
-  padding-top: 70px; /* Match with header height */
-  padding-left: 250px; /* Match with sidebar width */
-  transition: padding-left 0.3s ease;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  margin-top: 60px; /* Match with header height */
 }
 
 /* Utility classes */
@@ -34,9 +38,12 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .app-main {
-    padding-top: 60px; /* Smaller header on mobile */
-    padding-left: 0; /* No sidebar padding on mobile */
+  .content-wrapper {
+    flex-direction: column;
+  }
+  
+  .main-content {
+    margin-left: 0;
   }
   
   /* Login and Register pages should not have sidebar padding */

@@ -71,11 +71,16 @@ a:hover {
   min-height: 100vh;
 }
 
-.app-main {
+.content-wrapper {
+  display: flex;
   flex: 1;
-  padding-top: var(--header-height);
-  padding-left: var(--sidebar-width);
-  transition: padding-left var(--transition-normal);
+  margin-top: var(--header-height);
+}
+
+.main-content {
+  flex: 1;
+  padding: var(--spacing-lg);
+  min-height: calc(100vh - var(--header-height) - var(--footer-height));
 }
 
 /* Page structure */

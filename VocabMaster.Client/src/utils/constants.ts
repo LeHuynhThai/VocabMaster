@@ -7,6 +7,7 @@ export const ROUTES = {
   REGISTER: '/register',
   WORD_GENERATOR: '/word-generator',
   LEARNED_WORDS: '/learned-words',
+  TRANSLATION: '/translation',
   NOT_FOUND: '/not-found'
 };
 
@@ -22,7 +23,9 @@ export const API_ENDPOINTS = {
   NEW_RANDOM_WORD: '/api/wordgenerator/getnewrandomword',
   LOOKUP_WORD: '/api/wordgenerator/lookup',
   IS_LEARNED: '/api/wordgenerator/islearned',
-  LEARNED_WORDS: '/api/learnedword'
+  LEARNED_WORDS: '/api/learnedword',
+  TRANSLATE_EN_VI: '/api/translation/en-to-vi',
+  TRANSLATE: '/api/translation/translate'
 };
 
 /**
@@ -46,5 +49,6 @@ export const MESSAGES = {
   ERROR_REGISTER: 'Đăng ký thất bại. Vui lòng thử lại.',
   ERROR_FETCH_WORDS: 'Không thể tải danh sách từ vựng. Vui lòng thử lại sau.',
   ERROR_SAVE_WORD: 'Không thể lưu từ vựng. Vui lòng thử lại sau.',
-  ERROR_REMOVE_WORD: 'Không thể xóa từ vựng. Vui lòng thử lại sau.'
+  ERROR_REMOVE_WORD: 'Không thể xóa từ vựng. Vui lòng thử lại sau.',
+  ERROR_TRANSLATION: 'Không thể dịch văn bản. Vui lòng thử lại sau.'
 }; 
