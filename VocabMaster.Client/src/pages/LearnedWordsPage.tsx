@@ -34,6 +34,7 @@ const LearnedWordsPage: React.FC = () => {
 
   /**
    * Fetch all learned words for the current user
+   * Always fetch fresh data from the API, bypassing cache
    */
   const fetchLearnedWords = async () => {
     if (!isAuthenticated) {
@@ -44,7 +45,10 @@ const LearnedWordsPage: React.FC = () => {
     setError(null);
     
     try {
-      const learnedWords = await vocabularyService.getLearnedWords();
+      // add timestamp to the request to bypass cache
+      const timestamp = new Date().getTime();
+      const cacheBuster = `?t=${timestamp}`;
+      const learnedWords = await vocabularyService.getLearnedWords(cacheBuster);
       setWords(learnedWords);
     } catch (err) {
       setError('Không thể tải danh sách các từ đã học. Vui lòng thử lại sau.');
@@ -83,6 +87,23 @@ const LearnedWordsPage: React.FC = () => {
     }
   }, [isAuthenticated]);
 
+  // Thêm effect để tải lại dữ liệu mỗi khi component được hiển thị
+  useEffect(() => {
+    // Thêm event listener cho visibility change
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isAuthenticated) {
+        fetchLearnedWords();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup function
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isAuthenticated]);
+
   // retry loading if there was an error
   const handleRetry = () => {
     fetchLearnedWords();
@@ -95,6 +116,15 @@ const LearnedWordsPage: React.FC = () => {
         <p className="page-description">
           Danh sách các từ vựng bạn đã lưu
         </p>
+        <Button 
+          variant="outline-primary" 
+          onClick={fetchLearnedWords} 
+          disabled={isLoading}
+          className="mb-3"
+        >
+          <i className="bi bi-arrow-clockwise me-2"></i>
+          Làm mới danh sách
+        </Button>
       </div>
       
       {error && (

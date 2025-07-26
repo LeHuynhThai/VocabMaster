@@ -45,11 +45,13 @@ const vocabularyService = {
 
   /**
    * Gets user's learned words
+   * @param cacheBuster - Optional parameter to bypass cache
    * @returns List of learned words
    */
-  getLearnedWords: async (): Promise<LearnedWord[]> => {
+  getLearnedWords: async (cacheBuster?: string): Promise<LearnedWord[]> => {
     try {
-      const response = await api.get('/api/learnedword');
+      const url = cacheBuster ? `/api/learnedword${cacheBuster}` : '/api/learnedword';
+      const response = await api.get(url);
       return response.data || [];
     } catch (error: any) {
       console.error('Error fetching learned words:', error);

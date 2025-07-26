@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useRef, useCallback } from 'react';
+﻿import React, { createContext, useContext, useState, ReactNode, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Toast } from '../types';
 import ToastContainer from '../components/ui/ToastContainer';
@@ -15,7 +15,6 @@ interface ToastProviderProps {
   children: ReactNode;
 }
 
-// Giới hạn số lượng toast hiển thị cùng lúc
 const MAX_TOASTS = 3;
 
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {

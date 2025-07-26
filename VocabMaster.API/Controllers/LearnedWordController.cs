@@ -76,9 +76,12 @@ namespace VocabMaster.API.Controllers
                     return Unauthorized(new { message = "Invalid user authentication" });
                 }
 
-                // Try to get from cache first
+                // check if cache is disabled
+                bool skipCache = Request.Query.ContainsKey("t");
+                
+                // Try to get from cache first (only if not skipping cache)
                 string cacheKey = $"{LearnedWordsListCacheKey}{userId}";
-                if (_cache != null && _cache.TryGetValue(cacheKey, out List<LearnedWordDto> cachedWords))
+                if (!skipCache && _cache != null && _cache.TryGetValue(cacheKey, out List<LearnedWordDto> cachedWords))
                 {
                     _logger.LogInformation("Retrieved learned words from cache for user {UserId}", userId);
                     return Ok(cachedWords);
@@ -98,8 +101,8 @@ namespace VocabMaster.API.Controllers
                 // Convert to response DTOs using AutoMapper
                 var response = _mapper.Map<List<LearnedWordDto>>(learnedWords);
                 
-                // Cache the result
-                if (_cache != null)
+                // Cache the result (only if not skipping cache)
+                if (!skipCache && _cache != null)
                 {
                     var cacheOptions = new MemoryCacheEntryOptions()
                         .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheExpirationMinutes))
