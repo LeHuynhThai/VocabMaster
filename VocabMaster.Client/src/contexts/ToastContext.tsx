@@ -24,36 +24,36 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const lastToastTimeRef = useRef<number>(0);
 
   const removeToast = useCallback((id: string) => {
-    // Xóa timeout nếu có
+    // delete timeout if it exists
     if (toastTimeoutsRef.current[id]) {
       clearTimeout(toastTimeoutsRef.current[id]);
       delete toastTimeoutsRef.current[id];
     }
 
-    // Đánh dấu toast đang thoát để thêm hiệu ứng fade-out
+    // mark toast as exiting to add fade-out effect
     setToasts(prevToasts => 
       prevToasts.map(toast => 
         toast.id === id ? { ...toast, isExiting: true } : toast
       )
     );
     
-    // Đợi hiệu ứng hoàn thành rồi mới xóa toast khỏi state
+    // wait for fade-out effect to complete before removing toast from state
     setTimeout(() => {
       setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
-    }, 300); // Thời gian hiệu ứng fade-out
+    }, 300); // fade-out duration
   }, []);
 
   const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
-    // Kiểm tra nếu toast trùng lặp trong khoảng thời gian ngắn
+    // check if toast is duplicate in a short time
     const now = Date.now();
     if (
       toast.message === lastToastMessageRef.current && 
       now - lastToastTimeRef.current < 3000 // 3 giây
     ) {
-      return; // Không hiển thị toast trùng lặp
+      return; // do not show duplicate toast
     }
 
-    // Cập nhật thông tin toast cuối cùng
+    // update last toast information
     lastToastMessageRef.current = toast.message;
     lastToastTimeRef.current = now;
 
@@ -61,13 +61,13 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     const newToast: Toast = {
       ...toast,
       id,
-      duration: toast.duration || 5000, // Thời gian mặc định là 5 giây
+      duration: toast.duration || 5000, // default duration is 5 seconds
       isExiting: false
     };
 
-    // Thêm toast mới và giới hạn số lượng
+    // add new toast and limit number of toasts
     setToasts(prevToasts => {
-      // Nếu đã đạt giới hạn, xóa toast cũ nhất
+      // if limit is reached, delete oldest toast
       if (prevToasts.length >= MAX_TOASTS) {
         const oldestToast = prevToasts[0];
         if (oldestToast && !oldestToast.isExiting) {
@@ -77,12 +77,12 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
       return [...prevToasts, newToast];
     });
 
-    // Tự động xóa toast sau khoảng thời gian
+    // automatically delete toast after duration
     const timeout = setTimeout(() => {
       removeToast(id);
     }, newToast.duration);
 
-    // Lưu timeout để có thể xóa nếu cần
+    // save timeout to be able to delete if needed
     toastTimeoutsRef.current[id] = timeout;
   }, [removeToast]);
 
