@@ -37,7 +37,7 @@ namespace VocabMaster.Services
             _httpClient = httpClientFactory != null ? httpClientFactory.CreateClient("TranslationApi") : new HttpClient();
             
             // Get API URL from configuration
-            _translationApiUrl = configuration?.GetValue<string>("TranslationApiUrl") ?? "https://libretranslate.com/translate";
+            _translationApiUrl = configuration?.GetValue<string>("TranslationApiUrl") ?? "https://libretranslate.de/translate";
             
             // Get API key from configuration (optional)
             _apiKey = configuration?.GetValue<string>("TranslationApiKey");
@@ -76,32 +76,38 @@ namespace VocabMaster.Services
 
             try
             {
-                _logger.LogInformation("Translating text from {SourceLanguage} to {TargetLanguage}", sourceLanguage, targetLanguage);
+                _logger.LogInformation("Translating text from {SourceLanguage} to {TargetLanguage}: {Text}", sourceLanguage, targetLanguage, text);
                 
-                // Create request object
-                var request = new TranslationRequestDto
+                // Prepare request data according to LibreTranslate API documentation
+                var requestData = new
                 {
-                    Q = text,
-                    Source = sourceLanguage,
-                    Target = targetLanguage
+                    q = text,
+                    source = sourceLanguage,
+                    target = targetLanguage,
+                    api_key = !string.IsNullOrEmpty(_apiKey) ? _apiKey : null,
+                    format = "text"
                 };
                 
-                // Add API key if available
-                if (!string.IsNullOrEmpty(_apiKey))
-                {
-                    request.ApiKey = _apiKey;
-                }
-                
                 // Serialize request to JSON
-                var requestJson = JsonSerializer.Serialize(request);
+                var requestJson = JsonSerializer.Serialize(requestData);
                 var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+                
+                // Log request details for debugging
+                _logger.LogDebug("Sending translation request to {Url} with payload: {Payload}", _translationApiUrl, requestJson);
                 
                 // Send request to API
                 var response = await _httpClient.PostAsync(_translationApiUrl, content);
                 
+                // Read response content
+                var responseContent = await response.Content.ReadAsStringAsync();
+                
+                // Log response for debugging
+                _logger.LogDebug("Received translation response: {Response}", responseContent);
+                
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("API returned non-success status code {StatusCode}", response.StatusCode);
+                    _logger.LogWarning("API returned non-success status code {StatusCode}: {Response}", 
+                        response.StatusCode, responseContent);
                     return new TranslationResponseDto
                     {
                         OriginalText = text,
@@ -111,45 +117,61 @@ namespace VocabMaster.Services
                     };
                 }
                 
-                // Read response content
-                var responseContent = await response.Content.ReadAsStringAsync();
-                
                 // Parse JSON response
                 var options = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 };
                 
-                // LibreTranslate returns JSON in format { "translatedText": "..." }
-                var translationResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
-                string translatedText = translationResponse.GetProperty("translatedText").GetString();
-                
-                // Create response DTO
-                var result = new TranslationResponseDto
+                try 
                 {
-                    OriginalText = text,
-                    TranslatedText = translatedText,
-                    SourceLanguage = sourceLanguage,
-                    TargetLanguage = targetLanguage
-                };
-                
-                _logger.LogInformation("Successfully translated text from {SourceLanguage} to {TargetLanguage}", sourceLanguage, targetLanguage);
-                return result;
+                    // Try to parse as standard LibreTranslate response format
+                    var translationResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+                    
+                    if (translationResponse.TryGetProperty("translatedText", out var translatedTextElement))
+                    {
+                        string translatedText = translatedTextElement.GetString();
+                        
+                        // Create response DTO
+                        var result = new TranslationResponseDto
+                        {
+                            OriginalText = text,
+                            TranslatedText = translatedText ?? text, // Fallback to original if null
+                            SourceLanguage = sourceLanguage,
+                            TargetLanguage = targetLanguage
+                        };
+                        
+                        _logger.LogInformation("Successfully translated text from {SourceLanguage} to {TargetLanguage}", 
+                            sourceLanguage, targetLanguage);
+                        return result;
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Translation response missing 'translatedText' property: {Response}", responseContent);
+                        return new TranslationResponseDto
+                        {
+                            OriginalText = text,
+                            TranslatedText = text,
+                            SourceLanguage = sourceLanguage,
+                            TargetLanguage = targetLanguage
+                        };
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogError(ex, "Error parsing translation response: {Response}", responseContent);
+                    return new TranslationResponseDto
+                    {
+                        OriginalText = text,
+                        TranslatedText = text,
+                        SourceLanguage = sourceLanguage,
+                        TargetLanguage = targetLanguage
+                    };
+                }
             }
             catch (HttpRequestException ex)
             {
                 _logger.LogError(ex, "HTTP request error while translating text");
-                return new TranslationResponseDto
-                {
-                    OriginalText = text,
-                    TranslatedText = text, // Return original text if translation fails
-                    SourceLanguage = sourceLanguage,
-                    TargetLanguage = targetLanguage
-                };
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogError(ex, "JSON error while processing translation response");
                 return new TranslationResponseDto
                 {
                     OriginalText = text,

@@ -104,26 +104,23 @@ namespace VocabMaster.API.Controllers
                     
                     _cache.Set(cacheKey, response, cacheOptions);
                 }
-
-                _logger.LogInformation("Successfully retrieved random word '{Word}' for user {UserId}", 
-                    randomWord.Word, userId);
                 
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating random word");
-                return StatusCode(500, new { message = "An error occurred while retrieving a random word" });
+                _logger.LogError(ex, "Error getting random word");
+                return StatusCode(500, new { message = "An error occurred while getting a random word" });
             }
         }
 
         /// <summary>
-        /// Gets a new random word, ignoring the cache
+        /// Gets a new random word, bypassing cache
         /// </summary>
         /// <returns>A simplified random word with its definition</returns>
         /// <response code="200">Returns the random word with its definition</response>
         /// <response code="401">If the user is not authenticated</response>
-        /// <response code="404">If no words are available</response>
+        /// <response code="404">If no words are available or all words have been learned</response>
         /// <response code="500">If an error occurs during processing</response>
         [HttpGet("getnewrandomword")]
         [ProducesResponseType(typeof(VocabularyResponseDto), 200)]
@@ -141,12 +138,11 @@ namespace VocabMaster.API.Controllers
                     return Unauthorized(new { message = "Invalid user authentication" });
                 }
 
-                // Clear the cache for this user
+                // Invalidate cache
                 string cacheKey = $"{RandomWordCacheKey}{userId}";
                 if (_cache != null)
                 {
                     _cache.Remove(cacheKey);
-                    _logger.LogInformation("Cleared random word cache for user {UserId}", userId);
                 }
 
                 _logger.LogInformation("Getting new random word for user {UserId}", userId);
@@ -155,7 +151,7 @@ namespace VocabMaster.API.Controllers
                 if (randomWord == null)
                 {
                     _logger.LogInformation("No random word found for user {UserId}", userId);
-                    return NotFound(new { message = "No word found" });
+                    return NotFound(new { message = "No word found or all words have been learned" });
                 }
 
                 // Check if the word is already learned
@@ -173,27 +169,24 @@ namespace VocabMaster.API.Controllers
                     
                     _cache.Set(cacheKey, response, cacheOptions);
                 }
-
-                _logger.LogInformation("Successfully retrieved new random word '{Word}' for user {UserId}", 
-                    randomWord.Word, userId);
                 
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating new random word");
-                return StatusCode(500, new { message = "An error occurred while retrieving a new random word" });
+                _logger.LogError(ex, "Error getting new random word");
+                return StatusCode(500, new { message = "An error occurred while getting a new random word" });
             }
         }
 
         /// <summary>
-        /// Looks up the definition of a specific word
+        /// Looks up a word in the dictionary
         /// </summary>
         /// <param name="word">The word to look up</param>
-        /// <returns>The simplified word definition</returns>
-        /// <response code="200">Returns the word definition</response>
-        /// <response code="400">If the word parameter is null or empty</response>
-        /// <response code="404">If no definition is found for the word</response>
+        /// <returns>A simplified word with its definition</returns>
+        /// <response code="200">Returns the word with its definition</response>
+        /// <response code="400">If the word is null or empty</response>
+        /// <response code="404">If the word is not found</response>
         /// <response code="500">If an error occurs during processing</response>
         [HttpGet("lookup/{word}")]
         [ProducesResponseType(typeof(VocabularyResponseDto), 200)]
@@ -204,70 +197,70 @@ namespace VocabMaster.API.Controllers
         {
             if (string.IsNullOrWhiteSpace(word))
             {
-                _logger.LogWarning("Word parameter is null or empty");
                 return BadRequest(new { message = "Word cannot be empty" });
             }
 
             try
             {
                 var userId = GetUserIdFromClaims();
-                if (userId <= 0)
-                {
-                    _logger.LogWarning("Invalid user ID from claims");
-                    return Unauthorized(new { message = "Invalid user authentication" });
-                }
-
-                // Normalize the word
-                word = word.Trim().ToLowerInvariant();
-
+                
                 // Try to get from cache first
-                string cacheKey = $"{LookupCacheKey}{word}_{userId}";
-                if (_cache != null && _cache.TryGetValue(cacheKey, out VocabularyResponseDto cachedDefinition))
+                string cacheKey = $"{LookupCacheKey}{word.ToLowerInvariant()}";
+                if (_cache != null && _cache.TryGetValue(cacheKey, out VocabularyResponseDto cachedWord))
                 {
-                    _logger.LogInformation("Retrieved definition for word '{Word}' from cache", word);
-                    return Ok(cachedDefinition);
+                    _logger.LogInformation("Retrieved word definition from cache: {Word}", word);
+                    
+                    // If user is authenticated, check if the word is learned
+                    if (userId > 0)
+                    {
+                        bool isLearned = await _vocabularyService.IsWordLearned(userId, word);
+                        cachedWord.IsLearned = isLearned;
+                    }
+                    
+                    return Ok(cachedWord);
                 }
 
-                _logger.LogInformation("Looking up definition for word: {Word}", word);
-                var definition = await _dictionaryService.GetWordDefinition(word);
+                _logger.LogInformation("Looking up word: {Word}", word);
+                var wordDefinition = await _dictionaryService.GetWordDefinitionWithTranslation(word);
 
-                if (definition == null)
+                if (wordDefinition == null)
                 {
-                    _logger.LogInformation("No definition found for word: {Word}", word);
-                    return NotFound(new { message = $"No definition found for word: {word}" });
+                    _logger.LogInformation("Word not found: {Word}", word);
+                    return NotFound(new { message = $"Word '{word}' not found" });
                 }
 
-                // Check if the word is already learned
-                bool isLearned = await _vocabularyService.IsWordLearned(userId, word);
+                // Check if the word is already learned (if user is authenticated)
+                bool isWordLearned = userId > 0 && await _vocabularyService.IsWordLearned(userId, word);
 
                 // Convert to simplified response
-                var response = VocabularyResponseDto.FromDictionaryResponse(definition, 0, isLearned);
+                var response = VocabularyResponseDto.FromDictionaryResponse(wordDefinition, 0, isWordLearned);
                 
                 // Cache the result
                 if (_cache != null)
                 {
                     var cacheOptions = new MemoryCacheEntryOptions()
-                        .SetAbsoluteExpiration(TimeSpan.FromHours(24)) // Definitions don't change often
+                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheExpirationMinutes))
                         .SetPriority(CacheItemPriority.Normal);
                     
                     _cache.Set(cacheKey, response, cacheOptions);
                 }
-
-                _logger.LogInformation("Successfully retrieved definition for word: {Word}", word);
+                
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting word definition: {Word}", word);
-                return StatusCode(500, new { message = "An error occurred while looking up the word definition" });
+                _logger.LogError(ex, "Error looking up word: {Word}", word);
+                return StatusCode(500, new { message = "An error occurred while looking up the word" });
             }
         }
 
         /// <summary>
-        /// Checks if a word is already learned by the current user
+        /// Checks if a word is learned by the current user
         /// </summary>
         /// <param name="word">The word to check</param>
         /// <returns>Whether the word is learned</returns>
+        /// <response code="200">Returns whether the word is learned</response>
+        /// <response code="401">If the user is not authenticated</response>
         [HttpGet("islearned/{word}")]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 401)]
@@ -276,17 +269,20 @@ namespace VocabMaster.API.Controllers
             var userId = GetUserIdFromClaims();
             if (userId <= 0)
             {
+                _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
                 return Unauthorized(new { message = "Invalid user authentication" });
             }
 
             try
             {
-                var isLearned = await _vocabularyService.IsWordLearned(userId, word);
+                _logger.LogInformation("Checking if word {Word} is learned by user {UserId}", word, userId);
+                bool isLearned = await _vocabularyService.IsWordLearned(userId, word);
+                
                 return Ok(new { isLearned });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error checking if word is learned: {Word}", word);
+                _logger.LogError(ex, "Error checking if word {Word} is learned", word);
                 return StatusCode(500, new { message = "An error occurred while checking if the word is learned" });
             }
         }
@@ -294,10 +290,10 @@ namespace VocabMaster.API.Controllers
         /// <summary>
         /// Adds a word to the user's learned words list
         /// </summary>
-        /// <param name="word">The word to add to learned list</param>
+        /// <param name="word">The word to add</param>
         /// <returns>Result of the operation</returns>
-        /// <response code="200">Returns success status</response>
-        /// <response code="400">If the word parameter is null or empty</response>
+        /// <response code="200">If the word was added successfully</response>
+        /// <response code="400">If the word is null or empty</response>
         /// <response code="401">If the user is not authenticated</response>
         /// <response code="500">If an error occurs during processing</response>
         [HttpPost("learned/{word}")]
@@ -309,51 +305,44 @@ namespace VocabMaster.API.Controllers
         {
             if (string.IsNullOrWhiteSpace(word))
             {
-                _logger.LogWarning("Word parameter is null or empty");
                 return BadRequest(new { message = "Word cannot be empty" });
+            }
+
+            var userId = GetUserIdFromClaims();
+            if (userId <= 0)
+            {
+                _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
+                return Unauthorized(new { message = "Invalid user authentication" });
             }
 
             try
             {
-                var userId = GetUserIdFromClaims();
-                if (userId <= 0)
+                _logger.LogInformation("Adding word {Word} to learned list for user {UserId}", word, userId);
+                var result = await _vocabularyService.MarkWordAsLearned(userId, word);
+                
+                if (result.Success)
                 {
-                    _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
-                    return Unauthorized(new { message = "Invalid user authentication" });
-                }
-
-                // Normalize the word
-                word = word.Trim().ToLowerInvariant();
-
-                _logger.LogInformation("Adding word '{Word}' to learned list for user {UserId}", word, userId);
-                var result = await _vocabularyService.AddLearnedWord(userId, word);
-
-                if (result)
-                {
-                    // Invalidate caches that might be affected
+                    // Invalidate random word cache
                     if (_cache != null)
                     {
-                        _cache.Remove($"{RandomWordCacheKey}{userId}");
-                        _cache.Remove($"{LookupCacheKey}{word}_{userId}");
-                        _logger.LogInformation("Invalidated caches for user {UserId} after adding learned word", userId);
+                        string cacheKey = $"{RandomWordCacheKey}{userId}";
+                        _cache.Remove(cacheKey);
                     }
-
-                    _logger.LogInformation("Successfully added word '{Word}' to learned list for user {UserId}", word, userId);
-                    return Ok(new { success = true, message = $"Word '{word}' added to learned words" });
+                    
+                    return Ok(new { success = true });
                 }
                 else
                 {
-                    _logger.LogWarning("Failed to add word '{Word}' to learned list for user {UserId}", word, userId);
-                    return BadRequest(new { success = false, message = $"Failed to add word '{word}' to learned words" });
+                    return BadRequest(new { message = result.ErrorMessage ?? "Cannot mark word as learned" });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding word '{Word}' to learned list", word);
-                return StatusCode(500, new { success = false, message = "An error occurred while adding the word to learned list" });
+                _logger.LogError(ex, "Error adding word {Word} to learned list", word);
+                return StatusCode(500, new { message = "An error occurred while adding the word to learned list" });
             }
         }
-        
+
         /// <summary>
         /// Gets the user ID from the claims principal
         /// </summary>
