@@ -27,5 +27,12 @@ namespace VocabMaster.Core.Interfaces.Services
         /// <param name="userId">ID of the user</param>
         /// <returns>Dictionary response with word details or null if not found or all words have been learned</returns>
         Task<DictionaryResponseDto> GetRandomWordExcludeLearned(int userId);
+        
+        /// <summary>
+        /// Gets the definition of a word and translates relevant parts to Vietnamese
+        /// </summary>
+        /// <param name="word">The word to look up</param>
+        /// <returns>Dictionary response with translated details or null if not found</returns>
+        Task<DictionaryResponseDto> GetWordDefinitionWithTranslation(string word);
     }
 }

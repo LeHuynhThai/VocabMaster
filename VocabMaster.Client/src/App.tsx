@@ -17,7 +17,6 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import WordGeneratorPage from './pages/WordGeneratorPage';
 import LearnedWordsPage from './pages/LearnedWordsPage';
-import TranslationPage from './pages/TranslationPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { ROUTES } from './utils/constants';
 
@@ -55,12 +54,6 @@ function App() {
                     path={ROUTES.LEARNED_WORDS} 
                     element={
                       <ProtectedRoute element={<LearnedWordsPage />} />
-                    } 
-                  />
-                  <Route 
-                    path={ROUTES.TRANSLATION} 
-                    element={
-                      <ProtectedRoute element={<TranslationPage />} />
                     } 
                   />
                   <Route path={ROUTES.NOT_FOUND} element={<NotFoundPage />} />

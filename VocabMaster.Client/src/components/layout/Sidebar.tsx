@@ -67,13 +67,6 @@ const Sidebar: React.FC = () => {
                 <span>Từ đã học</span>
               </Link>
             </li>
-            
-            <li className={`nav-item ${isActive(ROUTES.TRANSLATION) ? 'active' : ''}`}>
-              <Link to={ROUTES.TRANSLATION} className="nav-link">
-                <i className="bi bi-translate"></i>
-                <span>Dịch thuật</span>
-              </Link>
-            </li>
           </ul>
         </nav>
       </div>

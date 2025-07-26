@@ -4,7 +4,6 @@ import { useToast } from '../contexts/ToastContext';
 import vocabularyService from '../services/vocabularyService';
 import { Vocabulary, Pronunciation, Meaning } from '../types';
 import './WordGeneratorPage.css';
-import TranslationBox from '../components/ui/TranslationBox';
 import { ROUTES } from '../utils/constants';
 
 // Hàm lấy class CSS dựa trên loại từ
@@ -102,7 +101,6 @@ const WordGeneratorPage: React.FC = () => {
           message: `Đã lưu từ "${word.word}" vào danh sách từ đã học.`
         });
       } else {
-        // Hiển thị thông báo lỗi
         addToast({
           type: 'error',
           message: result.error || 'Không thể lưu từ vựng. Vui lòng thử lại sau.'
@@ -132,6 +130,7 @@ const WordGeneratorPage: React.FC = () => {
     });
   };
 
+  // Load random word when component mounts
   useEffect(() => {
     fetchRandomWord();
   }, [fetchRandomWord]);
@@ -283,12 +282,6 @@ const WordGeneratorPage: React.FC = () => {
           </Button>
         </div>
       )}
-      
-      <Row className="mt-5">
-        <Col lg={8} className="mx-auto">
-          <TranslationBox initialText={word?.word || ''} />
-        </Col>
-      </Row>
     </Container>
   );
 };

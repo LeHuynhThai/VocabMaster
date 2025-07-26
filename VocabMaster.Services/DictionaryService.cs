@@ -21,6 +21,7 @@ namespace VocabMaster.Services
         private readonly ILogger<DictionaryService> _logger;
         private readonly IVocabularyRepo _vocabularyRepository;
         private readonly ILearnedWordRepo _learnedWordRepository;
+        private readonly ITranslationService _translationService;
         private readonly string _dictionaryApiUrl;
         private readonly Random _random = new Random();
         private const int MAX_ATTEMPTS = 5;
@@ -31,18 +32,21 @@ namespace VocabMaster.Services
         /// <param name="logger">Logger for the service</param>
         /// <param name="vocabularyRepository">Repository for vocabulary operations</param>
         /// <param name="learnedWordRepository">Repository for learned words operations</param>
+        /// <param name="translationService">Service for translation operations</param>
         /// <param name="configuration">Application configuration</param>
         /// <param name="httpClientFactory">Factory for creating HttpClient instances</param>
         public DictionaryService(
             ILogger<DictionaryService> logger,
             IVocabularyRepo vocabularyRepository,
             ILearnedWordRepo learnedWordRepository,
+            ITranslationService translationService,
             IConfiguration configuration = null,
             IHttpClientFactory httpClientFactory = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _vocabularyRepository = vocabularyRepository ?? throw new ArgumentNullException(nameof(vocabularyRepository));
             _learnedWordRepository = learnedWordRepository ?? throw new ArgumentNullException(nameof(learnedWordRepository));
+            _translationService = translationService ?? throw new ArgumentNullException(nameof(translationService));
             
             // Use IHttpClientFactory if provided, otherwise create a new HttpClient
             _httpClient = httpClientFactory != null ? httpClientFactory.CreateClient("DictionaryApi") : new HttpClient();
@@ -69,7 +73,7 @@ namespace VocabMaster.Services
                 }
                 
                 _logger.LogInformation("Found random word: {Word}", vocabulary.Word);
-                return await GetWordDefinition(vocabulary.Word);
+                return await GetWordDefinitionWithTranslation(vocabulary.Word);
             }
             catch (Exception ex)
             {
@@ -141,7 +145,7 @@ namespace VocabMaster.Services
                         if (randomVocab != null && !learnedWords.Contains(randomVocab.Word.ToLowerInvariant()))
                         {
                             _logger.LogInformation("Found unlearned random word on attempt {Attempt}: {Word}", attempt + 1, randomVocab.Word);
-                            return await GetWordDefinition(randomVocab.Word);
+                            return await GetWordDefinitionWithTranslation(randomVocab.Word);
                         }
                     }
                     
@@ -150,7 +154,7 @@ namespace VocabMaster.Services
                 }
                 
                 _logger.LogInformation("Found random unlearned word: {Word}", vocabulary.Word);
-                return await GetWordDefinition(vocabulary.Word);
+                return await GetWordDefinitionWithTranslation(vocabulary.Word);
             }
             catch (Exception ex)
             {
@@ -220,6 +224,58 @@ namespace VocabMaster.Services
             {
                 _logger.LogError(ex, "Unexpected error getting definition for word: {Word}", word);
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the definition of a word and translates relevant parts to Vietnamese
+        /// </summary>
+        /// <param name="word">The word to look up</param>
+        /// <returns>Dictionary response with translated details or null if not found</returns>
+        public async Task<DictionaryResponseDto> GetWordDefinitionWithTranslation(string word)
+        {
+            var definition = await GetWordDefinition(word);
+            if (definition == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Translate the word itself
+                var wordTranslation = await _translationService.TranslateEnglishToVietnamese(definition.Word);
+                
+                // Process each meaning
+                foreach (var meaning in definition.Meanings)
+                {
+                    // Translate part of speech
+                    var partOfSpeechTranslation = await _translationService.TranslateEnglishToVietnamese(meaning.PartOfSpeech);
+                    meaning.PartOfSpeech += $" ({partOfSpeechTranslation.TranslatedText})";
+                    
+                    // Process each definition in this meaning
+                    foreach (var def in meaning.Definitions)
+                    {
+                        // Translate definition text
+                        var definitionTranslation = await _translationService.TranslateEnglishToVietnamese(def.Text);
+                        def.Text += $"\n→ {definitionTranslation.TranslatedText}";
+                        
+                        // Translate example if present
+                        if (!string.IsNullOrEmpty(def.Example))
+                        {
+                            var exampleTranslation = await _translationService.TranslateEnglishToVietnamese(def.Example);
+                            def.Example += $"\n→ {exampleTranslation.TranslatedText}";
+                        }
+                    }
+                }
+                
+                _logger.LogInformation("Successfully translated definition for word: {Word}", word);
+                return definition;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error translating definition for word: {Word}", word);
+                // Return the original untranslated definition if translation fails
+                return definition;
             }
         }
     }
