@@ -45,7 +45,7 @@ const Sidebar: React.FC = () => {
         
         {/* Navigation links */}
         <nav className="sidebar-nav">
-          <h6 className="nav-title">Menu</h6>
+          <h6 className="nav-title">MENU</h6>
           <ul className="nav-list">
             <li className={`nav-item ${isActive(ROUTES.HOME) ? 'active' : ''}`}>
               <Link to={ROUTES.HOME} className="nav-link">
@@ -56,15 +56,22 @@ const Sidebar: React.FC = () => {
             
             <li className={`nav-item ${isActive(ROUTES.WORD_GENERATOR) ? 'active' : ''}`}>
               <Link to={ROUTES.WORD_GENERATOR} className="nav-link">
-                <i className="bi bi-translate"></i>
+                <i className="bi bi-book"></i>
                 <span>Từ vựng mới</span>
               </Link>
             </li>
             
             <li className={`nav-item ${isActive(ROUTES.LEARNED_WORDS) ? 'active' : ''}`}>
               <Link to={ROUTES.LEARNED_WORDS} className="nav-link">
-                <i className="bi bi-journal-text"></i>
+                <i className="bi bi-journal-check"></i>
                 <span>Từ đã học</span>
+              </Link>
+            </li>
+            
+            <li className={`nav-item ${isActive(ROUTES.TRANSLATION) ? 'active' : ''}`}>
+              <Link to={ROUTES.TRANSLATION} className="nav-link">
+                <i className="bi bi-translate"></i>
+                <span>Dịch thuật</span>
               </Link>
             </li>
           </ul>

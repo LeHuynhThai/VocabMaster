@@ -3,10 +3,10 @@
   top: var(--header-height);
   left: 0;
   height: calc(100vh - var(--header-height));
-  width: var(--sidebar-width);
+  width: var(--sidebar-width, 250px);
   background-color: white;
   box-shadow: var(--shadow-sm);
-  z-index: var(--z-index-fixed);
+  z-index: var(--z-index-fixed, 1000);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -17,7 +17,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-lg) 0;
+  padding: var(--spacing-lg, 20px) 0;
   overflow-y: auto;
 }
 
@@ -25,9 +25,9 @@
 .sidebar-profile {
   display: flex;
   align-items: center;
-  padding: 0 var(--spacing-lg) var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--gray-200);
+  padding: 0 var(--spacing-lg, 20px) var(--spacing-lg, 20px);
+  margin-bottom: var(--spacing-lg, 20px);
+  border-bottom: 1px solid var(--gray-200, #e9ecef);
 }
 
 .avatar-container {
@@ -37,52 +37,52 @@
 .avatar {
   width: 48px;
   height: 48px;
-  border-radius: var(--radius-md);
-  background: var(--gradient-primary);
+  border-radius: var(--radius-md, 8px);
+  background: var(--gradient-primary, linear-gradient(135deg, #6a11cb 0%, #2575fc 100%));
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
   font-size: 1.4rem;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md, 0 4px 6px rgba(0, 0, 0, 0.1));
 }
 
 .user-info {
-  margin-left: var(--spacing-md);
+  margin-left: var(--spacing-md, 16px);
   overflow: hidden;
 }
 
 .user-name {
   margin: 0 0 0.25rem;
   font-weight: 600;
-  font-size: var(--font-size-md);
-  color: var(--gray-800);
+  font-size: var(--font-size-md, 1rem);
+  color: var(--gray-800, #343a40);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .user-stats {
-  font-size: var(--font-size-xs);
-  color: var(--gray-600);
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--gray-600, #6c757d);
   display: flex;
   align-items: center;
 }
 
 /* Navigation */
 .nav-title {
-  padding: 0 var(--spacing-lg);
-  margin-bottom: var(--spacing-md);
+  padding: 0 var(--spacing-lg, 20px);
+  margin-bottom: var(--spacing-md, 16px);
   text-transform: uppercase;
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-xs, 0.75rem);
   letter-spacing: 1px;
-  color: var(--gray-600);
-  font-weight: 600;
+  color: #333;
+  font-weight: 700;
 }
 
 .sidebar-nav {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg, 20px);
 }
 
 .nav-list {
@@ -92,19 +92,20 @@
 }
 
 .nav-item {
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: var(--spacing-xs, 8px);
 }
 
 .nav-link {
   display: flex;
   align-items: center;
-  padding: var(--spacing-md) var(--spacing-lg);
-  color: var(--gray-700);
+  padding: var(--spacing-md, 16px) var(--spacing-lg, 20px);
+  color: #333;
   text-decoration: none;
-  transition: all var(--transition-normal);
+  transition: all var(--transition-normal, 0.3s ease);
   border-left: 3px solid transparent;
   position: relative;
   overflow: hidden;
+  font-weight: 500;
 }
 
 .nav-link::before {
@@ -115,7 +116,7 @@
   width: 0;
   height: 100%;
   background-color: rgba(106, 17, 203, 0.08);
-  transition: width var(--transition-normal);
+  transition: width var(--transition-normal, 0.3s ease);
   z-index: -1;
 }
 
@@ -124,30 +125,36 @@
 }
 
 .nav-link i {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-lg, 1.25rem);
   min-width: 24px;
   text-align: center;
-  margin-right: var(--spacing-md);
-  color: var(--primary);
+  margin-right: var(--spacing-md, 16px);
+  color: var(--primary, #6a11cb);
 }
 
 .nav-link span {
   white-space: nowrap;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333;
 }
 
 .nav-item.active .nav-link {
-  color: var(--primary);
-  border-left-color: var(--primary);
+  color: var(--primary, #6a11cb);
+  border-left-color: var(--primary, #6a11cb);
   background-color: rgba(106, 17, 203, 0.08);
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.nav-item.active .nav-link span {
+  color: var(--primary, #6a11cb);
 }
 
 /* Add space at the bottom to prevent overlap with footer */
 .sidebar-content::after {
   content: '';
   display: block;
-  height: var(--footer-height);
+  height: var(--footer-height, 60px);
 }
 
 /* Responsive adjustments */
@@ -156,7 +163,7 @@
     top: 60px;
     height: calc(100vh - 60px);
     transform: translateX(-100%);
-    transition: transform var(--transition-normal);
+    transition: transform var(--transition-normal, 0.3s ease);
   }
   
   .sidebar.show {

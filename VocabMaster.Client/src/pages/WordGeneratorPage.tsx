@@ -4,6 +4,8 @@ import { useToast } from '../contexts/ToastContext';
 import vocabularyService from '../services/vocabularyService';
 import { Vocabulary, Pronunciation, Meaning } from '../types';
 import './WordGeneratorPage.css';
+import TranslationBox from '../components/ui/TranslationBox';
+import { ROUTES } from '../utils/constants';
 
 // Hàm lấy class CSS dựa trên loại từ
 const getPartOfSpeechClass = (partOfSpeech: string): string => {
@@ -135,40 +137,57 @@ const WordGeneratorPage: React.FC = () => {
   }, [fetchRandomWord]);
 
   return (
-    <Container className="word-generator-page">
-      <h1 className="page-title">Từ Vựng Mới</h1>
-      
-      <Form onSubmit={handleSearch} className="search-form mb-4">
-        <InputGroup>
-          <Form.Control
-            type="text"
-            placeholder="Nhập từ cần tra cứu..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Button variant="primary" type="submit" disabled={searching}>
-            {searching ? <Spinner animation="border" size="sm" /> : 'Tra cứu'}
-          </Button>
-        </InputGroup>
-      </Form>
+    <Container className="py-4">
+      <Row>
+        <Col lg={8} className="mx-auto">
+          <div className="page-header">
+            <h1 className="page-title">Từ vựng ngẫu nhiên</h1>
+            <p className="page-description">
+              Học từ vựng mới mỗi ngày để cải thiện vốn từ của bạn
+            </p>
+          </div>
+          
+          <Form onSubmit={handleSearch} className="mb-4">
+            <InputGroup>
+              <Form.Control
+                type="text"
+                placeholder="Nhập từ bạn muốn tra cứu..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                disabled={searching || loading}
+              />
+              <Button 
+                type="submit" 
+                variant="outline-primary"
+                disabled={searching || loading || !searchTerm.trim()}
+              >
+                {searching ? (
+                  <Spinner animation="border" size="sm" />
+                ) : (
+                  <i className="bi bi-search"></i>
+                )}
+              </Button>
+            </InputGroup>
+          </Form>
+        </Col>
+      </Row>
 
       {loading ? (
         <div className="text-center my-5">
-          <Spinner animation="border" />
-          <p className="mt-2">Đang tải từ vựng...</p>
+          <Spinner animation="border" role="status" variant="primary">
+            <span className="visually-hidden">Đang tải...</span>
+          </Spinner>
+          <p className="mt-3">Đang tải từ vựng...</p>
         </div>
       ) : word ? (
         <div className="word-container">
           <div className="word-header">
             <h2 className="word-title">{word.word}</h2>
-          </div>
-
-          {word.pronunciations && word.pronunciations.length > 0 && (
-            <div className="pronunciation-section">
-              <h3 className="pronunciation-title">
-                <i className="bi bi-volume-up me-2"></i>
-                Phát âm
-              </h3>
+            {word.phonetic && (
+              <div className="word-phonetic">{word.phonetic}</div>
+            )}
+            
+            {word.pronunciations && word.pronunciations.length > 0 && (
               <div className="pronunciation-container">
                 {word.pronunciations.map((pronunciation: Pronunciation, index: number) => (
                   <div key={index} className="pronunciation-item">
@@ -187,8 +206,8 @@ const WordGeneratorPage: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {word.meanings && word.meanings.length > 0 && (
             <div className="meanings-container">
@@ -264,6 +283,12 @@ const WordGeneratorPage: React.FC = () => {
           </Button>
         </div>
       )}
+      
+      <Row className="mt-5">
+        <Col lg={8} className="mx-auto">
+          <TranslationBox initialText={word?.word || ''} />
+        </Col>
+      </Row>
     </Container>
   );
 };

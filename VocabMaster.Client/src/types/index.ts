@@ -56,6 +56,16 @@ export interface LearnedWord {
 }
 
 /**
+ * Translation response information
+ */
+export interface TranslationResponse {
+  originalText: string;
+  translatedText: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+}
+
+/**
  * Login request information
  */
 export interface LoginRequest {

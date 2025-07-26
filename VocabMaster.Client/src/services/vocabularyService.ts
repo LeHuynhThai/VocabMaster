@@ -1,5 +1,5 @@
 import api from './api';
-import { Vocabulary, LearnedWord } from '../types';
+import { Vocabulary, LearnedWord, TranslationResponse } from '../types';
 
 /**
  * Service for vocabulary operations
@@ -114,6 +114,54 @@ const vocabularyService = {
       return {
         success: false,
         error: error?.response?.data?.message || 'Không thể xóa từ vựng'
+      };
+    }
+  },
+
+  /**
+   * Translates text from English to Vietnamese
+   * @param text - Text to translate
+   * @returns Translation result
+   */
+  translateEnglishToVietnamese: async (text: string): Promise<TranslationResponse> => {
+    try {
+      const response = await api.get(`/api/translation/en-to-vi?text=${encodeURIComponent(text)}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error translating text:', error);
+      // return original text if error
+      return {
+        originalText: text,
+        translatedText: text,
+        sourceLanguage: 'en',
+        targetLanguage: 'vi'
+      };
+    }
+  },
+
+  /**
+   * Translates text between specified languages
+   * @param text - Text to translate
+   * @param sourceLanguage - Source language code
+   * @param targetLanguage - Target language code
+   * @returns Translation result
+   */
+  translate: async (text: string, sourceLanguage: string = 'en', targetLanguage: string = 'vi'): Promise<TranslationResponse> => {
+    try {
+      const response = await api.post('/api/translation/translate', {
+        q: text,
+        source: sourceLanguage,
+        target: targetLanguage
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error translating text:', error);
+      // return original text if error
+      return {
+        originalText: text,
+        translatedText: text,
+        sourceLanguage: sourceLanguage,
+        targetLanguage: targetLanguage
       };
     }
   }
