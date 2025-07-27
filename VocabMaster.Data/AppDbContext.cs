@@ -14,6 +14,7 @@ namespace VocabMaster.Data
         public DbSet<User> Users { get; set; }
         public DbSet<LearnedWord> LearnedVocabularies { get; set; }
         public DbSet<Vocabulary> Vocabularies { get; set; }
+        public DbSet<DictionaryDetails> DictionaryDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -30,6 +31,11 @@ namespace VocabMaster.Data
                 .WithOne(lv => lv.User)
                 .HasForeignKey(lv => lv.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+                
+            // Create unique index for Word in DictionaryDetails
+            builder.Entity<DictionaryDetails>()
+                .HasIndex(dd => dd.Word)
+                .IsUnique();
         }
     }
 }

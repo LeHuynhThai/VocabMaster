@@ -131,6 +131,26 @@ namespace VocabMaster.Data.Repositories
                 throw;
             }
         }
+
+        /// <summary>
+        /// Gets all vocabularies
+        /// </summary>
+        /// <returns>List of all vocabularies</returns>
+        public async Task<List<Vocabulary>> GetAll()
+        {
+            try
+            {
+                _logger?.LogInformation("Getting all vocabularies");
+                var vocabularies = await _context.Vocabularies.ToListAsync();
+                _logger?.LogInformation("Retrieved {Count} vocabularies", vocabularies.Count);
+                return vocabularies;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error retrieving all vocabularies");
+                throw;
+            }
+        }
     }
 }
 
