@@ -27,5 +27,11 @@ namespace VocabMaster.Core.Interfaces.Repositories
         /// <param name="learnedWords">List of words that have already been learned</param>
         /// <returns>Random vocabulary excluding learned words, or null if all words have been learned</returns>
         Task<Vocabulary> GetRandomExcludeLearned(List<string> learnedWords);
+
+        /// <summary>
+        /// Gets all vocabularies
+        /// </summary>
+        /// <returns>List of all vocabularies</returns>
+        Task<List<Vocabulary>> GetAll();
     }
 }

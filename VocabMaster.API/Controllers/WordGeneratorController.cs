@@ -189,68 +189,29 @@ namespace VocabMaster.API.Controllers
         /// <response code="404">If the word is not found</response>
         /// <response code="500">If an error occurs during processing</response>
         [HttpGet("lookup/{word}")]
-        [ProducesResponseType(typeof(VocabularyResponseDto), 200)]
-        [ProducesResponseType(typeof(object), 400)]
-        [ProducesResponseType(typeof(object), 404)]
-        [ProducesResponseType(typeof(object), 500)]
+        [Authorize]
         public async Task<IActionResult> Lookup(string word)
         {
-            if (string.IsNullOrWhiteSpace(word))
-            {
-                return BadRequest(new { message = "Word cannot be empty" });
-            }
-
             try
             {
-                var userId = GetUserIdFromClaims();
+                _logger.LogInformation("Looking up definition for word: {Word}", word);
                 
-                // Try to get from cache first
-                string cacheKey = $"{LookupCacheKey}{word.ToLowerInvariant()}";
-                if (_cache != null && _cache.TryGetValue(cacheKey, out VocabularyResponseDto cachedWord))
-                {
-                    _logger.LogInformation("Retrieved word definition from cache: {Word}", word);
-                    
-                    // If user is authenticated, check if the word is learned
-                    if (userId > 0)
-                    {
-                        bool isLearned = await _vocabularyService.IsWordLearned(userId, word);
-                        cachedWord.IsLearned = isLearned;
-                    }
-                    
-                    return Ok(cachedWord);
-                }
-
-                _logger.LogInformation("Looking up word: {Word}", word);
-                var wordDefinition = await _dictionaryService.GetWordDefinitionWithTranslation(word);
-
-                if (wordDefinition == null)
-                {
-                    _logger.LogInformation("Word not found: {Word}", word);
-                    return NotFound(new { message = $"Word '{word}' not found" });
-                }
-
-                // Check if the word is already learned (if user is authenticated)
-                bool isWordLearned = userId > 0 && await _vocabularyService.IsWordLearned(userId, word);
-
-                // Convert to simplified response
-                var response = VocabularyResponseDto.FromDictionaryResponse(wordDefinition, 0, isWordLearned);
+                // Get the definition from cache or API
+                var definition = await _dictionaryService.GetWordDefinitionFromCache(word);
                 
-                // Cache the result
-                if (_cache != null)
+                if (definition == null)
                 {
-                    var cacheOptions = new MemoryCacheEntryOptions()
-                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheExpirationMinutes))
-                        .SetPriority(CacheItemPriority.Normal);
-                    
-                    _cache.Set(cacheKey, response, cacheOptions);
+                    _logger.LogWarning("No definition found for word: {Word}", word);
+                    return NotFound(new { message = $"No definition found for word: {word}" });
                 }
                 
-                return Ok(response);
+                _logger.LogInformation("Successfully retrieved definition for word: {Word}", word);
+                return Ok(definition);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error looking up word: {Word}", word);
-                return StatusCode(500, new { message = "An error occurred while looking up the word" });
+                _logger.LogError(ex, "Error looking up definition for word: {Word}", word);
+                return StatusCode(500, new { message = "An error occurred while looking up the definition" });
             }
         }
 
