@@ -61,12 +61,19 @@ namespace VocabMaster.Data.Repositories
         /// <returns>The added or updated entity</returns>
         public async Task<DictionaryDetails> AddOrUpdate(DictionaryDetails details)
         {
+            if (details == null)
+            {
+                _logger.LogWarning("Dictionary details parameter is null");
+                return null;
+            }
+
             try
             {
                 _logger.LogInformation("Adding or updating dictionary details for word: {Word}", details.Word);
                 
                 // Check if the word already exists
-                var existingDetails = await GetByWord(details.Word);
+                var existingDetails = await _context.DictionaryDetails
+                    .FirstOrDefaultAsync(dd => dd.Word.ToLower() == details.Word.ToLower());
                 
                 if (existingDetails != null)
                 {
@@ -75,7 +82,6 @@ namespace VocabMaster.Data.Repositories
                     // Update existing entry
                     existingDetails.PhoneticsJson = details.PhoneticsJson;
                     existingDetails.MeaningsJson = details.MeaningsJson;
-                    existingDetails.TranslationsJson = details.TranslationsJson;
                     existingDetails.UpdatedAt = DateTime.UtcNow;
                     
                     _context.DictionaryDetails.Update(existingDetails);
@@ -89,7 +95,7 @@ namespace VocabMaster.Data.Repositories
                     _logger.LogInformation("Adding new dictionary details for word: {Word}", details.Word);
                     
                     // Add new entry
-                    _context.DictionaryDetails.Add(details);
+                    await _context.DictionaryDetails.AddAsync(details);
                     await _context.SaveChangesAsync();
                     
                     _logger.LogInformation("Successfully added dictionary details for word: {Word}", details.Word);
