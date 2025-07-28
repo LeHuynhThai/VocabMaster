@@ -320,6 +320,8 @@ namespace VocabMaster.Services
 
             try
             {
+                _logger.LogInformation("Caching definition for word: {Word}", word);
+                
                 // Check if already cached
                 var exists = await _dictionaryDetailsRepository.Exists(word);
                 if (exists)
@@ -337,7 +339,8 @@ namespace VocabMaster.Services
                 }
                 
                 // Cache the definition
-                return await CacheDefinition(definition);
+                var result = await CacheDefinition(definition);
+                return result != null;
             }
             catch (Exception ex)
             {
@@ -394,7 +397,7 @@ namespace VocabMaster.Services
                         
                         // Cache the definition
                         var success = await CacheDefinition(definition);
-                        if (success)
+                        if (success != null) // Changed from success to success != null
                         {
                             successCount++;
                             _logger.LogInformation("Successfully cached definition for word: {Word}", vocabulary.Word);
@@ -432,19 +435,19 @@ namespace VocabMaster.Services
         /// </summary>
         /// <param name="definition">The definition to cache</param>
         /// <returns>True if successful, false otherwise</returns>
-        private async Task<bool> CacheDefinition(DictionaryResponseDto definition)
+        private async Task<DictionaryDetails> CacheDefinition(DictionaryResponseDto definition)
         {
             if (definition == null)
             {
                 _logger.LogWarning("Definition parameter is null");
-                return false;
+                return null;
             }
 
             try
             {
                 var options = new JsonSerializerOptions
                 {
-                    WriteIndented = true
+                    PropertyNameCaseInsensitive = true,
                 };
                 
                 // Serialize the phonetics and meanings
@@ -460,19 +463,18 @@ namespace VocabMaster.Services
                     Word = definition.Word,
                     PhoneticsJson = phoneticsJson,
                     MeaningsJson = meaningsJson,
-                    TranslationsJson = "{}",
                     CreatedAt = DateTime.UtcNow
                 };
                 
                 // Save to the repository
                 var result = await _dictionaryDetailsRepository.AddOrUpdate(dictionaryDetails);
                 
-                return result != null;
+                return result;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error caching definition for word: {Word}", definition.Word);
-                return false;
+                return null;
             }
         }
     }

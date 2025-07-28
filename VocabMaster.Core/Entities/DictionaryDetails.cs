@@ -25,9 +25,6 @@ namespace VocabMaster.Core.Entities
         [Required]
         public string MeaningsJson { get; set; }
 
-        // Serialized JSON data for Vietnamese translations
-        public string TranslationsJson { get; set; } = "{}";
-
         // When this record was created
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
