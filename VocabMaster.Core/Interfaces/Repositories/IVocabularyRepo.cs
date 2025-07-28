@@ -33,5 +33,12 @@ namespace VocabMaster.Core.Interfaces.Repositories
         /// </summary>
         /// <returns>List of all vocabularies</returns>
         Task<List<Vocabulary>> GetAll();
+        
+        /// <summary>
+        /// Updates a vocabulary in the repository
+        /// </summary>
+        /// <param name="vocabulary">The vocabulary to update</param>
+        /// <returns>True if successful, false otherwise</returns>
+        Task<bool> Update(Vocabulary vocabulary);
     }
 }

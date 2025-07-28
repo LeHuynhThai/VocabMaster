@@ -151,6 +151,48 @@ namespace VocabMaster.Data.Repositories
                 throw;
             }
         }
+
+        /// <summary>
+        /// Updates a vocabulary in the repository
+        /// </summary>
+        /// <param name="vocabulary">The vocabulary to update</param>
+        /// <returns>True if successful, false otherwise</returns>
+        public async Task<bool> Update(Vocabulary vocabulary)
+        {
+            try
+            {
+                if (vocabulary == null)
+                {
+                    _logger?.LogWarning("Cannot update null vocabulary");
+                    return false;
+                }
+
+                _logger?.LogInformation("Updating vocabulary: {Word}", vocabulary.Word);
+                
+                // Check if the vocabulary exists
+                var existingVocabulary = await _context.Vocabularies.FindAsync(vocabulary.Id);
+                if (existingVocabulary == null)
+                {
+                    _logger?.LogWarning("Vocabulary with ID {Id} not found", vocabulary.Id);
+                    return false;
+                }
+                
+                // Update properties
+                existingVocabulary.Vietnamese = vocabulary.Vietnamese;
+                // Update other properties as needed
+                
+                // Save changes
+                await _context.SaveChangesAsync();
+                
+                _logger?.LogInformation("Successfully updated vocabulary: {Word}", vocabulary.Word);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error updating vocabulary: {Word}", vocabulary?.Word);
+                return false;
+            }
+        }
     }
 }
 
