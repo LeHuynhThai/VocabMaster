@@ -19,4 +19,8 @@
     <ProjectReference Include="..\VocabMaster.Core\VocabMaster.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Seed\Data\" />
+  </ItemGroup>
+
 </Project>

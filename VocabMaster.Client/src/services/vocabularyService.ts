@@ -61,60 +61,32 @@ const vocabularyService = {
   },
 
   /**
-   * Gets details of a learned word
-   * @param id - ID of the learned word
-   * @returns Learned word details
+   * Marks a word as learned
+   * @param word - Word to mark as learned
+   * @returns Success status
    */
-  getLearnedWord: async (id: number): Promise<Vocabulary> => {
-    try {
-      const response = await api.get(`/api/learnedword/${id}`);
-      return response.data;
-    } catch (error: any) {
-      console.error('Error fetching learned word details:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Adds a word to learned list
-   * @param word - Word to add
-   * @returns Result of the operation
-   */
-  addLearnedWord: async (word: string): Promise<any> => {
+  markAsLearned: async (word: string): Promise<boolean> => {
     try {
       const response = await api.post(`/api/wordgenerator/learned/${encodeURIComponent(word)}`);
-      return {
-        success: true,
-        data: response.data
-      };
+      return response.data.success;
     } catch (error: any) {
-      console.error('Error adding learned word:', error);
-      // return error object instead of throwing exception
-      return {
-        success: false,
-        error: error?.response?.data?.message || 'Không thể lưu từ vựng'
-      };
+      console.error('Error marking word as learned:', error);
+      return false;
     }
   },
 
   /**
-   * Removes a word from learned list
+   * Removes a learned word
    * @param id - ID of the learned word to remove
-   * @returns Result of the operation
+   * @returns Success status
    */
-  removeLearnedWord: async (id: number): Promise<any> => {
+  removeLearnedWord: async (id: number): Promise<boolean> => {
     try {
       const response = await api.delete(`/api/learnedword/${id}`);
-      return {
-        success: true,
-        data: response.data
-      };
+      return true;
     } catch (error: any) {
       console.error('Error removing learned word:', error);
-      return {
-        success: false,
-        error: error?.response?.data?.message || 'Không thể xóa từ vựng'
-      };
+      return false;
     }
   }
 };

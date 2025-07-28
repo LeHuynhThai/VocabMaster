@@ -66,12 +66,12 @@ const LearnedWordsPage: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const result = await vocabularyService.removeLearnedWord(id);
-      if (result.success) {
+      const success = await vocabularyService.removeLearnedWord(id);
+      if (success) {
         // update the state by removing the word
         setWords(words.filter(word => word.id !== id));
       } else {
-        setError(result.error || 'Không thể xóa từ này. Vui lòng thử lại sau.');
+        setError('Không thể xóa từ này. Vui lòng thử lại sau.');
       }
     } catch (err) {
       setError('Không thể xóa từ này. Vui lòng thử lại sau.');

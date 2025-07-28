@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -26,13 +26,6 @@ namespace VocabMaster.Data.Seed
                 {
                     logger.LogInformation("Seeding users...");
                     await SeedUsers(context);
-                }
-
-                // Seed vocabularies if there are none
-                if (!context.Vocabularies.Any())
-                {
-                    logger.LogInformation("Seeding vocabularies...");
-                    await SeedVocabularies(context);
                 }
 
                 logger.LogInformation("Seeding completed successfully.");
@@ -63,20 +56,6 @@ namespace VocabMaster.Data.Seed
             }
 
             await context.Users.AddRangeAsync(users);
-            await context.SaveChangesAsync();
-        }
-
-        private static async Task SeedVocabularies(AppDbContext context)
-        {
-            // Load basic vocabulary words from the BasicVocabulary.cs file
-            var basicWords = BasicVocabulary.Words;
-
-            var vocabularies = basicWords.Select(word => new Vocabulary
-            {
-                Word = word
-            }).ToList();
-
-            await context.Vocabularies.AddRangeAsync(vocabularies);
             await context.SaveChangesAsync();
         }
     }

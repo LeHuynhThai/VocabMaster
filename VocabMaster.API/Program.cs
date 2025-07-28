@@ -123,20 +123,26 @@ else
 
 app.UseHttpsRedirection();
 
-// Add CORS middleware
+// Serve static files
+app.UseStaticFiles();
+
+// Add CORS
 app.UseCors("ReactAppPolicy");
 
 // Add Session middleware
 app.UseSession();
 
-// Add Authentication & Authorization middleware
+// Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Map API controllers
 app.MapControllers();
 
-// Initialize seed data
-await app.SeedDatabaseAsync();
+// Apply migrations và seed data
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 app.Run();
