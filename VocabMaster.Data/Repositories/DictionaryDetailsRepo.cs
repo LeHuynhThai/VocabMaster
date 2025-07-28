@@ -55,45 +55,46 @@ namespace VocabMaster.Data.Repositories
         }
 
         /// <summary>
-        /// Adds or updates dictionary details
+        /// Adds or updates a dictionary details entity
         /// </summary>
-        /// <param name="details">The dictionary details to save</param>
-        /// <returns>The saved dictionary details</returns>
+        /// <param name="details">The dictionary details to add or update</param>
+        /// <returns>The added or updated entity</returns>
         public async Task<DictionaryDetails> AddOrUpdate(DictionaryDetails details)
         {
-            if (details == null)
-            {
-                _logger.LogWarning("Details parameter is null");
-                return null;
-            }
-
             try
             {
+                _logger.LogInformation("Adding or updating dictionary details for word: {Word}", details.Word);
+                
                 // Check if the word already exists
                 var existingDetails = await GetByWord(details.Word);
-
-                if (existingDetails == null)
+                
+                if (existingDetails != null)
                 {
-                    // Add new details
-                    _logger.LogInformation("Adding new dictionary details for word: {Word}", details.Word);
-                    details.CreatedAt = DateTime.UtcNow;
-                    await _context.DictionaryDetails.AddAsync(details);
-                }
-                else
-                {
-                    // Update existing details
-                    _logger.LogInformation("Updating dictionary details for word: {Word}", details.Word);
-                    existingDetails.Phonetic = details.Phonetic;
+                    _logger.LogInformation("Updating existing dictionary details for word: {Word}", details.Word);
+                    
+                    // Update existing entry
                     existingDetails.PhoneticsJson = details.PhoneticsJson;
                     existingDetails.MeaningsJson = details.MeaningsJson;
                     existingDetails.TranslationsJson = details.TranslationsJson;
                     existingDetails.UpdatedAt = DateTime.UtcNow;
+                    
                     _context.DictionaryDetails.Update(existingDetails);
-                    details = existingDetails;
+                    await _context.SaveChangesAsync();
+                    
+                    _logger.LogInformation("Successfully updated dictionary details for word: {Word}", details.Word);
+                    return existingDetails;
                 }
-
-                await _context.SaveChangesAsync();
-                return details;
+                else
+                {
+                    _logger.LogInformation("Adding new dictionary details for word: {Word}", details.Word);
+                    
+                    // Add new entry
+                    _context.DictionaryDetails.Add(details);
+                    await _context.SaveChangesAsync();
+                    
+                    _logger.LogInformation("Successfully added dictionary details for word: {Word}", details.Word);
+                    return details;
+                }
             }
             catch (Exception ex)
             {

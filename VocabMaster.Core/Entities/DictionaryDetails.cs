@@ -18,9 +18,6 @@ namespace VocabMaster.Core.Entities
         [MaxLength(100)]
         public string Word { get; set; }
 
-        [MaxLength(100)]
-        public string Phonetic { get; set; }
-
         // Serialized JSON data for phonetics
         public string PhoneticsJson { get; set; } = "[]";
 
