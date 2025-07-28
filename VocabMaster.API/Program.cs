@@ -31,6 +31,17 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
+
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -106,6 +117,9 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IVocabularyService, VocabularyService>();
 builder.Services.AddScoped<IDictionaryService, DictionaryService>();
 
+// Add TranslationCrawlerService
+builder.Services.AddScoped<ITranslationCrawlerService, TranslationCrawlerService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -123,19 +137,20 @@ else
 
 app.UseHttpsRedirection();
 
-// Serve static files
+// Use CORS before authentication and authorization
+app.UseCors("AllowAll");
+
+// Add static files middleware
 app.UseStaticFiles();
 
-// Add CORS
-app.UseCors("ReactAppPolicy");
+// Add routing middleware
+app.UseRouting();
 
-// Add Session middleware
-app.UseSession();
-
-// Authentication & Authorization
+// Add authentication and authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Add endpoints middleware
 app.MapControllers();
 
 // Apply migrations và seed data

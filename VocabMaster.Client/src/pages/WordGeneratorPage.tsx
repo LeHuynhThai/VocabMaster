@@ -146,16 +146,16 @@ const WordGeneratorPage: React.FC = () => {
               Học từ vựng mới mỗi ngày để cải thiện vốn từ của bạn
             </p>
           </div>
-          
+      
           <Form onSubmit={handleSearch} className="mb-4">
-            <InputGroup>
-              <Form.Control
-                type="text"
+        <InputGroup>
+          <Form.Control
+            type="text"
                 placeholder="Nhập từ bạn muốn tra cứu..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
                 disabled={searching || loading}
-              />
+          />
               <Button 
                 type="submit" 
                 variant="outline-primary"
@@ -166,9 +166,9 @@ const WordGeneratorPage: React.FC = () => {
                 ) : (
                   <i className="bi bi-search"></i>
                 )}
-              </Button>
-            </InputGroup>
-          </Form>
+          </Button>
+        </InputGroup>
+      </Form>
         </Col>
       </Row>
 
@@ -186,8 +186,8 @@ const WordGeneratorPage: React.FC = () => {
             {word.phonetic && (
               <div className="word-phonetic">{word.phonetic}</div>
             )}
-            
-            {word.pronunciations && word.pronunciations.length > 0 && (
+
+          {word.pronunciations && word.pronunciations.length > 0 && (
               <div className="pronunciation-container">
                 {word.pronunciations.map((pronunciation: Pronunciation, index: number) => (
                   <div key={index} className="pronunciation-item">
@@ -207,8 +207,8 @@ const WordGeneratorPage: React.FC = () => {
                 ))}
               </div>
             )}
-          </div>
-          
+            </div>
+
           {word.meanings && word.meanings.length > 0 && (
             <div className="meanings-container">
               {word.meanings.map((meaning: Meaning, index: number) => (
