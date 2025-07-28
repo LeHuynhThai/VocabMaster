@@ -248,7 +248,7 @@ namespace VocabMaster.Services
                 
                 if (dictionaryDetails == null)
                 {
-                    _logger.LogInformation("No cached details found for word: {Word}", word);
+                    _logger.LogInformation("No cached details found for word: {Word}, getting from API", word);
                     
                     // Get from API if not in cache
                     var definition = await GetWordDefinition(word);
@@ -256,11 +256,18 @@ namespace VocabMaster.Services
                     // Cache the definition if found
                     if (definition != null)
                     {
+                        _logger.LogInformation("Caching definition for word: {Word}", word);
                         await CacheDefinition(definition);
+                    }
+                    else 
+                    {
+                        _logger.LogWarning("No definition found from API for word: {Word}", word);
                     }
                     
                     return definition;
                 }
+                
+                _logger.LogInformation("Found cached definition for word: {Word}, using database data", word);
                 
                 // Deserialize the JSON data
                 var options = new JsonSerializerOptions
