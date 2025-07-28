@@ -42,7 +42,7 @@ namespace VocabMaster.Core.Interfaces.Services
         /// <param name="word">The word to cache</param>
         /// <returns>True if successful, false otherwise</returns>
         Task<bool> CacheWordDefinition(string word);
-        
+
         /// <summary>
         /// Caches the definitions of all words in the vocabulary repository
         /// </summary>

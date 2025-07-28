@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Button, Form, InputGroup, Spinner } from 'react-bootstrap';
 import { useToast } from '../contexts/ToastContext';
-import vocabularyService from '../services/vocabularyService';
+import { useNavigate } from 'react-router-dom';
 import { Vocabulary, Pronunciation, Meaning } from '../types';
+import vocabularyService from '../services/vocabularyService';
 import './WordGeneratorPage.css';
 import { ROUTES } from '../utils/constants';
 
@@ -88,9 +89,9 @@ const WordGeneratorPage: React.FC = () => {
     setSaving(true);
     
     try {
-      const result = await vocabularyService.addLearnedWord(word.word);
+      const success = await vocabularyService.markAsLearned(word.word);
       
-      if (result.success) {
+      if (success) {
         // Cập nhật trạng thái từ hiện tại
         const updatedWord = { ...word, isLearned: true };
         setWord(updatedWord);
@@ -103,7 +104,7 @@ const WordGeneratorPage: React.FC = () => {
       } else {
         addToast({
           type: 'error',
-          message: result.error || 'Không thể lưu từ vựng. Vui lòng thử lại sau.'
+          message: 'Không thể lưu từ vựng. Vui lòng thử lại sau.'
         });
       }
     } catch (error) {
@@ -207,7 +208,7 @@ const WordGeneratorPage: React.FC = () => {
               </div>
             )}
           </div>
-
+          
           {word.meanings && word.meanings.length > 0 && (
             <div className="meanings-container">
               {word.meanings.map((meaning: Meaning, index: number) => (
