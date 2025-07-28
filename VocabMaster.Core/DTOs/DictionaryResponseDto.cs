@@ -1,7 +1,11 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace VocabMaster.Core.DTOs
 {
+    /// <summary>
+    /// Data transfer object for dictionary API response
+    /// </summary>
     public class DictionaryResponseDto
     {
         [JsonPropertyName("word")]

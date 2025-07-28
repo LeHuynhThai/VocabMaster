@@ -285,7 +285,7 @@ namespace VocabMaster.Services
                 var response = new DictionaryResponseDto
                 {
                     Word = dictionaryDetails.Word,
-                    Phonetic = dictionaryDetails.Phonetic,
+                    Phonetic = phonetics.FirstOrDefault()?.Text ?? "",
                     Phonetics = phonetics,
                     Meanings = meanings
                 };
@@ -458,7 +458,6 @@ namespace VocabMaster.Services
                 var dictionaryDetails = new DictionaryDetails
                 {
                     Word = definition.Word,
-                    Phonetic = definition.Phonetic ?? "",
                     PhoneticsJson = phoneticsJson,
                     MeaningsJson = meaningsJson,
                     TranslationsJson = "{}",
