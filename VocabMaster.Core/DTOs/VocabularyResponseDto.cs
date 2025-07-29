@@ -46,13 +46,20 @@ namespace VocabMaster.Core.DTOs
         public bool IsLearned { get; set; }
         
         /// <summary>
+        /// Vietnamese translation of the word
+        /// </summary>
+        [JsonPropertyName("vietnamese")]
+        public string Vietnamese { get; set; }
+        
+        /// <summary>
         /// Creates a simplified response from a full dictionary response
         /// </summary>
         /// <param name="dictionaryResponse">The full dictionary response</param>
         /// <param name="id">Optional ID to assign</param>
         /// <param name="isLearned">Whether the word has been learned</param>
+        /// <param name="vietnamese">Vietnamese translation of the word</param>
         /// <returns>A simplified vocabulary response</returns>
-        public static VocabularyResponseDto FromDictionaryResponse(DictionaryResponseDto dictionaryResponse, int id = 0, bool isLearned = false)
+        public static VocabularyResponseDto FromDictionaryResponse(DictionaryResponseDto dictionaryResponse, int id = 0, bool isLearned = false, string vietnamese = null)
         {
             if (dictionaryResponse == null)
                 return null;
@@ -62,7 +69,8 @@ namespace VocabMaster.Core.DTOs
                 Id = id,
                 Word = dictionaryResponse.Word,
                 Phonetic = dictionaryResponse.Phonetic,
-                IsLearned = isLearned
+                IsLearned = isLearned,
+                Vietnamese = vietnamese
             };
             
             // Add pronunciations (up to 3)

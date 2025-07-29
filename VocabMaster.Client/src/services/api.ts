@@ -15,6 +15,9 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Debug request
+    console.log('Starting Request', JSON.stringify(config, null, 2));
+    
     // Ngăn chặn các sự kiện mặc định có thể gây reload trang
     if (config.method?.toLowerCase() === 'post' || config.method?.toLowerCase() === 'put') {
       if (config.headers) {
@@ -24,14 +27,22 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.log('Request Error:', error);
     return Promise.reject(error);
   }
 );
 
 // Response interceptor
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Debug response
+    console.log('Response:', JSON.stringify(response.data, null, 2));
+    return response;
+  },
   (error: AxiosError) => {
+    // Debug error
+    console.log('Response Error:', error);
+    
     // Ngăn chặn các hành vi mặc định có thể gây reload trang
     if (error.config && error.response) {
       // Ghi log lỗi nhưng không làm gián đoạn luồng ứng dụng
