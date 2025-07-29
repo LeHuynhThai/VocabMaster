@@ -21,7 +21,7 @@ public class AccountController : ControllerBase
         _mapper = mapper;
     }
 
-    // API Login POST
+    // API Login POST - Cập nhật để sử dụng JWT
     [HttpPost("login")]
     [Produces("application/json")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto model)
@@ -31,14 +31,10 @@ public class AccountController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var user = await _accountService.Login(model.Name, model.Password);
-        if (user != null)
+        var tokenResponse = await _accountService.Login(model.Name, model.Password);
+        if (tokenResponse != null)
         {
-            return Ok(new { 
-                id = user.Id, 
-                name = user.Name, 
-                role = user.Role.ToString() 
-            });
+            return Ok(tokenResponse);
         }
 
         return Unauthorized(new { message = "Invalid username or password" });
@@ -64,13 +60,13 @@ public class AccountController : ControllerBase
         return BadRequest(new { message = "Username already exists" });
     }
 
-    // API Logout
+    // API Logout - JWT không cần endpoint logout nhưng giữ lại để tương thích
     [HttpGet("logout")]
     [Authorize]
-    public async Task<IActionResult> Logout()
+    public IActionResult Logout()
     {
-        await _accountService.Logout();
-        return Ok(new { success = true });
+        // JWT không cần server-side logout
+        return Ok(new { success = true, message = "Logout successful" });
     }
 
     // API Get Current User
@@ -90,5 +86,20 @@ public class AccountController : ControllerBase
             role = user.Role.ToString(),
             learnedWordsCount = user.LearnedVocabularies?.Count ?? 0
         });
+    }
+
+    // API Refresh Token - Tạo token mới từ user hiện tại
+    [HttpGet("refresh-token")]
+    [Authorize]
+    public async Task<IActionResult> RefreshToken()
+    {
+        var user = await _accountService.GetCurrentUser();
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        var tokenResponse = await _accountService.GenerateJwtToken(user);
+        return Ok(tokenResponse);
     }
 }

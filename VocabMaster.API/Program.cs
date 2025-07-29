@@ -1,61 +1,57 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Data;
 using VocabMaster.Data.Repositories;
-using VocabMaster.Services;
-using System;
-using System.IO;
-using VocabMaster.Core.Mapping;
 using VocabMaster.Data.Seed;
+using VocabMaster.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add configuration
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
     .AddEnvironmentVariables();
 
+// Add services to the container
+builder.Services.AddControllers();
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("ReactAppPolicy", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
-// Configure CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", builder =>
-    {
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader();
-    });
-});
-
-// Add services to the container.
-builder.Services.AddControllers();
-
-// Add Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Add DbContext
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext")));
 
 // Add AutoMapper
-builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-// Add HttpContext accessor
+// Add Repositories
+builder.Services.AddScoped<IUserRepo, UserRepo>();
+builder.Services.AddScoped<IVocabularyRepo, VocabRepo>();
+builder.Services.AddScoped<ILearnedWordRepo, LearnedWordRepo>();
+builder.Services.AddScoped<IDictionaryDetailsRepo, DictionaryDetailsRepo>();
+
+// Add Services
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IVocabularyService, VocabularyService>();
+builder.Services.AddScoped<IDictionaryService, DictionaryService>();
+
+// Add HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
 
-// Add Session services
+// Add Session
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -66,34 +62,51 @@ builder.Services.AddSession(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // change from Always to SameAsRequest
 });
 
-// Add Authentication
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
+// Cấu hình JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("JWT");
+var jwtSecret = jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Secret is not configured");
+var key = Encoding.UTF8.GetBytes(jwtSecret);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.LoginPath = "/api/account/login";
-        options.LogoutPath = "/api/account/logout";
-        options.Cookie.Name = "VocabMaster.Auth";
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.Lax; // change from None to Lax
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // change from Always to SameAsRequest
-        options.ExpireTimeSpan = TimeSpan.FromDays(30); // increase expiration time
-        options.SlidingExpiration = true; // reset the expiration time on each request
-        options.Events.OnRedirectToLogin = context =>
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ClockSkew = TimeSpan.Zero
+    };
+
+    // Cấu hình để trả về lỗi chi tiết khi token không hợp lệ
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+            {
+                context.Response.Headers["Token-Expired"] = "true";
+            }
             return Task.CompletedTask;
-        };
-        options.Events.OnRedirectToAccessDenied = context =>
-        {
-            context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            return Task.CompletedTask;
-        };
-    });
+        }
+    };
+});
+
+// Thêm dịch vụ Authorization
+builder.Services.AddAuthorization();
 
 // Add HttpClient services
 builder.Services.AddHttpClient("DictionaryApi", client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("DictionaryApiUrl") ?? 
+    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("DictionaryApiUrl") ??
                                 "https://api.dictionaryapi.dev/api/v2/entries/en/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
     client.Timeout = TimeSpan.FromSeconds(30);
@@ -103,61 +116,46 @@ builder.Services.AddHttpClient("DictionaryApi", client =>
 builder.Services.AddMemoryCache();
 
 // Use connection string from appsettings.json
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext")));
-
-// Register repositories
-builder.Services.AddScoped<IUserRepo, UserRepo>();
-builder.Services.AddScoped<IVocabularyRepo, VocabRepo>();
-builder.Services.AddScoped<ILearnedWordRepo, LearnedWordRepo>();
-builder.Services.AddScoped<IDictionaryDetailsRepo, DictionaryDetailsRepo>();
-
-// Register services
-builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<IVocabularyService, VocabularyService>();
-builder.Services.AddScoped<IDictionaryService, DictionaryService>();
-
-// Add TranslationCrawlerService
-builder.Services.AddScoped<ITranslationCrawlerService, TranslationCrawlerService>();
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-else
-{
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    app.UseDeveloperExceptionPage();
 }
 
-app.UseHttpsRedirection();
-
-// Use CORS before authentication and authorization
-app.UseCors("AllowAll");
-
-// Add static files middleware
 app.UseStaticFiles();
 
-// Add routing middleware
+// Use CORS before Authentication
+app.UseCors("AllowAll");
+
 app.UseRouting();
 
-// Add authentication and authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Add endpoints middleware
+app.UseSession();
+
 app.MapControllers();
 
-// Apply migrations và seed data
-await using (var scope = app.Services.CreateAsyncScope())
+// Seed database
+using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        await context.Database.MigrateAsync();
+
+        // Khởi tạo dữ liệu từ SeedData
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        await SeedData.Initialize(services, logger);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
 }
 
 app.Run();

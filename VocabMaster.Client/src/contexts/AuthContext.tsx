@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import authService from '../services/authService';
 import { User, LoginRequest, RegisterRequest } from '../types';
+import useToast from '../hooks/useToast';
 
 interface AuthContextType {
   user: User | null;
@@ -25,99 +26,66 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// save auth state to localStorage
-const saveAuthState = (isAuthenticated: boolean) => {
-  localStorage.setItem('isAuthenticated', isAuthenticated ? 'true' : 'false');
-};
-
-// read auth state from localStorage
-const getAuthState = (): boolean => {
-  return localStorage.getItem('isAuthenticated') === 'true';
-};
-
-// save user state to localStorage
-const saveUserState = (user: User | null) => {
-  if (user) {
-    localStorage.setItem('user', JSON.stringify(user));
-  } else {
-    localStorage.removeItem('user');
-  }
-};
-
-// read user state from localStorage
-const getUserState = (): User | null => {
-  const userStr = localStorage.getItem('user');
-  if (userStr) {
-    try {
-      return JSON.parse(userStr);
-    } catch {
-      return null;
-    }
-  }
-  return null;
-};
-
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  // initialize with value from localStorage to avoid UI flickering
-  const [user, setUser] = useState<User | null>(getUserState());
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [authError, setAuthError] = useState<boolean>(false);
-  const [lastAuthCheck, setLastAuthCheck] = useState<number>(0);
+  const { showToast } = useToast();
 
-  // update user state in localStorage when changed
-  useEffect(() => {
-    saveUserState(user);
-  }, [user]);
+  // Kiểm tra xem có token trong localStorage không
+  const checkAuthToken = () => {
+    const token = localStorage.getItem('vocabmaster_token');
+    return !!token;
+  };
 
+  // Lưu trạng thái đăng nhập
+  const saveAuthState = (isAuthenticated: boolean) => {
+    localStorage.setItem('isAuthenticated', isAuthenticated ? 'true' : 'false');
+  };
+
+  // Kiểm tra trạng thái đăng nhập khi khởi động ứng dụng
   useEffect(() => {
-    const checkAuth = async () => {
-      // if there is an auth error or a recent check, do not call API continuously
-      const now = Date.now();
-      if (authError || (now - lastAuthCheck < 60000)) { // 60 seconds
-        return;
-      }
-      
-      // update last auth check time
-      setLastAuthCheck(now);
-      
-      // if localStorage does not have auth state or is not authenticated, do not call API
-      if (!getAuthState()) {
-        if (user !== null) {
-          setUser(null);
-        }
-        return;
-      }
-      
-      // only set loading state when actually checking auth
+    const initAuth = async () => {
       setIsLoading(true);
-      
       try {
-        const currentUser = await authService.getCurrentUser();
-        if (currentUser) {
-          setUser(currentUser);
-          saveAuthState(true);
+        // Nếu có token, thử lấy thông tin người dùng hiện tại
+        if (checkAuthToken()) {
+          const currentUser = await authService.getCurrentUser();
+          if (currentUser) {
+            setUser(currentUser);
+            saveAuthState(true);
+          } else {
+            // Nếu không lấy được thông tin người dùng, thử refresh token
+            const refreshSuccess = await authService.refreshToken();
+            if (refreshSuccess) {
+              const refreshedUser = await authService.getCurrentUser();
+              if (refreshedUser) {
+                setUser(refreshedUser);
+                saveAuthState(true);
+              } else {
+                setAuthError(true);
+                saveAuthState(false);
+              }
+            } else {
+              setAuthError(true);
+              saveAuthState(false);
+            }
+          }
         } else {
-          setUser(null);
+          setAuthError(true);
           saveAuthState(false);
         }
       } catch (error) {
-        console.error('Failed to load user:', error);
-        setUser(null);
-        saveAuthState(false);
-        // mark auth error to avoid calling API continuously
+        console.error('Auth initialization error:', error);
         setAuthError(true);
+        saveAuthState(false);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuth();
-    
-    // set interval to check auth periodically
-    const intervalId = setInterval(checkAuth, 300000); // 5 minutes
-    
-    return () => clearInterval(intervalId);
-  }, [authError, lastAuthCheck, user]);
+    initAuth();
+  }, []);
 
   const login = async (credentials: LoginRequest) => {
     setIsLoading(true);
