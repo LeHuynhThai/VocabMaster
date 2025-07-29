@@ -246,6 +246,13 @@ namespace VocabMaster.Services
                 _logger.LogInformation("Getting dictionary details from cache for word: {Word}", word);
                 var dictionaryDetails = await _dictionaryDetailsRepository.GetByWord(word);
                 
+                // Get the Vietnamese translation from the vocabulary table
+                var vocabulary = (await _vocabularyRepository.GetAll()).FirstOrDefault(v => v.Word.Equals(word, StringComparison.OrdinalIgnoreCase));
+                string vietnameseTranslation = vocabulary?.Vietnamese;
+                
+                // Debug Vietnamese translation
+                _logger.LogInformation("Vietnamese translation for word {Word}: {Translation}", word, vietnameseTranslation ?? "null");
+                
                 if (dictionaryDetails == null)
                 {
                     _logger.LogInformation("No cached details found for word: {Word}, getting from API", word);
@@ -258,6 +265,17 @@ namespace VocabMaster.Services
                     {
                         _logger.LogInformation("Caching definition for word: {Word}", word);
                         await CacheDefinition(definition);
+                        
+                        // Add Vietnamese translation if available
+                        if (!string.IsNullOrEmpty(vietnameseTranslation))
+                        {
+                            _logger.LogInformation("Adding Vietnamese translation to definition: {Translation}", vietnameseTranslation);
+                            definition.Vietnamese = vietnameseTranslation;
+                        }
+                        else
+                        {
+                            _logger.LogWarning("No Vietnamese translation available for word: {Word}", word);
+                        }
                     }
                     else 
                     {
@@ -287,10 +305,14 @@ namespace VocabMaster.Services
                     Word = dictionaryDetails.Word,
                     Phonetic = phonetics.FirstOrDefault()?.Text ?? "",
                     Phonetics = phonetics,
-                    Meanings = meanings
+                    Meanings = meanings,
+                    Vietnamese = vietnameseTranslation
                 };
                 
-                _logger.LogInformation("Successfully retrieved cached details for word: {Word}", word);
+                // Debug final response
+                _logger.LogInformation("Final response for word {Word} has Vietnamese: {HasVietnamese}", 
+                    word, !string.IsNullOrEmpty(response.Vietnamese) ? "Yes" : "No");
+                
                 return response;
             }
             catch (JsonException ex)
@@ -300,7 +322,7 @@ namespace VocabMaster.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting cached details for word: {Word}", word);
+                _logger.LogError(ex, "Unexpected error getting cached definition for word: {Word}", word);
                 return null;
             }
         }

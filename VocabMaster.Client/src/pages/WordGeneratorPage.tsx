@@ -35,6 +35,8 @@ const WordGeneratorPage: React.FC = () => {
     setLoading(true);
     try {
       const data = await vocabularyService.getRandomWord();
+      console.log('Random Word Data:', data);
+      console.log('Vietnamese translation:', data.vietnamese);
       setWord(data);
     } catch (error) {
       console.error('Error fetching random word:', error);
@@ -51,6 +53,8 @@ const WordGeneratorPage: React.FC = () => {
     setLoading(true);
     try {
       const data = await vocabularyService.getNewRandomWord();
+      console.log('New Random Word Data:', data);
+      console.log('Vietnamese translation:', data.vietnamese);
       setWord(data);
     } catch (error) {
       console.error('Error fetching new random word:', error);
@@ -70,6 +74,8 @@ const WordGeneratorPage: React.FC = () => {
     setSearching(true);
     try {
       const data = await vocabularyService.lookup(searchTerm.trim());
+      console.log('Lookup Word Data:', data);
+      console.log('Vietnamese translation:', data.vietnamese);
       setWord(data);
     } catch (error) {
       console.error('Error searching for word:', error);
@@ -148,14 +154,14 @@ const WordGeneratorPage: React.FC = () => {
           </div>
       
           <Form onSubmit={handleSearch} className="mb-4">
-        <InputGroup>
-          <Form.Control
-            type="text"
+            <InputGroup>
+              <Form.Control
+                type="text"
                 placeholder="Nhập từ bạn muốn tra cứu..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 disabled={searching || loading}
-          />
+              />
               <Button 
                 type="submit" 
                 variant="outline-primary"
@@ -166,9 +172,9 @@ const WordGeneratorPage: React.FC = () => {
                 ) : (
                   <i className="bi bi-search"></i>
                 )}
-          </Button>
-        </InputGroup>
-      </Form>
+              </Button>
+            </InputGroup>
+          </Form>
         </Col>
       </Row>
 
@@ -183,11 +189,23 @@ const WordGeneratorPage: React.FC = () => {
         <div className="word-container">
           <div className="word-header">
             <h2 className="word-title">{word.word}</h2>
-            {word.phonetic && (
-              <div className="word-phonetic">{word.phonetic}</div>
+            
+            {word.vietnamese && (
+              <div className="vietnamese-translation">
+                <h3 className="vietnamese-title">Nghĩa tiếng Việt:</h3>
+                <p className="vietnamese-text">{word.vietnamese}</p>
+              </div>
             )}
-
-          {word.pronunciations && word.pronunciations.length > 0 && (
+            
+            {!word.vietnamese && (
+              <div className="vietnamese-translation vietnamese-missing">
+                <h3 className="vietnamese-title">Nghĩa tiếng Việt:</h3>
+                <p className="vietnamese-text">Chưa có bản dịch</p>
+              </div>
+            )}
+            
+            {/* Chỉ hiển thị phát âm từ pronunciations, không hiển thị phonetic */}
+            {word.pronunciations && word.pronunciations.length > 0 && (
               <div className="pronunciation-container">
                 {word.pronunciations.map((pronunciation: Pronunciation, index: number) => (
                   <div key={index} className="pronunciation-item">
@@ -207,7 +225,7 @@ const WordGeneratorPage: React.FC = () => {
                 ))}
               </div>
             )}
-            </div>
+          </div>
 
           {word.meanings && word.meanings.length > 0 && (
             <div className="meanings-container">

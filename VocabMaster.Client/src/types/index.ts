@@ -44,6 +44,7 @@ export interface Vocabulary {
   pronunciations: Pronunciation[];
   meanings: Meaning[];
   isLearned: boolean;
+  vietnamese?: string;
 }
 
 /**

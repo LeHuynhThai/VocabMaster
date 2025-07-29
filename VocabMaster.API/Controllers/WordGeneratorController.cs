@@ -77,6 +77,7 @@ namespace VocabMaster.API.Controllers
                 if (_cache != null && _cache.TryGetValue(cacheKey, out VocabularyResponseDto cachedWord))
                 {
                     _logger.LogInformation("Retrieved random word from cache for user {UserId}", userId);
+                    _logger.LogInformation("Cached word has Vietnamese: {HasVietnamese}", !string.IsNullOrEmpty(cachedWord.Vietnamese) ? "Yes" : "No");
                     return Ok(cachedWord);
                 }
 
@@ -92,8 +93,16 @@ namespace VocabMaster.API.Controllers
                 // Check if the word is already learned
                 bool isLearned = await _vocabularyService.IsWordLearned(userId, randomWord.Word);
 
+                // Debug Vietnamese translation
+                _logger.LogInformation("Random word {Word} has Vietnamese translation: {HasVietnamese}", 
+                    randomWord.Word, !string.IsNullOrEmpty(randomWord.Vietnamese) ? "Yes" : "No");
+                
                 // Convert to simplified response
-                var response = VocabularyResponseDto.FromDictionaryResponse(randomWord, 0, isLearned);
+                var response = VocabularyResponseDto.FromDictionaryResponse(randomWord, 0, isLearned, randomWord.Vietnamese);
+                
+                // Debug response
+                _logger.LogInformation("Response for word {Word} has Vietnamese: {HasVietnamese}", 
+                    response.Word, !string.IsNullOrEmpty(response.Vietnamese) ? "Yes" : "No");
                 
                 // Cache the result
                 if (_cache != null)
@@ -157,8 +166,16 @@ namespace VocabMaster.API.Controllers
                 // Check if the word is already learned
                 bool isLearned = await _vocabularyService.IsWordLearned(userId, randomWord.Word);
 
+                // Debug Vietnamese translation
+                _logger.LogInformation("New random word {Word} has Vietnamese translation: {HasVietnamese}", 
+                    randomWord.Word, !string.IsNullOrEmpty(randomWord.Vietnamese) ? "Yes" : "No");
+                
                 // Convert to simplified response
-                var response = VocabularyResponseDto.FromDictionaryResponse(randomWord, 0, isLearned);
+                var response = VocabularyResponseDto.FromDictionaryResponse(randomWord, 0, isLearned, randomWord.Vietnamese);
+                
+                // Debug response
+                _logger.LogInformation("Response for new word {Word} has Vietnamese: {HasVietnamese}", 
+                    response.Word, !string.IsNullOrEmpty(response.Vietnamese) ? "Yes" : "No");
                 
                 // Cache the result
                 if (_cache != null)
@@ -204,6 +221,10 @@ namespace VocabMaster.API.Controllers
                     _logger.LogWarning("No definition found for word: {Word}", word);
                     return NotFound(new { message = $"No definition found for word: {word}" });
                 }
+                
+                // Debug Vietnamese translation
+                _logger.LogInformation("Lookup word {Word} has Vietnamese translation: {HasVietnamese}", 
+                    definition.Word, !string.IsNullOrEmpty(definition.Vietnamese) ? "Yes" : "No");
                 
                 _logger.LogInformation("Successfully retrieved definition for word: {Word}", word);
                 return Ok(definition);
