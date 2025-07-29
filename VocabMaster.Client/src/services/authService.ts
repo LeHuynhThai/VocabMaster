@@ -1,11 +1,17 @@
-import api from './api';
-import { LoginRequest, RegisterRequest, User } from '../types';
+import api, { removeToken } from './api';
+import { LoginRequest, RegisterRequest, User, TokenResponse } from '../types';
 
 const authService = {
   login: async (credentials: LoginRequest): Promise<User> => {
     try {
-      const response = await api.post('/api/account/login', credentials);
-      return response.data;
+      const response = await api.post<TokenResponse>('/api/account/login', credentials);
+      // Token đã được lưu tự động trong api interceptor
+      // Trả về thông tin user từ token response
+      return {
+        id: response.data.userId,
+        name: response.data.userName,
+        role: response.data.role
+      };
     } catch (error: any) {
       console.error('Login API error:', error.response?.data || error.message);
       throw error;
@@ -24,9 +30,10 @@ const authService = {
 
   logout: async (): Promise<void> => {
     try {
-      await api.get('/api/account/logout');
+      // Với JWT, chỉ cần xóa token ở client
+      removeToken();
     } catch (error: any) {
-      console.error('Logout API error:', error.response?.data || error.message);
+      console.error('Logout error:', error.message);
       throw error;
     }
   },
@@ -41,6 +48,17 @@ const authService = {
         console.error('Get current user API error:', error.response?.data || error.message);
       }
       return null;
+    }
+  },
+
+  refreshToken: async (): Promise<boolean> => {
+    try {
+      const response = await api.get<TokenResponse>('/api/account/refresh-token');
+      // Token đã được lưu tự động trong api interceptor
+      return true;
+    } catch (error: any) {
+      console.error('Refresh token error:', error.response?.data || error.message);
+      return false;
     }
   },
 

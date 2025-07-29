@@ -73,6 +73,15 @@ export interface RegisterRequest {
   confirmPassword: string;
 }
 
+export interface TokenResponse {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  userId: number;
+  userName: string;
+  role: string;
+}
+
 /**
  * Toast notification information
  */

@@ -154,14 +154,14 @@ const WordGeneratorPage: React.FC = () => {
           </div>
       
           <Form onSubmit={handleSearch} className="mb-4">
-            <InputGroup>
-              <Form.Control
-                type="text"
+        <InputGroup>
+          <Form.Control
+            type="text"
                 placeholder="Nhập từ bạn muốn tra cứu..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
                 disabled={searching || loading}
-              />
+          />
               <Button 
                 type="submit" 
                 variant="outline-primary"
@@ -172,9 +172,9 @@ const WordGeneratorPage: React.FC = () => {
                 ) : (
                   <i className="bi bi-search"></i>
                 )}
-              </Button>
-            </InputGroup>
-          </Form>
+          </Button>
+        </InputGroup>
+      </Form>
         </Col>
       </Row>
 
@@ -201,11 +201,11 @@ const WordGeneratorPage: React.FC = () => {
               <div className="vietnamese-translation vietnamese-missing">
                 <h3 className="vietnamese-title">Nghĩa tiếng Việt:</h3>
                 <p className="vietnamese-text">Chưa có bản dịch</p>
-              </div>
+          </div>
             )}
-            
+
             {/* Chỉ hiển thị phát âm từ pronunciations, không hiển thị phonetic */}
-            {word.pronunciations && word.pronunciations.length > 0 && (
+          {word.pronunciations && word.pronunciations.length > 0 && (
               <div className="pronunciation-container">
                 {word.pronunciations.map((pronunciation: Pronunciation, index: number) => (
                   <div key={index} className="pronunciation-item">
@@ -225,7 +225,7 @@ const WordGeneratorPage: React.FC = () => {
                 ))}
               </div>
             )}
-          </div>
+            </div>
 
           {word.meanings && word.meanings.length > 0 && (
             <div className="meanings-container">
