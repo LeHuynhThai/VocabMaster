@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Button, Form, InputGroup, Spinner } from 'react-bootstrap';
 import { useToast } from '../contexts/ToastContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Vocabulary, Pronunciation, Meaning } from '../types';
 import vocabularyService from '../services/vocabularyService';
 import './WordGeneratorPage.css';
@@ -30,6 +30,15 @@ const WordGeneratorPage: React.FC = () => {
   const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
   const { addToast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Lấy từ vựng từ URL query parameter
+  const getWordFromUrl = useCallback(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const wordParam = queryParams.get('word');
+    return wordParam;
+  }, [location.search]);
 
   const fetchRandomWord = useCallback(async () => {
     setLoading(true);
@@ -38,6 +47,8 @@ const WordGeneratorPage: React.FC = () => {
       console.log('Random Word Data:', data);
       console.log('Vietnamese translation:', data.vietnamese);
       setWord(data);
+      // Xóa tham số từ URL khi hiển thị từ ngẫu nhiên
+      navigate(ROUTES.WORD_GENERATOR, { replace: true });
     } catch (error) {
       console.error('Error fetching random word:', error);
       addToast({
@@ -47,7 +58,7 @@ const WordGeneratorPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, navigate]);
 
   const fetchNewRandomWord = useCallback(async () => {
     setLoading(true);
@@ -56,6 +67,8 @@ const WordGeneratorPage: React.FC = () => {
       console.log('New Random Word Data:', data);
       console.log('Vietnamese translation:', data.vietnamese);
       setWord(data);
+      // Xóa tham số từ URL khi hiển thị từ ngẫu nhiên mới
+      navigate(ROUTES.WORD_GENERATOR, { replace: true });
     } catch (error) {
       console.error('Error fetching new random word:', error);
       addToast({
@@ -65,7 +78,30 @@ const WordGeneratorPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, navigate]);
+
+  const lookupWord = useCallback(async (wordToLookup: string) => {
+    if (!wordToLookup.trim()) return;
+    
+    setLoading(true);
+    try {
+      const data = await vocabularyService.lookup(wordToLookup.trim());
+      console.log('Lookup Word Data:', data);
+      console.log('Vietnamese translation:', data.vietnamese);
+      setWord(data);
+      // Cập nhật URL với từ vựng đang tra cứu
+      navigate(`${ROUTES.WORD_GENERATOR}?word=${encodeURIComponent(wordToLookup.trim())}`, { replace: true });
+      setSearchTerm(wordToLookup.trim());
+    } catch (error) {
+      console.error('Error searching for word:', error);
+      addToast({
+        type: 'error',
+        message: `Không tìm thấy từ "${wordToLookup}". Vui lòng kiểm tra lại.`
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [addToast, navigate]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,16 +109,7 @@ const WordGeneratorPage: React.FC = () => {
     
     setSearching(true);
     try {
-      const data = await vocabularyService.lookup(searchTerm.trim());
-      console.log('Lookup Word Data:', data);
-      console.log('Vietnamese translation:', data.vietnamese);
-      setWord(data);
-    } catch (error) {
-      console.error('Error searching for word:', error);
-      addToast({
-        type: 'error',
-        message: `Không tìm thấy từ "${searchTerm}". Vui lòng kiểm tra lại.`
-      });
+      await lookupWord(searchTerm);
     } finally {
       setSearching(false);
     }
@@ -137,17 +164,22 @@ const WordGeneratorPage: React.FC = () => {
     });
   };
 
-  // Load random word when component mounts
+  // Kiểm tra URL khi component được tải
   useEffect(() => {
-    fetchRandomWord();
-  }, [fetchRandomWord]);
+    const wordFromUrl = getWordFromUrl();
+    if (wordFromUrl) {
+      lookupWord(wordFromUrl);
+    } else {
+      fetchRandomWord();
+    }
+  }, [getWordFromUrl, lookupWord, fetchRandomWord]);
 
   return (
     <Container className="py-4">
       <Row>
         <Col lg={8} className="mx-auto">
           <div className="page-header">
-            <h1 className="page-title">Từ vựng ngẫu nhiên</h1>
+            <h1 className="page-title">Từ vựng</h1>
             <p className="page-description">
               Học từ vựng mới mỗi ngày để cải thiện vốn từ của bạn
             </p>
