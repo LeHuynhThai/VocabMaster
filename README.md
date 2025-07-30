@@ -1,62 +1,75 @@
 # VocabMaster
 
-Ứng dụng học từ vựng tiếng Anh với ASP.NET Core API và React.
+Ứng dụng học từ vựng Tiếng Anh với phát âm, nghĩa Tiếng Việt và ví dụ.
 
-## Cấu trúc dự án
+## Cài đặt
 
-- **VocabMaster.API**: Backend API sử dụng ASP.NET Core
-- **VocabMaster.Core**: Thư viện chứa các entities, interfaces và DTOs
-- **VocabMaster.Data**: Lớp truy cập dữ liệu và migrations
-- **VocabMaster.Services**: Các services xử lý business logic
-- **VocabMaster.Tests**: Unit tests
-- **VocabMaster.Client**: Frontend React
-
-## Cài đặt và chạy dự án
-
-### Backend (ASP.NET Core)
-
-1. Mở solution trong Visual Studio
-2. Khôi phục các packages NuGet
-3. Chạy migrations để tạo database
-4. Khởi chạy project VocabMaster.API
-
-### Frontend (React)
-
-Dự án React sử dụng nhiều dependencies, để tối ưu việc quản lý và tránh đẩy node_modules lên Git, hãy làm theo các bước sau:
-
-1. **Cài đặt dependencies**:
-   ```bash
-   cd VocabMaster.Client
-   npm run install:clean
+1. Clone repository:
+   ```
+   git clone https://github.com/yourusername/VocabMaster.git
+   cd VocabMaster
    ```
 
-2. **Khởi chạy ứng dụng React**:
-   ```bash
+2. Cài đặt các package cho backend:
+   ```
+   dotnet restore
+   ```
+
+3. Cài đặt các package cho frontend:
+   ```
+   cd VocabMaster.Client
+   npm install
+   ```
+
+4. Cấu hình database:
+   ```
+   cd VocabMaster.API
+   copy appsettings.example.json appsettings.json
+   ```
+   Sau đó chỉnh sửa chuỗi kết nối database trong appsettings.json (nếu cần)
+
+5. Chạy migrations để tạo database:
+   ```
+   dotnet ef database update
+   ```
+
+## Cấu hình Google OAuth
+
+1. Tạo project trên [Google Cloud Console](https://console.cloud.google.com/)
+2. Thiết lập OAuth consent screen
+3. Tạo OAuth client ID (Web application)
+4. Thêm Authorized JavaScript origins: `http://localhost:3000`
+5. Thêm Authorized redirect URIs: `http://localhost:3000`
+6. Lấy Client ID và Client Secret, cập nhật vào file appsettings.json
+   ```json
+   "GoogleOAuth": {
+     "ClientId": "YOUR_CLIENT_ID",
+     "ClientSecret": "YOUR_CLIENT_SECRET",
+     "RedirectUri": "http://localhost:3000"
+   }
+   ```
+7. Cập nhật ClientID trong file `VocabMaster.Client/src/index.tsx`
+
+## Chạy ứng dụng
+
+1. Chạy backend:
+   ```
+   cd VocabMaster.API
+   dotnet run
+   ```
+
+2. Chạy frontend (trong terminal khác):
+   ```
+   cd VocabMaster.Client
    npm start
    ```
 
-3. **Build cho production**:
-   ```bash
-   npm run build
-   ```
+3. Mở trình duyệt và truy cập: `http://localhost:3000`
 
-## Best practices cho quản lý dependencies
+## Tính năng chính
 
-1. **Không commit node_modules**: Thư mục này đã được thêm vào .gitignore
-2. **Không commit package-lock.json**: Đã cấu hình npm để không tạo file này
-3. **Sử dụng phiên bản chính xác**: Cấu hình save-exact=true trong .npmrc
-4. **Chỉ commit package.json**: Đảm bảo file này được cập nhật khi thêm dependencies mới
-
-## Cài đặt trong môi trường CI/CD
-
-```bash
-cd VocabMaster.Client
-npm run install:ci
-npm run build
-```
-
-## Giải quyết vấn đề nhiều files
-
-- Sử dụng .gitignore để loại bỏ node_modules và các file build
-- Cấu hình npm để không tạo package-lock.json
-- Sử dụng npm ci trong môi trường CI/CD để cài đặt dependencies nhanh hơn 
+- Đăng ký, đăng nhập (JWT và Google OAuth)
+- Phát sinh từ vựng ngẫu nhiên với phát âm, nghĩa Tiếng Việt
+- Lưu từ vựng đã học và xem lại sau
+- Tìm kiếm trong từ vựng đã học
+- Quản lý hồ sơ người dùng (avatar, mật khẩu) 

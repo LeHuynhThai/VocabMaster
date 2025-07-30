@@ -69,3 +69,40 @@ coverage/
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Visual Studio files
+.vs/
+.vscode/
+bin/
+obj/
+*.user
+*.suo
+
+# NodeJS
+node_modules/
+npm-debug.log
+.DS_Store
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Configs with secrets
+VocabMaster.API/appsettings.json
+VocabMaster.API/appsettings.Development.json
+# Không loại trừ file example
+# */appsettings.*.json
+
+# Temporary files
+*.swp
+*~
+*.log

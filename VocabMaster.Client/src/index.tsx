@@ -8,7 +8,7 @@ import reportWebVitals from './reportWebVitals';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 // Sử dụng Client ID thật từ Google Cloud Console
-const GOOGLE_CLIENT_ID = 'REMOVED-GITHUB-CLIENTID.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '201311652729-adk0vho01ohrhlfi2sp948qr6bec1rrb.apps.googleusercontent.com';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
