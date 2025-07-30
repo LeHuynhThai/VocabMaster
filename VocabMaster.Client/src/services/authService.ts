@@ -1,4 +1,5 @@
 import api, { removeToken } from './api';
+import { LoginRequest, RegisterRequest, User, TokenResponse, GoogleAuthRequest } from '../types';
 
 const authService = {
   login: async (credentials: LoginRequest): Promise<User> => {
@@ -19,16 +20,43 @@ const authService = {
 
   googleLogin: async (googleAuth: GoogleAuthRequest): Promise<User> => {
     try {
-      const response = await api.post<TokenResponse>('/api/account/google-login', googleAuth);
-      // Token đã được lưu tự động trong api interceptor
-      // Trả về thông tin user từ token response
+      console.log('GoogleLogin API call with token length:', googleAuth.accessToken.length);
+      
+      if (googleAuth.idToken) {
+        console.log('IdToken is provided, length:', googleAuth.idToken.length);
+      } else {
+        console.log('No idToken provided');
+      }
+      
+      // Đảm bảo luôn có idToken
+      const payload = {
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken || 'dummy_token' // Nếu không có, thêm giá trị giả
+      };
+      
+      console.log('Sending Google auth payload to API');
+      
+      const response = await api.post<TokenResponse>('/api/account/google-login', payload, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Google login successful, received token response');
+      
       return {
         id: response.data.userId,
         name: response.data.userName,
         role: response.data.role
       };
     } catch (error: any) {
-      console.error('Google Login API error:', error.response?.data || error.message);
+      console.error('Google Login API error:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers
+      });
       throw error;
     }
   },

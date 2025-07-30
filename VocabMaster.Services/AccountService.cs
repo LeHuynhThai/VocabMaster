@@ -99,16 +99,38 @@ public class AccountService : IAccountService
     {
         try
         {
+            // Xử lý token trống hoặc null
+            if (googleAuth == null || string.IsNullOrEmpty(googleAuth.AccessToken))
+            {
+                Console.WriteLine("Error: GoogleAuthDto or AccessToken is null/empty");
+                return null;
+            }
+
+            Console.WriteLine($"Starting Google authentication with token length: {googleAuth.AccessToken.Length}");
+
             // Lấy thông tin người dùng từ Google
             var googleUserInfo = await GetGoogleUserInfo(googleAuth.AccessToken);
             
             if (googleUserInfo == null)
             {
+                Console.WriteLine("Error: Failed to get Google user info");
+                return null;
+            }
+
+            // Log thông tin user nhận được từ Google
+            Console.WriteLine($"Google user info received: {googleUserInfo}");
+            Console.WriteLine($"Email: {googleUserInfo.Email}, Name: {googleUserInfo.Name}");
+            
+            // Nếu không có email thì không thể xử lý
+            if (string.IsNullOrEmpty(googleUserInfo.Email))
+            {
+                Console.WriteLine("Error: Google user email is missing");
                 return null;
             }
             
             // Kiểm tra xem người dùng đã tồn tại trong hệ thống chưa
             var existingUser = await _userRepository.GetByName(googleUserInfo.Email);
+            Console.WriteLine($"Existing user found: {existingUser != null}");
             
             if (existingUser == null)
             {
@@ -120,17 +142,29 @@ public class AccountService : IAccountService
                     Role = UserRole.User
                 };
                 
+                Console.WriteLine($"Creating new user with email: {newUser.Name}");
                 await _userRepository.Add(newUser);
                 existingUser = await _userRepository.GetByName(googleUserInfo.Email);
+                
+                if (existingUser == null)
+                {
+                    Console.WriteLine("Error: Failed to create new user");
+                    return null;
+                }
             }
             
             // Tạo JWT token cho người dùng
-            return await GenerateJwtToken(existingUser);
+            Console.WriteLine($"Generating JWT token for user ID: {existingUser.Id}");
+            var tokenResponse = await GenerateJwtToken(existingUser);
+            Console.WriteLine("JWT token generated successfully");
+            
+            return tokenResponse;
         }
         catch (Exception ex)
         {
-            // Log lỗi
+            // Log lỗi chi tiết
             Console.WriteLine($"Error authenticating Google user: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
             return null;
         }
     }
@@ -140,21 +174,87 @@ public class AccountService : IAccountService
     {
         try
         {
-            var httpClient = _httpClientFactory.CreateClient();
-            var response = await httpClient.GetAsync($"https://www.googleapis.com/oauth2/v3/userinfo?access_token={accessToken}");
-            
-            if (response.IsSuccessStatusCode)
+            if (string.IsNullOrEmpty(accessToken))
             {
-                var content = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<GoogleUserInfoDto>(content);
+                Console.WriteLine("Error: AccessToken is null or empty");
+                return null;
+            }
+
+            Console.WriteLine($"Getting user info with token length: {accessToken.Length}");
+            Console.WriteLine($"Token preview: {accessToken.Substring(0, Math.Min(20, accessToken.Length))}...");
+            
+            var httpClient = _httpClientFactory.CreateClient("GoogleApi");
+            
+            // Thử nhiều cách gọi API khác nhau
+            
+            // Cách 1: Sử dụng Authorization header
+            var url1 = "https://www.googleapis.com/oauth2/v3/userinfo";
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+            
+            Console.WriteLine($"Trying method 1 with URL: {url1}");
+            var response1 = await httpClient.GetAsync(url1);
+            var content1 = await response1.Content.ReadAsStringAsync();
+            
+            Console.WriteLine($"Method 1 response status: {response1.StatusCode}");
+            Console.WriteLine($"Method 1 response content: {content1}");
+            
+            if (response1.IsSuccessStatusCode)
+            {
+                var options = new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                
+                var userInfo = JsonSerializer.Deserialize<GoogleUserInfoDto>(content1, options);
+                
+                if (userInfo == null)
+                {
+                    Console.WriteLine("Failed to deserialize Google user info");
+                    return null;
+                }
+                
+                Console.WriteLine($"Successfully obtained user info for: {userInfo.Email}");
+                return userInfo;
             }
             
+            // Cách 2: Sử dụng query parameter
+            httpClient.DefaultRequestHeaders.Authorization = null;
+            var url2 = $"https://www.googleapis.com/oauth2/v3/userinfo?access_token={accessToken}";
+            
+            Console.WriteLine($"Trying method 2 with URL parameter");
+            var response2 = await httpClient.GetAsync(url2);
+            var content2 = await response2.Content.ReadAsStringAsync();
+            
+            Console.WriteLine($"Method 2 response status: {response2.StatusCode}");
+            Console.WriteLine($"Method 2 response content: {content2}");
+            
+            if (response2.IsSuccessStatusCode)
+            {
+                var options = new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                
+                var userInfo = JsonSerializer.Deserialize<GoogleUserInfoDto>(content2, options);
+                
+                if (userInfo == null)
+                {
+                    Console.WriteLine("Failed to deserialize Google user info");
+                    return null;
+                }
+                
+                Console.WriteLine($"Successfully obtained user info for: {userInfo.Email}");
+                return userInfo;
+            }
+            
+            // Cả hai cách đều thất bại
+            Console.WriteLine("Both methods failed to get user info from Google");
             return null;
         }
         catch (Exception ex)
         {
-            // Log lỗi
             Console.WriteLine($"Error getting Google user info: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
             return null;
         }
     }

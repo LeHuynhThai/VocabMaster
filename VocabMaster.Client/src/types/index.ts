@@ -86,8 +86,8 @@ export interface TokenResponse {
  * Google Auth information
  */
 export interface GoogleAuthRequest {
-  idToken?: string;
   accessToken: string;
+  idToken?: string;
 }
 
 /**

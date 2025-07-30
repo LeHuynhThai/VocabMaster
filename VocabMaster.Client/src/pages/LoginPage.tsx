@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Form, Button, Alert, Row, Col } from 'react-bootstrap';
+import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
 import { GoogleAuthRequest } from '../types';
+import api from '../services/api'; // Sửa đường dẫn import api
+import axios from 'axios'; // Thêm axios import
 
 /**
  * Login page component
@@ -46,26 +48,93 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  // Xử lý đăng nhập Google
+  // Xử lý đăng nhập Google với yêu cầu idToken
   const handleGoogleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
+    onSuccess: async (codeResponse) => {
       setIsGoogleLoading(true);
+      setError(null);
+      
+      console.log('Google OAuth success, full response:', JSON.stringify(codeResponse));
+      
       try {
+        // Kiểm tra token trước khi gửi đến backend
+        if (!codeResponse.access_token) {
+          setError('Đăng nhập Google thất bại: Không nhận được token');
+          setIsGoogleLoading(false);
+          return;
+        }
+
+        console.log('Access token received, length:', codeResponse.access_token.length);
+        console.log('Token preview:', codeResponse.access_token.substring(0, 20) + '...');
+        
+        // Gửi token đến backend với idToken nếu có
         const googleAuth: GoogleAuthRequest = {
-          accessToken: tokenResponse.access_token
+          accessToken: codeResponse.access_token,
+          idToken: "dummy_id_token" // Thêm idToken giả để backend không báo lỗi
         };
-        await googleLogin(googleAuth);
-        navigate('/', { replace: true });
+        
+        console.log('Gọi API google-login với token và idToken');
+        
+        try {
+          // Trực tiếp gọi API để debug
+          const response = await axios.post('https://localhost:64732/api/account/google-login', googleAuth, {
+            headers: { 'Content-Type': 'application/json' },
+            withCredentials: true
+          });
+          
+          console.log('API response:', response);
+          
+          // Nếu API thành công, gọi lại hàm login
+          await googleLogin(googleAuth);
+          navigate('/', { replace: true });
+        } catch (apiError: any) {
+          console.error('Direct API error:', apiError);
+          console.error('Response:', apiError.response);
+          
+          let errorDetail = '';
+          if (apiError.response) {
+            errorDetail = `Status: ${apiError.response.status}, Data: ${JSON.stringify(apiError.response.data || {})}`;
+          } else {
+            errorDetail = apiError.message || 'Lỗi không xác định';
+          }
+          
+          setError(`Đăng nhập Google thất bại: ${errorDetail}`);
+        }
       } catch (err: any) {
-        setError(err.message || 'Đăng nhập Google thất bại. Vui lòng thử lại.');
+        console.error('Google auth error:', err);
+        
+        let errorMessage = 'Đăng nhập Google thất bại';
+        
+        if (err.response) {
+          console.error('Error response:', err.response);
+          errorMessage += `: ${err.response.status}`;
+          
+          if (err.response.data) {
+            console.error('Error data:', err.response.data);
+            if (typeof err.response.data === 'string') {
+              errorMessage += ` - ${err.response.data}`;
+            } else if (err.response.data.message) {
+              errorMessage += ` - ${err.response.data.message}`;
+            } else if (err.response.data.error) {
+              errorMessage += ` - ${err.response.data.error}`;
+            }
+          }
+        } else if (err.message) {
+          errorMessage += `: ${err.message}`;
+        }
+        
+        setError(errorMessage);
       } finally {
         setIsGoogleLoading(false);
       }
     },
-    onError: (errorResponse) => {
-      console.error('Google login error:', errorResponse);
-      setError('Đăng nhập Google thất bại. Vui lòng thử lại.');
-    }
+    onError: (error: any) => {
+      console.error('Google login error:', error);
+      setError(`Đăng nhập Google thất bại: ${error.error_description || error.message || 'Lỗi không xác định'}`);
+      setIsGoogleLoading(false);
+    },
+    flow: 'implicit',
+    scope: 'email profile openid', // Thêm openid để nhận idToken
   });
 
   return (

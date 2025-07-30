@@ -42,34 +42,113 @@ public class AccountController : ControllerBase
         return Unauthorized(new { message = "Invalid username or password" });
     }
 
-    // API Google Login
+    // Xử lý Google Login với bắt lỗi chi tiết hơn
     [HttpPost("google-login")]
     [Produces("application/json")]
+    [AllowAnonymous]
     public async Task<IActionResult> GoogleLogin([FromBody] GoogleAuthDto googleAuth)
     {
+        try 
+        {
+            Console.WriteLine("Google Login API endpoint được gọi");
+            
+            if (googleAuth == null)
+            {
+                Console.WriteLine("GoogleAuthDto là null");
+                return BadRequest("Dữ liệu không hợp lệ");
+            }
+
+            Console.WriteLine($"GoogleAuth: accessToken length={googleAuth.AccessToken?.Length ?? 0}, idToken length={googleAuth.IdToken?.Length ?? 0}");
+            
+            if (string.IsNullOrEmpty(googleAuth.AccessToken))
+            {
+                Console.WriteLine("AccessToken là null hoặc rỗng");
+                return BadRequest("AccessToken không được cung cấp");
+            }
+            
+            // IdToken không còn là bắt buộc
+            if (string.IsNullOrEmpty(googleAuth.IdToken))
+            {
+                Console.WriteLine("IdToken không được cung cấp, nhưng tiếp tục xử lý với AccessToken");
+                // Không return lỗi
+            }
+
+            // In ra thông tin token để debug
+            Console.WriteLine($"Token preview: {googleAuth.AccessToken.Substring(0, Math.Min(20, googleAuth.AccessToken.Length))}...");
+            
+            try
+            {
+                var tokenResponse = await _accountService.AuthenticateGoogleUser(googleAuth);
+                
+                if (tokenResponse == null)
+                {
+                    Console.WriteLine("Không nhận được token response từ AuthenticateGoogleUser");
+                    return Unauthorized("Không thể xác thực với Google");
+                }
+                
+                Console.WriteLine($"Xác thực thành công cho user: {tokenResponse.UserName}");
+                return Ok(tokenResponse);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi xác thực Google: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    Console.WriteLine($"Inner stack trace: {ex.InnerException.StackTrace}");
+                }
+                
+                return StatusCode(500, $"Lỗi xác thực Google: {ex.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Lỗi không xác định trong GoogleLogin: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            return StatusCode(500, "Đã xảy ra lỗi không xác định");
+        }
+    }
+
+    // Endpoint kiểm tra token Google OAuth
+    [HttpPost("validate-google-token")]
+    [Produces("application/json")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ValidateGoogleToken([FromBody] GoogleAuthDto googleAuth)
+    {
+        _logger.LogInformation("ValidateGoogleToken endpoint called");
+        
         try
         {
             if (googleAuth == null || string.IsNullOrEmpty(googleAuth.AccessToken))
             {
-                return BadRequest(new { message = "Invalid Google authentication data" });
+                return BadRequest(new { valid = false, message = "Token is missing" });
             }
-
-            _logger.LogInformation("Processing Google login with token: {Token}", googleAuth.AccessToken.Substring(0, 10) + "...");
-
-            var tokenResponse = await _accountService.AuthenticateGoogleUser(googleAuth);
-            if (tokenResponse != null)
+            
+            // Chỉ lấy thông tin người dùng từ Google, không tạo JWT
+            var userInfo = await _accountService.GetGoogleUserInfo(googleAuth.AccessToken);
+            
+            if (userInfo != null)
             {
-                _logger.LogInformation("Google login successful for user: {UserName}", tokenResponse.UserName);
-                return Ok(tokenResponse);
+                return Ok(new { 
+                    valid = true, 
+                    userInfo = new {
+                        id = userInfo.Id,
+                        email = userInfo.Email,
+                        name = userInfo.Name,
+                        picture = userInfo.Picture,
+                        emailVerified = userInfo.EmailVerified
+                    }
+                });
             }
-
-            _logger.LogWarning("Google login failed - unable to authenticate user");
-            return Unauthorized(new { message = "Unable to authenticate with Google" });
+            
+            return BadRequest(new { valid = false, message = "Invalid or expired token" });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during Google login");
-            return StatusCode(500, new { message = "An error occurred during Google authentication" });
+            _logger.LogError(ex, "Error validating Google token");
+            return StatusCode(500, new { valid = false, message = ex.Message });
         }
     }
 
@@ -134,5 +213,14 @@ public class AccountController : ControllerBase
 
         var tokenResponse = await _accountService.GenerateJwtToken(user);
         return Ok(tokenResponse);
+    }
+
+    // Endpoint test để kiểm tra kết nối đến API
+    [HttpGet("test")]
+    [AllowAnonymous]
+    public IActionResult Test()
+    {
+        Console.WriteLine("Test endpoint được gọi");
+        return Ok(new { message = "API đang hoạt động", time = DateTime.Now });
     }
 }
