@@ -11,4 +11,6 @@ public interface IAccountService
     Task Logout(); // Logout
     Task<User> GetCurrentUser(); // Get current user
     Task<TokenResponseDto> GenerateJwtToken(User user); // Thêm phương thức tạo JWT token
+    Task<TokenResponseDto> AuthenticateGoogleUser(GoogleAuthDto googleAuth); // Thêm phương thức xác thực Google
+    Task<GoogleUserInfoDto> GetGoogleUserInfo(string accessToken); // Lấy thông tin người dùng Google
 }

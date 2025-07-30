@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import authService from '../services/authService';
-import { User, LoginRequest, RegisterRequest } from '../types';
+import { User, LoginRequest, RegisterRequest, GoogleAuthRequest } from '../types';
 import useToast from '../hooks/useToast';
 
 interface AuthContextType {
@@ -8,6 +8,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
+  googleLogin: (googleAuth: GoogleAuthRequest) => Promise<void>;
   register: (userData: RegisterRequest) => Promise<boolean>;
   logout: () => Promise<void>;
 }
@@ -105,6 +106,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const googleLogin = async (googleAuth: GoogleAuthRequest) => {
+    setIsLoading(true);
+    try {
+      const loggedInUser = await authService.googleLogin(googleAuth);
+      setUser(loggedInUser);
+      // reset auth error when login is successful
+      setAuthError(false);
+      // save auth state
+      saveAuthState(true);
+    } catch (error) {
+      console.error('Google login failed:', error);
+      saveAuthState(false);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const register = async (userData: RegisterRequest) => {
     setIsLoading(true);
     try {
@@ -137,6 +156,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     isAuthenticated: !!user,
     login,
+    googleLogin,
     register,
     logout
   };

@@ -83,6 +83,14 @@ export interface TokenResponse {
 }
 
 /**
+ * Google Auth information
+ */
+export interface GoogleAuthRequest {
+  idToken?: string;
+  accessToken: string;
+}
+
+/**
  * Toast notification information
  */
 export interface Toast {

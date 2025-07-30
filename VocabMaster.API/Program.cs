@@ -24,9 +24,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -108,6 +109,14 @@ builder.Services.AddHttpClient("DictionaryApi", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("DictionaryApiUrl") ??
                                 "https://api.dictionaryapi.dev/api/v2/entries/en/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// Add HttpClient for Google API
+builder.Services.AddHttpClient("GoogleApi", client =>
+{
+    client.BaseAddress = new Uri("https://www.googleapis.com/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
     client.Timeout = TimeSpan.FromSeconds(30);
 });

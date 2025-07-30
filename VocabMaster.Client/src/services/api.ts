@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || '';
+// URL API backend
+const API_URL = 'https://localhost:64732';
 const TOKEN_KEY = 'vocabmaster_token';
 
 // Create axios instance with default config
@@ -10,6 +11,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000, // 10 seconds timeout
+  withCredentials: true, // Cho phép gửi cookies khi cross-domain request
 });
 
 // Hàm lấy token từ localStorage

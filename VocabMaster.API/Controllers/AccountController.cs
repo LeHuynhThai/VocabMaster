@@ -14,11 +14,13 @@ public class AccountController : ControllerBase
 {
     private readonly IAccountService _accountService;
     private readonly IMapper _mapper;
+    private readonly ILogger<AccountController> _logger;
 
-    public AccountController(IAccountService accountService, IMapper mapper)
+    public AccountController(IAccountService accountService, IMapper mapper, ILogger<AccountController> logger)
     {
         _accountService = accountService;
         _mapper = mapper;
+        _logger = logger;
     }
 
     // API Login POST - Cập nhật để sử dụng JWT
@@ -38,6 +40,37 @@ public class AccountController : ControllerBase
         }
 
         return Unauthorized(new { message = "Invalid username or password" });
+    }
+
+    // API Google Login
+    [HttpPost("google-login")]
+    [Produces("application/json")]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleAuthDto googleAuth)
+    {
+        try
+        {
+            if (googleAuth == null || string.IsNullOrEmpty(googleAuth.AccessToken))
+            {
+                return BadRequest(new { message = "Invalid Google authentication data" });
+            }
+
+            _logger.LogInformation("Processing Google login with token: {Token}", googleAuth.AccessToken.Substring(0, 10) + "...");
+
+            var tokenResponse = await _accountService.AuthenticateGoogleUser(googleAuth);
+            if (tokenResponse != null)
+            {
+                _logger.LogInformation("Google login successful for user: {UserName}", tokenResponse.UserName);
+                return Ok(tokenResponse);
+            }
+
+            _logger.LogWarning("Google login failed - unable to authenticate user");
+            return Unauthorized(new { message = "Unable to authenticate with Google" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during Google login");
+            return StatusCode(500, new { message = "An error occurred during Google authentication" });
+        }
     }
 
     // API Register POST

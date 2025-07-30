@@ -1,5 +1,4 @@
 import api, { removeToken } from './api';
-import { LoginRequest, RegisterRequest, User, TokenResponse } from '../types';
 
 const authService = {
   login: async (credentials: LoginRequest): Promise<User> => {
@@ -14,6 +13,22 @@ const authService = {
       };
     } catch (error: any) {
       console.error('Login API error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  googleLogin: async (googleAuth: GoogleAuthRequest): Promise<User> => {
+    try {
+      const response = await api.post<TokenResponse>('/api/account/google-login', googleAuth);
+      // Token đã được lưu tự động trong api interceptor
+      // Trả về thông tin user từ token response
+      return {
+        id: response.data.userId,
+        name: response.data.userName,
+        role: response.data.role
+      };
+    } catch (error: any) {
+      console.error('Google Login API error:', error.response?.data || error.message);
       throw error;
     }
   },

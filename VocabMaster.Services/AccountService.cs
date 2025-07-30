@@ -11,6 +11,8 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using VocabMaster.Core.DTOs;
+using System.Net.Http;
+using System.Text.Json;
 
 namespace VocabMaster.Services;
 
@@ -20,17 +22,20 @@ public class AccountService : IAccountService
     private readonly IHttpContextAccessor _httpContextAccessor; // Http context accessor
     private readonly IMapper _mapper; // AutoMapper
     private readonly IConfiguration _configuration; // Configuration
+    private readonly IHttpClientFactory _httpClientFactory; // Http client factory
 
     // Constructor
     public AccountService(IUserRepo userRepository,
                          IHttpContextAccessor httpContextAccessor,
                          IMapper mapper,
-                         IConfiguration configuration)
+                         IConfiguration configuration,
+                         IHttpClientFactory httpClientFactory)
     {
         _userRepository = userRepository;
         _httpContextAccessor = httpContextAccessor;
         _mapper = mapper;
         _configuration = configuration;
+        _httpClientFactory = httpClientFactory;
     }
 
     // Login - Cập nhật để sử dụng JWT
@@ -87,6 +92,71 @@ public class AccountService : IAccountService
             UserName = user.Name,
             Role = user.Role.ToString()
         };
+    }
+
+    // Xác thực người dùng Google
+    public async Task<TokenResponseDto> AuthenticateGoogleUser(GoogleAuthDto googleAuth)
+    {
+        try
+        {
+            // Lấy thông tin người dùng từ Google
+            var googleUserInfo = await GetGoogleUserInfo(googleAuth.AccessToken);
+            
+            if (googleUserInfo == null)
+            {
+                return null;
+            }
+            
+            // Kiểm tra xem người dùng đã tồn tại trong hệ thống chưa
+            var existingUser = await _userRepository.GetByName(googleUserInfo.Email);
+            
+            if (existingUser == null)
+            {
+                // Tạo người dùng mới nếu chưa tồn tại
+                var newUser = new User
+                {
+                    Name = googleUserInfo.Email, // Sử dụng email làm tên đăng nhập
+                    Password = HashPassword(Guid.NewGuid().ToString()), // Tạo mật khẩu ngẫu nhiên
+                    Role = UserRole.User
+                };
+                
+                await _userRepository.Add(newUser);
+                existingUser = await _userRepository.GetByName(googleUserInfo.Email);
+            }
+            
+            // Tạo JWT token cho người dùng
+            return await GenerateJwtToken(existingUser);
+        }
+        catch (Exception ex)
+        {
+            // Log lỗi
+            Console.WriteLine($"Error authenticating Google user: {ex.Message}");
+            return null;
+        }
+    }
+    
+    // Lấy thông tin người dùng từ Google
+    public async Task<GoogleUserInfoDto> GetGoogleUserInfo(string accessToken)
+    {
+        try
+        {
+            var httpClient = _httpClientFactory.CreateClient();
+            var response = await httpClient.GetAsync($"https://www.googleapis.com/oauth2/v3/userinfo?access_token={accessToken}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<GoogleUserInfoDto>(content);
+            }
+            
+            return null;
+        }
+        catch (Exception ex)
+        {
+            // Log lỗi
+            Console.WriteLine($"Error getting Google user info: {ex.Message}");
+            return null;
+        }
     }
 
     // Create user claims
