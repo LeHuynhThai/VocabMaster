@@ -1,8 +1,4 @@
-using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Mvc;
 using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.API.Controllers
@@ -34,7 +30,7 @@ namespace VocabMaster.API.Controllers
             {
                 _logger.LogInformation("Caching definition for word: {Word}", word);
                 var result = await _dictionaryService.CacheWordDefinition(word);
-                
+
                 if (result)
                 {
                     _logger.LogInformation("Successfully cached definition for word: {Word}", word);
@@ -64,7 +60,7 @@ namespace VocabMaster.API.Controllers
             {
                 _logger.LogInformation("Starting to cache all vocabulary definitions");
                 var result = await _dictionaryService.CacheAllVocabularyDefinitions();
-                
+
                 _logger.LogInformation("Finished caching vocabulary definitions. Success count: {Count}", result);
                 return Ok(new { success = true, count = result, message = $"Successfully cached {result} definitions" });
             }
@@ -75,4 +71,4 @@ namespace VocabMaster.API.Controllers
             }
         }
     }
-} 
+}

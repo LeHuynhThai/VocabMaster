@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace VocabMaster.Core.DTOs
 {
@@ -12,11 +12,11 @@ namespace VocabMaster.Core.DTOs
         /// </summary>
         [JsonPropertyName("id")]
         public int Id { get; set; }
-        
+
         /// <summary>
         /// The word text
         /// </summary>
         [JsonPropertyName("word")]
         public string Word { get; set; }
     }
-} 
+}

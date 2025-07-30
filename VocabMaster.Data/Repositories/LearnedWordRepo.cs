@@ -1,9 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
 
@@ -59,7 +55,7 @@ namespace VocabMaster.Data.Repositories
             try
             {
                 _logger?.LogInformation("Getting learned words for user: {UserId}", userId);
-                
+
                 // Use a more efficient query with Include for eager loading
                 return await _context.LearnedVocabularies
                     .Where(lv => lv.UserId == userId)
@@ -87,18 +83,18 @@ namespace VocabMaster.Data.Repositories
                     return false;
                 }
 
-                _logger?.LogInformation("Adding learned word: {Word} for user: {UserId}", 
+                _logger?.LogInformation("Adding learned word: {Word} for user: {UserId}",
                     learnedWord.Word, learnedWord.UserId);
-                
+
                 await _context.LearnedVocabularies.AddAsync(learnedWord);
                 await _context.SaveChangesAsync();
-                
+
                 _logger?.LogInformation("Successfully added learned word with ID: {Id}", learnedWord.Id);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error adding learned word: {Word} for user: {UserId}", 
+                _logger?.LogError(ex, "Error adding learned word: {Word} for user: {UserId}",
                     learnedWord?.Word, learnedWord?.UserId);
                 return false;
             }
@@ -114,7 +110,7 @@ namespace VocabMaster.Data.Repositories
             try
             {
                 _logger?.LogInformation("Deleting learned word with ID: {Id}", id);
-                
+
                 var learnedWord = await _context.LearnedVocabularies.FindAsync(id);
                 if (learnedWord == null)
                 {
@@ -124,7 +120,7 @@ namespace VocabMaster.Data.Repositories
 
                 _context.LearnedVocabularies.Remove(learnedWord);
                 await _context.SaveChangesAsync();
-                
+
                 _logger?.LogInformation("Successfully deleted learned word with ID: {Id}", id);
                 return true;
             }
@@ -134,7 +130,7 @@ namespace VocabMaster.Data.Repositories
                 return false;
             }
         }
-        
+
         /// <summary>
         /// Removes a learned word for a specific user by word text
         /// </summary>
@@ -152,23 +148,23 @@ namespace VocabMaster.Data.Repositories
                 }
 
                 _logger?.LogInformation("Removing learned word: {Word} for user: {UserId}", word, userId);
-                
+
                 // Find the learned word to remove
                 var learnedWord = await _context.LearnedVocabularies
-                    .FirstOrDefaultAsync(lv => 
-                        lv.UserId == userId && 
+                    .FirstOrDefaultAsync(lv =>
+                        lv.UserId == userId &&
                         EF.Functions.Like(lv.Word, word));
-                
+
                 if (learnedWord == null)
                 {
                     _logger?.LogWarning("Learned word: {Word} not found for user: {UserId}", word, userId);
                     return false;
                 }
-                
+
                 // Remove the learned word
                 _context.LearnedVocabularies.Remove(learnedWord);
                 await _context.SaveChangesAsync();
-                
+
                 _logger?.LogInformation("Successfully removed learned word: {Word} for user: {UserId}", word, userId);
                 return true;
             }

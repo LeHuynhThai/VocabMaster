@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VocabMaster.Core.Entities;
-using System;
 
 namespace VocabMaster.Data
 {
@@ -31,7 +30,7 @@ namespace VocabMaster.Data
                 .WithOne(lv => lv.User)
                 .HasForeignKey(lv => lv.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-                
+
             // Create unique index for Word in DictionaryDetails
             builder.Entity<DictionaryDetails>()
                 .HasIndex(dd => dd.Word)

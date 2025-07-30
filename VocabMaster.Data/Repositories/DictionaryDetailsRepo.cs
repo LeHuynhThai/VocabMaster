@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
@@ -70,34 +66,34 @@ namespace VocabMaster.Data.Repositories
             try
             {
                 _logger.LogInformation("Adding or updating dictionary details for word: {Word}", details.Word);
-                
+
                 // Check if the word already exists
                 var existingDetails = await _context.DictionaryDetails
                     .FirstOrDefaultAsync(dd => dd.Word.ToLower() == details.Word.ToLower());
-                
+
                 if (existingDetails != null)
                 {
                     _logger.LogInformation("Updating existing dictionary details for word: {Word}", details.Word);
-                    
+
                     // Update existing entry
                     existingDetails.PhoneticsJson = details.PhoneticsJson;
                     existingDetails.MeaningsJson = details.MeaningsJson;
                     existingDetails.UpdatedAt = DateTime.UtcNow;
-                    
+
                     _context.DictionaryDetails.Update(existingDetails);
                     await _context.SaveChangesAsync();
-                    
+
                     _logger.LogInformation("Successfully updated dictionary details for word: {Word}", details.Word);
                     return existingDetails;
                 }
                 else
                 {
                     _logger.LogInformation("Adding new dictionary details for word: {Word}", details.Word);
-                    
+
                     // Add new entry
                     await _context.DictionaryDetails.AddAsync(details);
                     await _context.SaveChangesAsync();
-                    
+
                     _logger.LogInformation("Successfully added dictionary details for word: {Word}", details.Word);
                     return details;
                 }
@@ -153,4 +149,4 @@ namespace VocabMaster.Data.Repositories
             }
         }
     }
-} 
+}

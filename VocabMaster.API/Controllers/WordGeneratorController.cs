@@ -1,14 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Memory;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Security.Claims;
-using System.Collections.Generic;
-using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Core.DTOs;
+using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.API.Controllers
 {
@@ -94,26 +89,26 @@ namespace VocabMaster.API.Controllers
                 bool isLearned = await _vocabularyService.IsWordLearned(userId, randomWord.Word);
 
                 // Debug Vietnamese translation
-                _logger.LogInformation("Random word {Word} has Vietnamese translation: {HasVietnamese}", 
+                _logger.LogInformation("Random word {Word} has Vietnamese translation: {HasVietnamese}",
                     randomWord.Word, !string.IsNullOrEmpty(randomWord.Vietnamese) ? "Yes" : "No");
-                
+
                 // Convert to simplified response
                 var response = VocabularyResponseDto.FromDictionaryResponse(randomWord, 0, isLearned, randomWord.Vietnamese);
-                
+
                 // Debug response
-                _logger.LogInformation("Response for word {Word} has Vietnamese: {HasVietnamese}", 
+                _logger.LogInformation("Response for word {Word} has Vietnamese: {HasVietnamese}",
                     response.Word, !string.IsNullOrEmpty(response.Vietnamese) ? "Yes" : "No");
-                
+
                 // Cache the result
                 if (_cache != null)
                 {
                     var cacheOptions = new MemoryCacheEntryOptions()
                         .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheExpirationMinutes))
                         .SetPriority(CacheItemPriority.Normal);
-                    
+
                     _cache.Set(cacheKey, response, cacheOptions);
                 }
-                
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -167,26 +162,26 @@ namespace VocabMaster.API.Controllers
                 bool isLearned = await _vocabularyService.IsWordLearned(userId, randomWord.Word);
 
                 // Debug Vietnamese translation
-                _logger.LogInformation("New random word {Word} has Vietnamese translation: {HasVietnamese}", 
+                _logger.LogInformation("New random word {Word} has Vietnamese translation: {HasVietnamese}",
                     randomWord.Word, !string.IsNullOrEmpty(randomWord.Vietnamese) ? "Yes" : "No");
-                
+
                 // Convert to simplified response
                 var response = VocabularyResponseDto.FromDictionaryResponse(randomWord, 0, isLearned, randomWord.Vietnamese);
-                
+
                 // Debug response
-                _logger.LogInformation("Response for new word {Word} has Vietnamese: {HasVietnamese}", 
+                _logger.LogInformation("Response for new word {Word} has Vietnamese: {HasVietnamese}",
                     response.Word, !string.IsNullOrEmpty(response.Vietnamese) ? "Yes" : "No");
-                
+
                 // Cache the result
                 if (_cache != null)
                 {
                     var cacheOptions = new MemoryCacheEntryOptions()
                         .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheExpirationMinutes))
                         .SetPriority(CacheItemPriority.Normal);
-                    
+
                     _cache.Set(cacheKey, response, cacheOptions);
                 }
-                
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -212,20 +207,20 @@ namespace VocabMaster.API.Controllers
             try
             {
                 _logger.LogInformation("Looking up definition for word: {Word}", word);
-                
+
                 // Get the definition from cache or API
                 var definition = await _dictionaryService.GetWordDefinitionFromCache(word);
-                
+
                 if (definition == null)
                 {
                     _logger.LogWarning("No definition found for word: {Word}", word);
                     return NotFound(new { message = $"No definition found for word: {word}" });
                 }
-                
+
                 // Debug Vietnamese translation
-                _logger.LogInformation("Lookup word {Word} has Vietnamese translation: {HasVietnamese}", 
+                _logger.LogInformation("Lookup word {Word} has Vietnamese translation: {HasVietnamese}",
                     definition.Word, !string.IsNullOrEmpty(definition.Vietnamese) ? "Yes" : "No");
-                
+
                 _logger.LogInformation("Successfully retrieved definition for word: {Word}", word);
                 return Ok(definition);
             }
@@ -259,7 +254,7 @@ namespace VocabMaster.API.Controllers
             {
                 _logger.LogInformation("Checking if word {Word} is learned by user {UserId}", word, userId);
                 bool isLearned = await _vocabularyService.IsWordLearned(userId, word);
-                
+
                 return Ok(new { isLearned });
             }
             catch (Exception ex)
@@ -301,7 +296,7 @@ namespace VocabMaster.API.Controllers
             {
                 _logger.LogInformation("Adding word {Word} to learned list for user {UserId}", word, userId);
                 var result = await _vocabularyService.MarkWordAsLearned(userId, word);
-                
+
                 if (result.Success)
                 {
                     // Invalidate random word cache
@@ -310,7 +305,7 @@ namespace VocabMaster.API.Controllers
                         string cacheKey = $"{RandomWordCacheKey}{userId}";
                         _cache.Remove(cacheKey);
                     }
-                    
+
                     return Ok(new { success = true });
                 }
                 else
@@ -331,14 +326,14 @@ namespace VocabMaster.API.Controllers
         /// <returns>User ID or 0 if not found or invalid</returns>
         private int GetUserIdFromClaims()
         {
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier) ?? 
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier) ??
                               User.Claims.FirstOrDefault(c => c.Type == "UserId");
-                              
+
             if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
             {
                 return userId;
             }
-            
+
             _logger.LogWarning("UserId not found in claims or could not be parsed");
             return 0;
         }

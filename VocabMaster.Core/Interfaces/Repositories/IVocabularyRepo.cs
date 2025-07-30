@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using VocabMaster.Core.Entities;
+﻿using VocabMaster.Core.Entities;
 
 namespace VocabMaster.Core.Interfaces.Repositories
 {
@@ -14,13 +12,13 @@ namespace VocabMaster.Core.Interfaces.Repositories
         /// </summary>
         /// <returns>Random vocabulary or null if none exist</returns>
         Task<Vocabulary> GetRandom();
-        
+
         /// <summary>
         /// Gets the total count of vocabularies in the repository
         /// </summary>
         /// <returns>Count of vocabularies</returns>
         Task<int> Count();
-        
+
         /// <summary>
         /// Gets a random vocabulary excluding words that have already been learned
         /// </summary>
@@ -33,7 +31,7 @@ namespace VocabMaster.Core.Interfaces.Repositories
         /// </summary>
         /// <returns>List of all vocabularies</returns>
         Task<List<Vocabulary>> GetAll();
-        
+
         /// <summary>
         /// Updates a vocabulary in the repository
         /// </summary>

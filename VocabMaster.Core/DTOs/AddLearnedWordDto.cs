@@ -1,5 +1,5 @@
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using System.ComponentModel.DataAnnotations;
 
 namespace VocabMaster.Core.DTOs
 {
@@ -15,4 +15,4 @@ namespace VocabMaster.Core.DTOs
         [JsonPropertyName("word")]
         public string Word { get; set; }
     }
-} 
+}

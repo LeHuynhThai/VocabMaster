@@ -1,6 +1,4 @@
-using System;
-
-namespace VocabMaster.Core.DTOs
+﻿namespace VocabMaster.Core.DTOs
 {
     public class TokenResponseDto
     {
@@ -11,4 +9,4 @@ namespace VocabMaster.Core.DTOs
         public string UserName { get; set; }
         public string Role { get; set; }
     }
-} 
+}

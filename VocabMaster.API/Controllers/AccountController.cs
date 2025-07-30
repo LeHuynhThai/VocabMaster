@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using AutoMapper;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Services;
-using Microsoft.AspNetCore.Authorization;
-using System.Threading.Tasks;
 
 namespace VocabMaster.API.Controllers;
 
@@ -48,10 +47,10 @@ public class AccountController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GoogleLogin([FromBody] GoogleAuthDto googleAuth)
     {
-        try 
+        try
         {
             Console.WriteLine("Google Login API endpoint được gọi");
-            
+
             if (googleAuth == null)
             {
                 Console.WriteLine("GoogleAuthDto là null");
@@ -59,13 +58,13 @@ public class AccountController : ControllerBase
             }
 
             Console.WriteLine($"GoogleAuth: accessToken length={googleAuth.AccessToken?.Length ?? 0}, idToken length={googleAuth.IdToken?.Length ?? 0}");
-            
+
             if (string.IsNullOrEmpty(googleAuth.AccessToken))
             {
                 Console.WriteLine("AccessToken là null hoặc rỗng");
                 return BadRequest("AccessToken không được cung cấp");
             }
-            
+
             // IdToken không còn là bắt buộc
             if (string.IsNullOrEmpty(googleAuth.IdToken))
             {
@@ -75,17 +74,17 @@ public class AccountController : ControllerBase
 
             // In ra thông tin token để debug
             Console.WriteLine($"Token preview: {googleAuth.AccessToken.Substring(0, Math.Min(20, googleAuth.AccessToken.Length))}...");
-            
+
             try
             {
                 var tokenResponse = await _accountService.AuthenticateGoogleUser(googleAuth);
-                
+
                 if (tokenResponse == null)
                 {
                     Console.WriteLine("Không nhận được token response từ AuthenticateGoogleUser");
                     return Unauthorized("Không thể xác thực với Google");
                 }
-                
+
                 Console.WriteLine($"Xác thực thành công cho user: {tokenResponse.UserName}");
                 return Ok(tokenResponse);
             }
@@ -93,13 +92,13 @@ public class AccountController : ControllerBase
             {
                 Console.WriteLine($"Lỗi xác thực Google: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                
+
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
                     Console.WriteLine($"Inner stack trace: {ex.InnerException.StackTrace}");
                 }
-                
+
                 return StatusCode(500, $"Lỗi xác thực Google: {ex.Message}");
             }
         }
@@ -118,22 +117,24 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> ValidateGoogleToken([FromBody] GoogleAuthDto googleAuth)
     {
         _logger.LogInformation("ValidateGoogleToken endpoint called");
-        
+
         try
         {
             if (googleAuth == null || string.IsNullOrEmpty(googleAuth.AccessToken))
             {
                 return BadRequest(new { valid = false, message = "Token is missing" });
             }
-            
+
             // Chỉ lấy thông tin người dùng từ Google, không tạo JWT
             var userInfo = await _accountService.GetGoogleUserInfo(googleAuth.AccessToken);
-            
+
             if (userInfo != null)
             {
-                return Ok(new { 
-                    valid = true, 
-                    userInfo = new {
+                return Ok(new
+                {
+                    valid = true,
+                    userInfo = new
+                    {
                         id = userInfo.Id,
                         email = userInfo.Email,
                         name = userInfo.Name,
@@ -142,7 +143,7 @@ public class AccountController : ControllerBase
                     }
                 });
             }
-            
+
             return BadRequest(new { valid = false, message = "Invalid or expired token" });
         }
         catch (Exception ex)
@@ -192,7 +193,8 @@ public class AccountController : ControllerBase
             return Unauthorized();
         }
 
-        return Ok(new {
+        return Ok(new
+        {
             id = user.Id,
             name = user.Name,
             role = user.Role.ToString(),

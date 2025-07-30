@@ -1,6 +1,4 @@
-using System.Threading.Tasks;
-
-namespace VocabMaster.Core.Interfaces.Services
+﻿namespace VocabMaster.Core.Interfaces.Services
 {
     /// <summary>
     /// Interface for crawling Vietnamese translations for English vocabulary
@@ -12,7 +10,7 @@ namespace VocabMaster.Core.Interfaces.Services
         /// </summary>
         /// <returns>Number of translations successfully crawled</returns>
         Task<int> CrawlAllTranslations();
-        
+
         /// <summary>
         /// Translates a single English word to Vietnamese
         /// </summary>
@@ -20,4 +18,4 @@ namespace VocabMaster.Core.Interfaces.Services
         /// <returns>Vietnamese translation or null if not found</returns>
         Task<string> TranslateWord(string word);
     }
-} 
+}

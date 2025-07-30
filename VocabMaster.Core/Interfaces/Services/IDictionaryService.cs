@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-using System.Collections.Generic;
-using VocabMaster.Core.DTOs;
+﻿using VocabMaster.Core.DTOs;
 
 namespace VocabMaster.Core.Interfaces.Services
 {
@@ -14,14 +12,14 @@ namespace VocabMaster.Core.Interfaces.Services
         /// </summary>
         /// <returns>Dictionary response with word details or null if not found</returns>
         Task<DictionaryResponseDto> GetRandomWord();
-        
+
         /// <summary>
         /// Gets a random word, optionally trying to exclude words already learned by the user
         /// </summary>
         /// <param name="userId">ID of the user</param>
         /// <returns>Dictionary response with word details or null if not found</returns>
         Task<DictionaryResponseDto> GetRandomWordExcludeLearned(int userId);
-        
+
         /// <summary>
         /// Gets the definition of a word from the dictionary API
         /// </summary>
@@ -35,7 +33,7 @@ namespace VocabMaster.Core.Interfaces.Services
         /// <param name="word">The word to look up</param>
         /// <returns>Dictionary response with word details or null if not found</returns>
         Task<DictionaryResponseDto> GetWordDefinitionFromCache(string word);
-        
+
         /// <summary>
         /// Caches the definition of a word in the local database
         /// </summary>

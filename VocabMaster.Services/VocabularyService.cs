@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Caching.Memory;
 using VocabMaster.Core.Entities;
-using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Core.Interfaces.Repositories;
+using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Services
 {
@@ -52,26 +48,26 @@ namespace VocabMaster.Services
             try
             {
                 _logger.LogInformation("Adding word '{Word}' to learned list for user {UserId}", word, userId);
-                
+
                 // Check if the word is already learned
                 if (await IsWordLearned(userId, word))
                 {
                     _logger.LogInformation("Word '{Word}' is already in the learned list for user {UserId}", word, userId);
                     return true;
                 }
-                
+
                 // Create new learned word
                 var learnedWord = new LearnedWord
                 {
                     UserId = userId,
                     Word = word,
                 };
-                
+
                 var result = await _learnedWordRepository.Add(learnedWord);
-                
+
                 // Invalidate cache
                 InvalidateUserCache(userId);
-                
+
                 _logger.LogInformation("Successfully added word '{Word}' to learned list for user {UserId}", word, userId);
                 return result;
             }
@@ -81,7 +77,7 @@ namespace VocabMaster.Services
                 return false;
             }
         }
-        
+
         /// <summary>
         /// Marks a word as learned for a specific user
         /// </summary>
@@ -110,12 +106,12 @@ namespace VocabMaster.Services
                     UserId = userId,
                     Word = word,
                 };
-                
+
                 var result = await _learnedWordRepository.Add(learnedWord);
-                
+
                 // Invalidate cache
                 InvalidateUserCache(userId);
-                
+
                 if (result)
                 {
                     _logger.LogInformation("Successfully marked word '{Word}' as learned for user {UserId}", word, userId);
@@ -133,7 +129,7 @@ namespace VocabMaster.Services
                 return new MarkWordResult { Success = false, ErrorMessage = "An error occurred. Please try again." };
             }
         }
-        
+
         /// <summary>
         /// Gets all learned words for a specific user
         /// </summary>
@@ -152,8 +148,8 @@ namespace VocabMaster.Services
                 return new List<LearnedWord>();
             }
         }
-        
-        
+
+
         /// <summary>
         /// Removes a learned word for a specific user by ID
         /// </summary>
@@ -165,7 +161,7 @@ namespace VocabMaster.Services
             try
             {
                 _logger.LogInformation("Removing learned word with ID {WordId} for user {UserId}", wordId, userId);
-                
+
                 // Verify the word belongs to the user
                 var learnedWord = await _learnedWordRepository.GetById(wordId);
                 if (learnedWord == null || learnedWord.UserId != userId)
@@ -173,12 +169,12 @@ namespace VocabMaster.Services
                     _logger.LogWarning("User {UserId} tried to remove learned word with ID {WordId} that doesn't exist or doesn't belong to them", userId, wordId);
                     return false;
                 }
-                
+
                 var result = await _learnedWordRepository.Delete(wordId);
-                
+
                 // Invalidate cache
                 InvalidateUserCache(userId);
-                
+
                 _logger.LogInformation("Successfully removed learned word with ID {WordId} for user {UserId}", wordId, userId);
                 return result;
             }
@@ -188,7 +184,7 @@ namespace VocabMaster.Services
                 return false;
             }
         }
-        
+
         /// <summary>
         /// Checks if a word is in the user's learned words list
         /// </summary>
@@ -205,28 +201,28 @@ namespace VocabMaster.Services
                 {
                     return learnedWords.Contains(word, StringComparer.OrdinalIgnoreCase);
                 }
-                
+
                 // Get all learned words for the user
                 var userLearnedWords = await _learnedWordRepository.GetByUserId(userId);
-                
+
                 // Check if the word is in the learned list
-                bool isLearned = userLearnedWords.Any(lw => 
+                bool isLearned = userLearnedWords.Any(lw =>
                     string.Equals(lw.Word, word, StringComparison.OrdinalIgnoreCase));
-                
+
                 // Cache the learned words for future checks
                 if (_cache != null)
                 {
                     var wordSet = new HashSet<string>(
-                        userLearnedWords.Select(lw => lw.Word), 
+                        userLearnedWords.Select(lw => lw.Word),
                         StringComparer.OrdinalIgnoreCase);
-                        
+
                     var cacheOptions = new MemoryCacheEntryOptions()
                         .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheExpirationMinutes))
                         .SetPriority(CacheItemPriority.Normal);
-                    
+
                     _cache.Set(cacheKey, wordSet, cacheOptions);
                 }
-                
+
                 return isLearned;
             }
             catch (Exception ex)
@@ -235,7 +231,7 @@ namespace VocabMaster.Services
                 return false;
             }
         }
-        
+
         /// <summary>
         /// Invalidates the user's cache
         /// </summary>
@@ -246,7 +242,7 @@ namespace VocabMaster.Services
             {
                 string cacheKey = $"{LearnedWordsCacheKey}{userId}";
                 _cache.Remove(cacheKey);
-                
+
                 // Also remove random word cache
                 _cache.Remove($"RandomWord_{userId}");
             }
@@ -263,16 +259,16 @@ namespace VocabMaster.Services
             try
             {
                 _logger.LogInformation("Getting learned word with ID {WordId} for user {UserId}", wordId, userId);
-                
+
                 var learnedWord = await _learnedWordRepository.GetById(wordId);
-                
+
                 // Check if the word exists and belongs to the user
                 if (learnedWord == null || learnedWord.UserId != userId)
                 {
                     _logger.LogWarning("Learned word with ID {WordId} not found or doesn't belong to user {UserId}", wordId, userId);
                     return null;
                 }
-                
+
                 _logger.LogInformation("Successfully retrieved learned word with ID {WordId} for user {UserId}", wordId, userId);
                 return learnedWord;
             }

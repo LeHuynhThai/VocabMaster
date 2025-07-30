@@ -1,8 +1,5 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading.Tasks;
 using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.API.Controllers
@@ -58,13 +55,13 @@ namespace VocabMaster.API.Controllers
             {
                 _logger.LogInformation("Translating word: {Word}", word);
                 var translation = await _translationCrawlerService.TranslateWord(word);
-                
+
                 if (string.IsNullOrEmpty(translation))
                 {
                     _logger.LogWarning("No translation found for word: {Word}", word);
                     return NotFound(new { message = "No translation found" });
                 }
-                
+
                 _logger.LogInformation("Successfully translated word: {Word} to {Translation}", word, translation);
                 return Ok(translation);
             }
@@ -101,13 +98,13 @@ namespace VocabMaster.API.Controllers
             {
                 _logger.LogInformation("Translating word (public endpoint): {Word}", word);
                 var translation = await _translationCrawlerService.TranslateWord(word);
-                
+
                 if (string.IsNullOrEmpty(translation))
                 {
                     _logger.LogWarning("No translation found for word: {Word}", word);
                     return NotFound(new { message = "No translation found" });
                 }
-                
+
                 _logger.LogInformation("Successfully translated word: {Word} to {Translation}", word, translation);
                 return Ok(translation);
             }
@@ -132,10 +129,10 @@ namespace VocabMaster.API.Controllers
             try
             {
                 _logger.LogInformation("Starting to crawl all translations");
-                
+
                 // Use the actual service to crawl translations
                 var count = await _translationCrawlerService.CrawlAllTranslations();
-                
+
                 _logger.LogInformation("Successfully crawled {Count} translations", count);
                 return Ok(new { count });
             }
@@ -157,4 +154,4 @@ namespace VocabMaster.API.Controllers
             return Ok(new { message = "Translation controller is working!" });
         }
     }
-} 
+}

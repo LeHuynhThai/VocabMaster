@@ -1,16 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Memory;
-using System;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using VocabMaster.Core.Entities;
-using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Core.DTOs;
-using AutoMapper;
+using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.API.Controllers
 {
@@ -78,7 +72,7 @@ namespace VocabMaster.API.Controllers
 
                 // check if cache is disabled
                 bool skipCache = Request.Query.ContainsKey("t");
-                
+
                 // Try to get from cache first (only if not skipping cache)
                 string cacheKey = $"{LearnedWordsListCacheKey}{userId}";
                 if (!skipCache && _cache != null && _cache.TryGetValue(cacheKey, out List<LearnedWordDto> cachedWords))
@@ -90,27 +84,27 @@ namespace VocabMaster.API.Controllers
                 // Get learned words
                 _logger.LogInformation("Getting learned words for user {UserId}", userId);
                 var learnedWords = await _vocabularyService.GetUserLearnedVocabularies(userId);
-                
+
                 // if no words, return empty list instead of error
                 if (learnedWords == null)
                 {
                     _logger.LogInformation("No learned words found for user {UserId}", userId);
                     return Ok(new List<LearnedWordDto>());
                 }
-                
+
                 // Convert to response DTOs using AutoMapper
                 var response = _mapper.Map<List<LearnedWordDto>>(learnedWords);
-                
+
                 // Cache the result (only if not skipping cache)
                 if (!skipCache && _cache != null)
                 {
                     var cacheOptions = new MemoryCacheEntryOptions()
                         .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheExpirationMinutes))
                         .SetPriority(CacheItemPriority.Normal);
-                    
+
                     _cache.Set(cacheKey, response, cacheOptions);
                 }
-                
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -164,7 +158,7 @@ namespace VocabMaster.API.Controllers
 
                 // Convert to vocabulary response
                 var response = VocabularyResponseDto.FromDictionaryResponse(wordDetails, learnedWord.Id, true);
-                
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -207,14 +201,15 @@ namespace VocabMaster.API.Controllers
             {
                 _logger.LogInformation("Adding word '{Word}' to learned list for user {UserId}", request.Word, userId);
                 var result = await _vocabularyService.MarkWordAsLearned(userId, request.Word.Trim());
-                
+
                 if (result.Success)
                 {
                     // Invalidate cache
                     InvalidateCache(userId);
-                    
-                    return Ok(new { 
-                        id = result.Data?.Id ?? 0, 
+
+                    return Ok(new
+                    {
+                        id = result.Data?.Id ?? 0,
                         word = request.Word.Trim(),
                     });
                 }
@@ -265,12 +260,12 @@ namespace VocabMaster.API.Controllers
             {
                 _logger.LogInformation("Removing learned word with ID {WordId} for user {UserId}", id, userId);
                 var result = await _vocabularyService.RemoveLearnedWordById(userId, id);
-                
+
                 if (result)
                 {
                     // Invalidate cache
                     InvalidateCache(userId);
-                    
+
                     return Ok(new { success = true });
                 }
                 else
@@ -284,25 +279,25 @@ namespace VocabMaster.API.Controllers
                 return StatusCode(500, new { message = "An error occurred while removing the word from learned list" });
             }
         }
-        
+
         /// <summary>
         /// Gets the user ID from the claims principal
         /// </summary>
         /// <returns>User ID or 0 if not found or invalid</returns>
         private int GetUserIdFromClaims()
         {
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier) ?? 
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier) ??
                               User.Claims.FirstOrDefault(c => c.Type == "UserId");
-                              
+
             if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
             {
                 return userId;
             }
-            
+
             _logger.LogWarning("UserId not found in claims or could not be parsed");
             return 0;
         }
-        
+
         /// <summary>
         /// Invalidates the user's cache
         /// </summary>

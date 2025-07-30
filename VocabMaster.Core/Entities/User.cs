@@ -20,7 +20,7 @@ namespace VocabMaster.Core.Entities
         // Navigation property
         public virtual ICollection<LearnedWord> LearnedVocabularies { get; set; }
 
-        
+
         public User()
         {
             LearnedVocabularies = new HashSet<LearnedWord>();

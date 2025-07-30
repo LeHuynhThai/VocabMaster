@@ -1,15 +1,10 @@
-﻿using System;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
-using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Core.Interfaces.Repositories;
+using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Services
 {
@@ -26,7 +21,7 @@ namespace VocabMaster.Services
         private readonly string _dictionaryApiUrl;
         private readonly Random _random = new Random();
         private const int MAX_ATTEMPTS = 5;
-        
+
         /// <summary>
         /// Initializes a new instance of the DictionaryService
         /// </summary>
@@ -48,10 +43,10 @@ namespace VocabMaster.Services
             _vocabularyRepository = vocabularyRepository ?? throw new ArgumentNullException(nameof(vocabularyRepository));
             _learnedWordRepository = learnedWordRepository ?? throw new ArgumentNullException(nameof(learnedWordRepository));
             _dictionaryDetailsRepository = dictionaryDetailsRepository ?? throw new ArgumentNullException(nameof(dictionaryDetailsRepository));
-            
+
             // Use IHttpClientFactory if provided, otherwise create a new HttpClient
             _httpClient = httpClientFactory != null ? httpClientFactory.CreateClient("DictionaryApi") : new HttpClient();
-            
+
             // Get API URL from configuration if provided, otherwise use default
             _dictionaryApiUrl = configuration?.GetValue<string>("DictionaryApiUrl") ?? "https://api.dictionaryapi.dev/api/v2/entries/en/";
         }
@@ -66,13 +61,13 @@ namespace VocabMaster.Services
             {
                 _logger.LogInformation("Getting random word from vocabulary repository");
                 var vocabulary = await _vocabularyRepository.GetRandom();
-                
+
                 if (vocabulary == null)
                 {
                     _logger.LogWarning("No vocabulary found in the repository");
                     return null;
                 }
-                
+
                 _logger.LogInformation("Found random word: {Word}", vocabulary.Word);
                 return await GetWordDefinitionFromCache(vocabulary.Word);
             }
@@ -82,7 +77,7 @@ namespace VocabMaster.Services
                 return null;
             }
         }
-        
+
         /// <summary>
         /// Gets a random word, optionally trying to exclude words already learned by the user
         /// </summary>
@@ -94,14 +89,14 @@ namespace VocabMaster.Services
             {
                 // First try to get a word excluding learned ones
                 var result = await TryGetRandomWordExcludeLearned(userId);
-                
+
                 // If no unlearned word is found or there's an issue, fall back to any random word
                 if (result == null)
                 {
                     _logger.LogInformation("Falling back to any random word for user {UserId}", userId);
                     return await GetRandomWord();
                 }
-                
+
                 return result;
             }
             catch (Exception ex)
@@ -111,7 +106,7 @@ namespace VocabMaster.Services
                 return await GetRandomWord();
             }
         }
-        
+
         /// <summary>
         /// Helper method to try getting a random word excluding learned ones
         /// </summary>
@@ -121,23 +116,23 @@ namespace VocabMaster.Services
             {
                 _logger.LogInformation("Getting learned words for user {UserId}", userId);
                 var learnedVocabularies = await _learnedWordRepository.GetByUserId(userId);
-                
+
                 if (learnedVocabularies == null || !learnedVocabularies.Any())
                 {
                     _logger.LogInformation("No learned vocabularies found for user {UserId}, returning any random word", userId);
                     return await GetRandomWord();
                 }
-                
+
                 var learnedWords = learnedVocabularies.Select(lv => lv.Word.ToLowerInvariant()).ToHashSet();
                 _logger.LogInformation("User {UserId} has learned {Count} words", userId, learnedWords.Count);
-                
+
                 // Try to get an unlearned word
                 var vocabulary = await _vocabularyRepository.GetRandomExcludeLearned(learnedWords.ToList());
-                
+
                 if (vocabulary == null)
                 {
                     _logger.LogInformation("No unlearned words found for user {UserId} in the first attempt", userId);
-                    
+
                     // If all words from the repository are learned, try multiple random words
                     // until we find one that's not in the learned list
                     for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++)
@@ -149,11 +144,11 @@ namespace VocabMaster.Services
                             return await GetWordDefinitionFromCache(randomVocab.Word);
                         }
                     }
-                    
+
                     _logger.LogInformation("All attempts to find unlearned word failed, returning any random word");
                     return await GetRandomWord();
                 }
-                
+
                 _logger.LogInformation("Found random unlearned word: {Word}", vocabulary.Word);
                 return await GetWordDefinitionFromCache(vocabulary.Word);
             }
@@ -181,33 +176,33 @@ namespace VocabMaster.Services
             {
                 _logger.LogInformation("Looking up definition for word: {Word}", word);
                 var requestUri = $"{_dictionaryApiUrl}{Uri.EscapeDataString(word)}";
-                
+
                 var response = await _httpClient.GetAsync(requestUri);
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("API returned non-success status code {StatusCode} for word {Word}", 
+                    _logger.LogWarning("API returned non-success status code {StatusCode} for word {Word}",
                         response.StatusCode, word);
                     return null;
                 }
-                
+
                 var content = await response.Content.ReadAsStringAsync();
-                
+
                 var options = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 };
-                
+
                 var dictionaryResponse = JsonSerializer.Deserialize<List<DictionaryResponseDto>>(content, options);
-                
+
                 var result = dictionaryResponse?.FirstOrDefault();
-                
+
                 if (result == null)
                 {
                     _logger.LogWarning("No definition found for word: {Word}", word);
                     return null;
                 }
-                
+
                 _logger.LogInformation("Successfully retrieved definition for word: {Word}", word);
                 return result;
             }
@@ -245,27 +240,27 @@ namespace VocabMaster.Services
             {
                 _logger.LogInformation("Getting dictionary details from cache for word: {Word}", word);
                 var dictionaryDetails = await _dictionaryDetailsRepository.GetByWord(word);
-                
+
                 // Get the Vietnamese translation from the vocabulary table
                 var vocabulary = (await _vocabularyRepository.GetAll()).FirstOrDefault(v => v.Word.Equals(word, StringComparison.OrdinalIgnoreCase));
                 string vietnameseTranslation = vocabulary?.Vietnamese;
-                
+
                 // Debug Vietnamese translation
                 _logger.LogInformation("Vietnamese translation for word {Word}: {Translation}", word, vietnameseTranslation ?? "null");
-                
+
                 if (dictionaryDetails == null)
                 {
                     _logger.LogInformation("No cached details found for word: {Word}, getting from API", word);
-                    
+
                     // Get from API if not in cache
                     var definition = await GetWordDefinition(word);
-                    
+
                     // Cache the definition if found
                     if (definition != null)
                     {
                         _logger.LogInformation("Caching definition for word: {Word}", word);
                         await CacheDefinition(definition);
-                        
+
                         // Add Vietnamese translation if available
                         if (!string.IsNullOrEmpty(vietnameseTranslation))
                         {
@@ -277,28 +272,28 @@ namespace VocabMaster.Services
                             _logger.LogWarning("No Vietnamese translation available for word: {Word}", word);
                         }
                     }
-                    else 
+                    else
                     {
                         _logger.LogWarning("No definition found from API for word: {Word}", word);
                     }
-                    
+
                     return definition;
                 }
-                
+
                 _logger.LogInformation("Found cached definition for word: {Word}, using database data", word);
-                
+
                 // Deserialize the JSON data
                 var options = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 };
-                
+
                 var phonetics = string.IsNullOrEmpty(dictionaryDetails.PhoneticsJson)
                     ? new List<Phonetic>()
                     : JsonSerializer.Deserialize<List<Phonetic>>(dictionaryDetails.PhoneticsJson, options);
-                
+
                 var meanings = JsonSerializer.Deserialize<List<Meaning>>(dictionaryDetails.MeaningsJson, options);
-                
+
                 // Create and return the dictionary response
                 var response = new DictionaryResponseDto
                 {
@@ -308,11 +303,11 @@ namespace VocabMaster.Services
                     Meanings = meanings,
                     Vietnamese = vietnameseTranslation
                 };
-                
+
                 // Debug final response
-                _logger.LogInformation("Final response for word {Word} has Vietnamese: {HasVietnamese}", 
+                _logger.LogInformation("Final response for word {Word} has Vietnamese: {HasVietnamese}",
                     word, !string.IsNullOrEmpty(response.Vietnamese) ? "Yes" : "No");
-                
+
                 return response;
             }
             catch (JsonException ex)
@@ -343,7 +338,7 @@ namespace VocabMaster.Services
             try
             {
                 _logger.LogInformation("Caching definition for word: {Word}", word);
-                
+
                 // Check if already cached
                 var exists = await _dictionaryDetailsRepository.Exists(word);
                 if (exists)
@@ -351,7 +346,7 @@ namespace VocabMaster.Services
                     _logger.LogInformation("Word {Word} is already cached", word);
                     return true;
                 }
-                
+
                 // Get definition from API
                 var definition = await GetWordDefinition(word);
                 if (definition == null)
@@ -359,7 +354,7 @@ namespace VocabMaster.Services
                     _logger.LogWarning("Could not get definition for word: {Word}", word);
                     return false;
                 }
-                
+
                 // Cache the definition
                 var result = await CacheDefinition(definition);
                 return result != null;
@@ -380,7 +375,7 @@ namespace VocabMaster.Services
             try
             {
                 _logger.LogInformation("Starting to cache all vocabulary definitions");
-                
+
                 // Get all vocabularies
                 var vocabularies = await _vocabularyRepository.GetAll();
                 if (vocabularies == null || !vocabularies.Any())
@@ -388,12 +383,12 @@ namespace VocabMaster.Services
                     _logger.LogWarning("No vocabularies found to cache");
                     return 0;
                 }
-                
+
                 _logger.LogInformation("Found {Count} vocabularies to cache", vocabularies.Count);
-                
+
                 int successCount = 0;
                 int failCount = 0;
-                
+
                 // Process each vocabulary
                 foreach (var vocabulary in vocabularies)
                 {
@@ -407,7 +402,7 @@ namespace VocabMaster.Services
                             successCount++;
                             continue;
                         }
-                        
+
                         // Get definition from API
                         var definition = await GetWordDefinition(vocabulary.Word);
                         if (definition == null)
@@ -416,7 +411,7 @@ namespace VocabMaster.Services
                             failCount++;
                             continue;
                         }
-                        
+
                         // Cache the definition
                         var success = await CacheDefinition(definition);
                         if (success != null) // Changed from success to success != null
@@ -429,7 +424,7 @@ namespace VocabMaster.Services
                             failCount++;
                             _logger.LogWarning("Failed to cache definition for word: {Word}", vocabulary.Word);
                         }
-                        
+
                         // Add a small delay to avoid overloading the API
                         await Task.Delay(500);
                     }
@@ -439,10 +434,10 @@ namespace VocabMaster.Services
                         failCount++;
                     }
                 }
-                
-                _logger.LogInformation("Finished caching vocabulary definitions. Success: {SuccessCount}, Failed: {FailCount}", 
+
+                _logger.LogInformation("Finished caching vocabulary definitions. Success: {SuccessCount}, Failed: {FailCount}",
                     successCount, failCount);
-                
+
                 return successCount;
             }
             catch (Exception ex)
@@ -471,14 +466,14 @@ namespace VocabMaster.Services
                 {
                     PropertyNameCaseInsensitive = true,
                 };
-                
+
                 // Serialize the phonetics and meanings
                 var phoneticsJson = definition.Phonetics != null && definition.Phonetics.Any()
                     ? JsonSerializer.Serialize(definition.Phonetics, options)
                     : "[]";
-                
+
                 var meaningsJson = JsonSerializer.Serialize(definition.Meanings ?? new List<Meaning>(), options);
-                
+
                 // Create the dictionary details entity
                 var dictionaryDetails = new DictionaryDetails
                 {
@@ -487,10 +482,10 @@ namespace VocabMaster.Services
                     MeaningsJson = meaningsJson,
                     CreatedAt = DateTime.UtcNow
                 };
-                
+
                 // Save to the repository
                 var result = await _dictionaryDetailsRepository.AddOrUpdate(dictionaryDetails);
-                
+
                 return result;
             }
             catch (Exception ex)

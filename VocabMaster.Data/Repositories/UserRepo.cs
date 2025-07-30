@@ -1,7 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VocabMaster.Core.Entities;
-using VocabMaster.Core.Interfaces.Repositories;
-using VocabMaster.Data;
 
 namespace VocabMaster.Data.Repositories
 {

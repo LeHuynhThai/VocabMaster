@@ -1,15 +1,8 @@
-using System;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
-using VocabMaster.Core.Interfaces.Services;
+using System.Text.Json;
 using VocabMaster.Core.Interfaces.Repositories;
-using VocabMaster.Core.Entities;
-using System.Linq; // Added missing import for .Any() and .Where()
+using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Services
 {
@@ -39,13 +32,13 @@ namespace VocabMaster.Services
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _vocabularyRepository = vocabularyRepository ?? throw new ArgumentNullException(nameof(vocabularyRepository));
-            
+
             // Use IHttpClientFactory if provided, otherwise create a new HttpClient
             _httpClient = httpClientFactory != null ? httpClientFactory.CreateClient("TranslationApi") : new HttpClient();
-            
+
             // Get API URL from configuration if provided, otherwise use default
             _translationApiUrl = configuration?.GetValue<string>("TranslationApiUrl") ?? "https://lingvanex.com/api/v1/translate";
-            
+
             // Get delay between requests from configuration if provided, otherwise use default
             _delayBetweenRequestsMs = configuration?.GetValue<int>("TranslationDelayMs") ?? 1000;
         }
@@ -59,7 +52,7 @@ namespace VocabMaster.Services
             try
             {
                 _logger.LogInformation("Starting to crawl Vietnamese translations for all vocabulary");
-                
+
                 // Get all vocabularies without Vietnamese translation
                 var vocabularies = await _vocabularyRepository.GetAll();
                 if (vocabularies == null || !vocabularies.Any())
@@ -67,13 +60,13 @@ namespace VocabMaster.Services
                     _logger.LogWarning("No vocabularies found to translate");
                     return 0;
                 }
-                
+
                 var untranslatedVocabularies = vocabularies.Where(v => string.IsNullOrEmpty(v.Vietnamese)).ToList();
                 _logger.LogInformation("Found {Count} vocabularies without Vietnamese translation", untranslatedVocabularies.Count);
-                
+
                 int successCount = 0;
                 int failCount = 0;
-                
+
                 // Process each vocabulary
                 foreach (var vocabulary in untranslatedVocabularies)
                 {
@@ -87,18 +80,18 @@ namespace VocabMaster.Services
                             failCount++;
                             continue;
                         }
-                        
+
                         // Update vocabulary with translation
                         vocabulary.Vietnamese = translation;
-                        
+
                         // Save to database
                         // Note: We're assuming the repository has an Update method
                         // If not, you'll need to implement a way to update the vocabulary
                         await _vocabularyRepository.Update(vocabulary);
-                        
+
                         successCount++;
                         _logger.LogInformation("Successfully translated word: {Word} to {Translation}", vocabulary.Word, translation);
-                        
+
                         // Add a delay to avoid overloading the API
                         await Task.Delay(_delayBetweenRequestsMs);
                     }
@@ -108,10 +101,10 @@ namespace VocabMaster.Services
                         failCount++;
                     }
                 }
-                
-                _logger.LogInformation("Finished crawling translations. Success: {SuccessCount}, Failed: {FailCount}", 
+
+                _logger.LogInformation("Finished crawling translations. Success: {SuccessCount}, Failed: {FailCount}",
                     successCount, failCount);
-                
+
                 return successCount;
             }
             catch (Exception ex)
@@ -120,7 +113,7 @@ namespace VocabMaster.Services
                 return 0;
             }
         }
-        
+
         /// <summary>
         /// Translates a single English word to Vietnamese
         /// </summary>
@@ -137,17 +130,17 @@ namespace VocabMaster.Services
             try
             {
                 _logger.LogInformation("Translating word: {Word}", word);
-                
+
                 // Try to use Google Translate API
                 // Note: This is using a free endpoint that might not be stable long-term
                 string googleTranslateUrl = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q={Uri.EscapeDataString(word)}";
-                
+
                 var response = await _httpClient.GetAsync(googleTranslateUrl);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
-                    
+
                     // Parse the response
                     // Google Translate API returns a nested array structure
                     // The first element of the first array contains the translation
@@ -157,15 +150,15 @@ namespace VocabMaster.Services
                         using (JsonDocument document = JsonDocument.Parse(responseContent))
                         {
                             var root = document.RootElement;
-                            
+
                             // Navigate to the first translation
-                            if (root.ValueKind == JsonValueKind.Array && 
-                                root[0].ValueKind == JsonValueKind.Array && 
-                                root[0][0].ValueKind == JsonValueKind.Array && 
+                            if (root.ValueKind == JsonValueKind.Array &&
+                                root[0].ValueKind == JsonValueKind.Array &&
+                                root[0][0].ValueKind == JsonValueKind.Array &&
                                 root[0][0][0].ValueKind == JsonValueKind.String)
                             {
                                 string translation = root[0][0][0].GetString();
-                                
+
                                 if (!string.IsNullOrEmpty(translation))
                                 {
                                     _logger.LogInformation("Successfully translated word: {Word} to {Translation}", word, translation);
@@ -180,10 +173,10 @@ namespace VocabMaster.Services
                         // Fall through to fallback
                     }
                 }
-                
+
                 // If Google Translate fails, try using another free translation API
                 // You could implement additional API calls here
-                
+
                 // If all APIs fail, use the fallback dictionary
                 _logger.LogWarning("API translation failed for word: {Word}, using fallback", word);
                 return FallbackTranslate(word);
@@ -199,7 +192,7 @@ namespace VocabMaster.Services
                 return FallbackTranslate(word);
             }
         }
-        
+
         /// <summary>
         /// Fallback translation method using a simple dictionary or another API
         /// </summary>
@@ -288,13 +281,13 @@ namespace VocabMaster.Services
                     { "nine", "chín" },
                     { "ten", "mười" }
                 };
-                
+
                 if (commonTranslations.TryGetValue(word, out string translation))
                 {
                     _logger.LogInformation("Found fallback translation for word: {Word}", word);
                     return translation;
                 }
-                
+
                 _logger.LogWarning("No fallback translation found for word: {Word}", word);
                 return null;
             }
@@ -304,7 +297,7 @@ namespace VocabMaster.Services
                 return null;
             }
         }
-        
+
         /// <summary>
         /// Response class for translation API
         /// </summary>
@@ -315,4 +308,4 @@ namespace VocabMaster.Services
             public string TargetLanguage { get; set; }
         }
     }
-} 
+}
