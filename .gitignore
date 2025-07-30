@@ -46,7 +46,7 @@ Thumbs.db
 # OS generated files
 .DS_Store
 Thumbs.db
-
+        
 .vs/
 
 # React / Node.js
@@ -106,3 +106,54 @@ VocabMaster.API/appsettings.Development.json
 *.swp
 *~
 *.log
+
+# Ignore Visual Studio user settings
+*.csproj.user
+
+# ASP.NET Secrets
+secrets.json
+
+# Publish
+publish/
+
+# Logs
+*.log
+
+# Database
+*.mdf
+*.ldf
+
+# Cursor AI
+.cursor/
+
+# Others
+*.db
+*.DS_Store
+Thumbs.db
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+.vs/
+
+# React / Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+package-lock.json
+
+# React build output
+build/
+dist/
+coverage/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
