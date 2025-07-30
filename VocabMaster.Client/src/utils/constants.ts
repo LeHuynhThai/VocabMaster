@@ -28,8 +28,12 @@ export const API_ENDPOINTS = {
   TRANSLATE_EN_VI: '/api/translation/en-to-vi',
   TRANSLATE: '/api/translation/translate',
   QUIZ_RANDOM: '/api/quiz/random',
+  QUIZ_RANDOM_UNCOMPLETED: '/api/quiz/random-uncompleted',
   QUIZ_CREATE: '/api/quiz/create',
-  QUIZ_CHECK_ANSWER: '/api/quiz/check-answer'
+  QUIZ_CHECK_ANSWER: '/api/quiz/check-answer',
+  QUIZ_CHECK_ANSWER_COMPLETE: '/api/quiz/check-answer-and-complete',
+  QUIZ_COMPLETED: '/api/quiz/completed',
+  QUIZ_STATS: '/api/quiz/stats'
 };
 
 /**

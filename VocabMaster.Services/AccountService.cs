@@ -58,12 +58,19 @@ public class AccountService : IAccountService
         var audience = jwtSettings["Audience"];
         var expiryInDays = int.Parse(jwtSettings["ExpiryInDays"]);
 
-        // Tạo claims cho token
+        // Tạo claims cho token - Cập nhật để thêm nhiều loại claim chứa userId
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.Name),
             new Claim(ClaimTypes.Role, user.Role.ToString()),
-            new Claim("UserId", user.Id.ToString())
+            // Thêm NameIdentifier claim - đây là chuẩn mà nhiều framework sử dụng
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            // Giữ claim UserId hiện tại để đảm bảo tương thích ngược
+            new Claim("UserId", user.Id.ToString()),
+            // Thêm các claim khác với tên phổ biến để tăng tính tương thích
+            new Claim("userId", user.Id.ToString()),
+            new Claim("id", user.Id.ToString()),
+            new Claim("sub", user.Id.ToString())
         };
 
         // Tạo key và credentials
@@ -263,7 +270,11 @@ public class AccountService : IAccountService
         {
             new Claim(ClaimTypes.Name, user.Name),
             new Claim(ClaimTypes.Role, user.Role.ToString()),
-            new Claim("UserId", user.Id.ToString())
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim("UserId", user.Id.ToString()),
+            new Claim("userId", user.Id.ToString()),
+            new Claim("id", user.Id.ToString()),
+            new Claim("sub", user.Id.ToString())
         };
     }
 
@@ -304,7 +315,13 @@ public class AccountService : IAccountService
             return null;
         }
 
-        var userId = _httpContextAccessor.HttpContext.User.FindFirst("UserId")?.Value;
+        // Tìm kiếm nhiều loại claim có thể chứa userId
+        var userId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? _httpContextAccessor.HttpContext.User.FindFirst("UserId")?.Value
+            ?? _httpContextAccessor.HttpContext.User.FindFirst("userId")?.Value
+            ?? _httpContextAccessor.HttpContext.User.FindFirst("id")?.Value
+            ?? _httpContextAccessor.HttpContext.User.FindFirst("sub")?.Value;
+
         if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int id))
         {
             return null;

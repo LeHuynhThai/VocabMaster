@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useToast from '../hooks/useToast';
-import quizService, { QuizQuestion, QuizResult } from '../services/quizService';
+import quizService, { QuizQuestion, QuizResult, QuizStats } from '../services/quizService';
 import { MESSAGES } from '../utils/constants';
 import './QuizPage.css';
 
@@ -13,12 +13,15 @@ const QuizPage: React.FC = () => {
   const [result, setResult] = useState<QuizResult | null>(null);
   const [isChecking, setIsChecking] = useState<boolean>(false);
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
+  const [stats, setStats] = useState<QuizStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState<boolean>(false);
 
   useEffect(() => {
     loadQuestion();
+    loadStats();
   }, []);
 
-  // Effect to shuffle options    
+  // Effect to shuffle the options when the question changes
   useEffect(() => {
     if (question) {
       const options = [
@@ -27,7 +30,7 @@ const QuizPage: React.FC = () => {
         question.wrongAnswer3,
         question.correctAnswer
       ];
-      // Shuffle options only once and save to state
+      // Shuffle only once and save to state
       setShuffledOptions(options.sort(() => Math.random() - 0.5));
     }
   }, [question]);
@@ -39,7 +42,8 @@ const QuizPage: React.FC = () => {
     setResult(null);
 
     try {
-      const questionData = await quizService.getRandomQuestion();
+      // Get an uncompleted question instead of a random question
+      const questionData = await quizService.getRandomUncompletedQuestion();
       setQuestion(questionData);
     } catch (error) {
       console.error('Error fetching quiz question:', error);
@@ -47,6 +51,19 @@ const QuizPage: React.FC = () => {
       showToast(MESSAGES.ERROR_QUIZ_FETCH, 'danger');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadStats = async () => {
+    setLoadingStats(true);
+    try {
+      const statsData = await quizService.getQuizStats();
+      setStats(statsData);
+    } catch (error) {
+      console.error('Error fetching quiz stats:', error);
+      // Don't show toast because this is just supplementary information
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -61,8 +78,14 @@ const QuizPage: React.FC = () => {
     setIsChecking(true);
 
     try {
-      const resultData = await quizService.checkAnswer(question.id, selectedAnswer);
+      // Use the new API to mark the question as completed
+      const resultData = await quizService.checkAnswerAndComplete(question.id, selectedAnswer);
       setResult(resultData);
+      
+      // If the answer is correct, update stats
+      if (resultData.isCorrect) {
+        await loadStats(); // Update stats
+      }
     } catch (error) {
       console.error('Error checking answer:', error);
       showToast('Đã xảy ra lỗi khi kiểm tra câu trả lời', 'danger');
@@ -89,6 +112,10 @@ const QuizPage: React.FC = () => {
     }
 
     return 'quiz-option';
+  };
+
+  const formatPercentage = (value: number): string => {
+    return value.toFixed(1) + '%';
   };
 
   return (

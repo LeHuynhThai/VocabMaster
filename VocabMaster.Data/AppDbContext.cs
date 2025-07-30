@@ -15,6 +15,7 @@ namespace VocabMaster.Data
         public DbSet<Vocabulary> Vocabularies { get; set; }
         public DbSet<DictionaryDetails> DictionaryDetails { get; set; }
         public DbSet<QuizQuestion> QuizQuestions { get; set; }
+        public DbSet<CompletedQuiz> CompletedQuizzes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -35,6 +36,11 @@ namespace VocabMaster.Data
             // Create unique index for Word in DictionaryDetails
             builder.Entity<DictionaryDetails>()
                 .HasIndex(dd => dd.Word)
+                .IsUnique();
+
+            // Create composite index for UserId and QuizQuestionId in CompletedQuiz
+            builder.Entity<CompletedQuiz>()
+                .HasIndex(cq => new { cq.UserId, cq.QuizQuestionId })
                 .IsUnique();
         }
     }

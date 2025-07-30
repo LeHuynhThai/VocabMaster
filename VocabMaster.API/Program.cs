@@ -44,6 +44,7 @@ builder.Services.AddScoped<IVocabularyRepo, VocabRepo>();
 builder.Services.AddScoped<ILearnedWordRepo, LearnedWordRepo>();
 builder.Services.AddScoped<IDictionaryDetailsRepo, DictionaryDetailsRepo>();
 builder.Services.AddScoped<IQuizQuestionRepo, QuizQuestionRepo>();
+builder.Services.AddScoped<ICompletedQuizRepo, CompletedQuizRepo>();
 
 // Add Services
 builder.Services.AddScoped<IAccountService, AccountService>();

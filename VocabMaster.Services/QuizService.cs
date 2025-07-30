@@ -18,6 +18,7 @@ namespace VocabMaster.Services
     {
         private readonly IQuizQuestionRepo _quizQuestionRepo;
         private readonly IVocabularyRepo _vocabularyRepo;
+        private readonly ICompletedQuizRepo _completedQuizRepo;
         private readonly IMapper _mapper;
         private readonly ILogger<QuizService> _logger;
         private readonly Random _random = new Random();
@@ -25,11 +26,13 @@ namespace VocabMaster.Services
         public QuizService(
             IQuizQuestionRepo quizQuestionRepo,
             IVocabularyRepo vocabularyRepo,
+            ICompletedQuizRepo completedQuizRepo,
             IMapper mapper,
             ILogger<QuizService> logger)
         {
             _quizQuestionRepo = quizQuestionRepo;
             _vocabularyRepo = vocabularyRepo;
+            _completedQuizRepo = completedQuizRepo;
             _mapper = mapper;
             _logger = logger;
         }
@@ -76,6 +79,55 @@ namespace VocabMaster.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting random quiz question");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Gets a random quiz question that hasn't been completed by the user
+        /// </summary>
+        /// <param name="userId">ID of the user</param>
+        /// <returns>A random uncompleted quiz question DTO</returns>
+        public async Task<QuizQuestionDto> GetRandomUncompletedQuestion(int userId)
+        {
+            try
+            {
+                // Check if we have any quiz questions
+                bool hasQuestions = await _quizQuestionRepo.AnyQuizQuestions();
+                
+                // If not, create one from vocabulary
+                if (!hasQuestions)
+                {
+                    await CreateQuizQuestionFromVocabulary();
+                }
+                
+                // Get IDs of completed questions for this user
+                var completedQuestionIds = await _completedQuizRepo.GetCompletedQuizQuestionIdsByUserId(userId);
+                
+                // Get a random quiz question that hasn't been completed by this user
+                var question = await _quizQuestionRepo.GetRandomUnansweredQuizQuestion(completedQuestionIds);
+                
+                // If all questions have been answered, get a random question
+                if (question == null)
+                {
+                    _logger.LogInformation("User {UserId} has completed all quiz questions, returning a random one", userId);
+                    question = await _quizQuestionRepo.GetRandomQuizQuestion();
+                }
+                
+                if (question == null)
+                {
+                    _logger.LogWarning("No quiz questions available for user {UserId}", userId);
+                    return null;
+                }
+
+                // Map to DTO
+                var questionDto = _mapper.Map<QuizQuestionDto>(question);
+                
+                return questionDto;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting random uncompleted quiz question for user {UserId}", userId);
                 throw;
             }
         }
@@ -162,6 +214,155 @@ namespace VocabMaster.Services
             {
                 _logger.LogError(ex, "Error checking quiz answer");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Verifies an answer to a quiz question and marks it as completed if correct
+        /// </summary>
+        /// <param name="questionId">The ID of the question</param>
+        /// <param name="answer">The selected answer</param>
+        /// <param name="userId">The ID of the user</param>
+        /// <returns>Quiz result with information about correct/incorrect answer</returns>
+        public async Task<QuizResultDto> CheckAnswerAndMarkCompleted(int questionId, string answer, int userId)
+        {
+            try
+            {
+                _logger.LogInformation("CheckAnswerAndMarkCompleted called with QuestionId={QuestionId}, Answer={Answer}, UserId={UserId}",
+                    questionId, answer, userId);
+                
+                // Get the result first
+                var result = await CheckAnswer(questionId, answer);
+                _logger.LogInformation("CheckAnswer result: IsCorrect={IsCorrect}, CorrectAnswer={CorrectAnswer}",
+                    result.IsCorrect, result.CorrectAnswer);
+                
+                // If answer is correct, mark it as completed
+                if (result.IsCorrect)
+                {
+                    _logger.LogInformation("Answer is correct, creating CompletedQuiz record");
+                    var completedQuiz = new CompletedQuiz
+                    {
+                        UserId = userId,
+                        QuizQuestionId = questionId,
+                        WasCorrect = true
+                    };
+                    
+                    _logger.LogInformation("Calling MarkAsCompleted with UserId={UserId}, QuizQuestionId={QuizQuestionId}, WasCorrect=true",
+                        completedQuiz.UserId, completedQuiz.QuizQuestionId);
+                    
+                    try
+                    {
+                        var markedResult = await _completedQuizRepo.MarkAsCompleted(completedQuiz);
+                        _logger.LogInformation("MarkAsCompleted successful. Result Id={ResultId}", markedResult.Id);
+                    }
+                    catch (Exception markEx)
+                    {
+                        _logger.LogError(markEx, "Error in MarkAsCompleted for correct answer");
+                        throw;
+                    }
+                }
+                else
+                {
+                    // Even if answer is wrong, we mark it as attempted but with wasCorrect = false
+                    _logger.LogInformation("Answer is incorrect, creating CompletedQuiz record with WasCorrect=false");
+                    var completedQuiz = new CompletedQuiz
+                    {
+                        UserId = userId,
+                        QuizQuestionId = questionId,
+                        WasCorrect = false
+                    };
+                    
+                    _logger.LogInformation("Calling MarkAsCompleted with UserId={UserId}, QuizQuestionId={QuizQuestionId}, WasCorrect=false",
+                        completedQuiz.UserId, completedQuiz.QuizQuestionId);
+                    
+                    try
+                    {
+                        var markedResult = await _completedQuizRepo.MarkAsCompleted(completedQuiz);
+                        _logger.LogInformation("MarkAsCompleted successful. Result Id={ResultId}", markedResult.Id);
+                    }
+                    catch (Exception markEx)
+                    {
+                        _logger.LogError(markEx, "Error in MarkAsCompleted for incorrect answer");
+                        throw;
+                    }
+                }
+                
+                _logger.LogInformation("CheckAnswerAndMarkCompleted completed successfully");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking and marking quiz answer for user {UserId}", userId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Gets all completed quiz questions for a user
+        /// </summary>
+        /// <param name="userId">ID of the user</param>
+        /// <returns>List of completed quiz questions</returns>
+        public async Task<List<CompletedQuizDto>> GetCompletedQuizzes(int userId)
+        {
+            try
+            {
+                var completedQuizzes = await _completedQuizRepo.GetByUserId(userId);
+                return _mapper.Map<List<CompletedQuizDto>>(completedQuizzes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting completed quizzes for user {UserId}", userId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Gets statistics about a user's quiz progress
+        /// </summary>
+        /// <param name="userId">ID of the user</param>
+        /// <returns>Quiz statistics</returns>
+        public async Task<QuizStatsDto> GetQuizStatistics(int userId)
+        {
+            try
+            {
+                // Get total number of quiz questions
+                int totalQuestions = await _quizQuestionRepo.CountQuizQuestions();
+                
+                // Get user's completed quizzes
+                var completedQuizzes = await _completedQuizRepo.GetByUserId(userId);
+                int completedCount = completedQuizzes.Count;
+                int correctCount = completedQuizzes.Count(cq => cq.WasCorrect);
+                
+                return new QuizStatsDto
+                {
+                    TotalQuestions = totalQuestions,
+                    CompletedQuestions = completedCount,
+                    CorrectAnswers = correctCount,
+                    CompletionPercentage = totalQuestions > 0 ? (double)completedCount / totalQuestions * 100 : 0,
+                    CorrectPercentage = completedCount > 0 ? (double)correctCount / completedCount * 100 : 0
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting quiz statistics for user {UserId}", userId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of quiz questions in the system
+        /// </summary>
+        /// <returns>Total number of questions</returns>
+        public async Task<int> CountTotalQuestions()
+        {
+            try
+            {
+                return await _quizQuestionRepo.CountQuizQuestions();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error counting total quiz questions");
+                return 0;
             }
         }
     }
