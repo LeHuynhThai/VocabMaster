@@ -24,6 +24,9 @@ namespace VocabMaster.Core.Mapping
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.UserId, opt => opt.Ignore())
                 .ForMember(dest => dest.User, opt => opt.Ignore());
+                
+            // Quiz mappings
+            CreateMap<QuizQuestion, QuizQuestionDto>();
         }
     }
 }

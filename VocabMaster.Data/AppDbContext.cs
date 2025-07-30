@@ -14,6 +14,7 @@ namespace VocabMaster.Data
         public DbSet<LearnedWord> LearnedVocabularies { get; set; }
         public DbSet<Vocabulary> Vocabularies { get; set; }
         public DbSet<DictionaryDetails> DictionaryDetails { get; set; }
+        public DbSet<QuizQuestion> QuizQuestions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

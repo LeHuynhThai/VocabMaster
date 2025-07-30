@@ -24,6 +24,13 @@ namespace VocabMaster.Data.Seed
                     await SeedUsers(context);
                 }
 
+                // Seed quiz questions
+                if (!context.QuizQuestions.Any())
+                {
+                    logger.LogInformation("Seeding quiz questions...");
+                    await SeedQuizQuestions.SeedAsync(serviceProvider);
+                }
+
                 logger.LogInformation("Seeding completed successfully.");
             }
             catch (Exception ex)

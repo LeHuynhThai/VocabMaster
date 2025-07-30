@@ -14,6 +14,13 @@ namespace VocabMaster.Core.Interfaces.Repositories
         Task<Vocabulary> GetRandom();
 
         /// <summary>
+        /// Gets multiple random vocabulary items
+        /// </summary>
+        /// <param name="count">Number of random vocabulary items to get</param>
+        /// <returns>List of random vocabulary items</returns>
+        Task<List<Vocabulary>> GetRandomVocabularies(int count);
+
+        /// <summary>
         /// Gets the total count of vocabularies in the repository
         /// </summary>
         /// <returns>Count of vocabularies</returns>

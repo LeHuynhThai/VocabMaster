@@ -17,6 +17,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import WordGeneratorPage from './pages/WordGeneratorPage';
 import LearnedWordsPage from './pages/LearnedWordsPage';
+import QuizPage from './pages/QuizPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { ROUTES } from './utils/constants';
 
@@ -54,6 +55,12 @@ function App() {
                     path={ROUTES.LEARNED_WORDS} 
                     element={
                       <ProtectedRoute element={<LearnedWordsPage />} />
+                    } 
+                  />
+                  <Route 
+                    path={ROUTES.QUIZ} 
+                    element={
+                      <ProtectedRoute element={<QuizPage />} />
                     } 
                   />
                   <Route path={ROUTES.NOT_FOUND} element={<NotFoundPage />} />

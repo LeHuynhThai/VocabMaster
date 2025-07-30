@@ -43,11 +43,13 @@ builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IVocabularyRepo, VocabRepo>();
 builder.Services.AddScoped<ILearnedWordRepo, LearnedWordRepo>();
 builder.Services.AddScoped<IDictionaryDetailsRepo, DictionaryDetailsRepo>();
+builder.Services.AddScoped<IQuizQuestionRepo, QuizQuestionRepo>();
 
 // Add Services
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IVocabularyService, VocabularyService>();
 builder.Services.AddScoped<IDictionaryService, DictionaryService>();
+builder.Services.AddScoped<IQuizService, QuizService>();
 
 // Add HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
@@ -63,7 +65,7 @@ builder.Services.AddSession(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // change from Always to SameAsRequest
 });
 
-// Cấu hình JWT Authentication
+// JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JWT");
 var jwtSecret = jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Secret is not configured");
 var key = Encoding.UTF8.GetBytes(jwtSecret);
@@ -87,7 +89,7 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 
-    // Cấu hình để trả về lỗi chi tiết khi token không hợp lệ
+    // Configure JWT Bearer Events
     options.Events = new JwtBearerEvents
     {
         OnAuthenticationFailed = context =>
@@ -101,7 +103,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Thêm dịch vụ Authorization
+// Add Authorization
 builder.Services.AddAuthorization();
 
 // Add HttpClient services
@@ -156,7 +158,7 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<AppDbContext>();
         await context.Database.MigrateAsync();
 
-        // Khởi tạo dữ liệu từ SeedData
+        // Seed data from SeedData
         var logger = services.GetRequiredService<ILogger<Program>>();
         await SeedData.Initialize(services, logger);
     }

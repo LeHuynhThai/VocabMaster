@@ -8,6 +8,7 @@ export const ROUTES = {
   WORD_GENERATOR: '/word-generator',
   LEARNED_WORDS: '/learned-words',
   TRANSLATION: '/translation',
+  QUIZ: '/quiz',
   NOT_FOUND: '/not-found'
 };
 
@@ -25,7 +26,10 @@ export const API_ENDPOINTS = {
   IS_LEARNED: '/api/wordgenerator/islearned',
   LEARNED_WORDS: '/api/learnedword',
   TRANSLATE_EN_VI: '/api/translation/en-to-vi',
-  TRANSLATE: '/api/translation/translate'
+  TRANSLATE: '/api/translation/translate',
+  QUIZ_RANDOM: '/api/quiz/random',
+  QUIZ_CREATE: '/api/quiz/create',
+  QUIZ_CHECK_ANSWER: '/api/quiz/check-answer'
 };
 
 /**
@@ -50,5 +54,8 @@ export const MESSAGES = {
   ERROR_FETCH_WORDS: 'Không thể tải danh sách từ vựng. Vui lòng thử lại sau.',
   ERROR_SAVE_WORD: 'Không thể lưu từ vựng. Vui lòng thử lại sau.',
   ERROR_REMOVE_WORD: 'Không thể xóa từ vựng. Vui lòng thử lại sau.',
-  ERROR_TRANSLATION: 'Không thể dịch văn bản. Vui lòng thử lại sau.'
+  ERROR_TRANSLATION: 'Không thể dịch văn bản. Vui lòng thử lại sau.',
+  QUIZ_CORRECT: 'Chính xác!',
+  QUIZ_INCORRECT: 'Không chính xác. Đáp án đúng là:',
+  ERROR_QUIZ_FETCH: 'Không thể tải câu hỏi. Vui lòng thử lại sau.'
 }; 

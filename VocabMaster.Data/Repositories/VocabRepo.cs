@@ -84,6 +84,65 @@ namespace VocabMaster.Data.Repositories
         }
 
         /// <summary>
+        /// Gets multiple random vocabulary items
+        /// </summary>
+        /// <param name="count">Number of random vocabulary items to get</param>
+        /// <returns>List of random vocabulary items</returns>
+        public async Task<List<Vocabulary>> GetRandomVocabularies(int count)
+        {
+            try
+            {
+                if (count <= 0)
+                {
+                    _logger?.LogWarning("Invalid count requested: {Count}", count);
+                    return new List<Vocabulary>();
+                }
+
+                var totalVocabularies = await _context.Vocabularies.CountAsync();
+
+                if (totalVocabularies == 0)
+                {
+                    _logger?.LogWarning("No vocabularies found in the database");
+                    return new List<Vocabulary>();
+                }
+
+                _logger?.LogInformation("Retrieving {Count} random vocabularies from {Total} total", count, totalVocabularies);
+
+                // If requested count is greater than available vocabularies, return all
+                if (count >= totalVocabularies)
+                {
+                    _logger?.LogInformation("Requested count exceeds available vocabularies, returning all");
+                    return await _context.Vocabularies.ToListAsync();
+                }
+
+                // Get all vocabularies and select random ones
+                var allVocabularies = await _context.Vocabularies.ToListAsync();
+                var result = new List<Vocabulary>();
+                var selectedIndices = new HashSet<int>();
+
+                while (result.Count < count)
+                {
+                    var randomIndex = _random.Next(allVocabularies.Count);
+                    
+                    // Ensure we don't select the same vocabulary twice
+                    if (!selectedIndices.Contains(randomIndex))
+                    {
+                        selectedIndices.Add(randomIndex);
+                        result.Add(allVocabularies[randomIndex]);
+                    }
+                }
+
+                _logger?.LogInformation("Successfully retrieved {Count} random vocabularies", result.Count);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error retrieving random vocabularies");
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Gets a random vocabulary excluding words that the user has already learned
         /// </summary>
         /// <param name="learnedWords">List of words that the user has already learned</param>
