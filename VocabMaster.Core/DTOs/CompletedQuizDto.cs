@@ -1,4 +1,4 @@
-namespace VocabMaster.Core.DTOs
+﻿namespace VocabMaster.Core.DTOs
 {
     /// <summary>
     /// DTO for completed quiz questions
@@ -29,4 +29,4 @@ namespace VocabMaster.Core.DTOs
         public string Message { get; set; }
         public CompletedQuizDto Data { get; set; }
     }
-} 
+}

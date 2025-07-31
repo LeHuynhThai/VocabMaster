@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace VocabMaster.Core.Entities
 {
@@ -28,4 +28,4 @@ namespace VocabMaster.Core.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
-} 
+}

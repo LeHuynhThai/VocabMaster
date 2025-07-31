@@ -123,7 +123,7 @@ namespace VocabMaster.Data.Repositories
                 while (result.Count < count)
                 {
                     var randomIndex = _random.Next(allVocabularies.Count);
-                    
+
                     // Ensure we don't select the same vocabulary twice
                     if (!selectedIndices.Contains(randomIndex))
                     {

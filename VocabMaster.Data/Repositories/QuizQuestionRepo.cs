@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
 
@@ -24,10 +24,10 @@ namespace VocabMaster.Data.Repositories
         public async Task<QuizQuestion> GetRandomQuizQuestion()
         {
             var count = await _context.QuizQuestions.CountAsync();
-            
+
             if (count == 0)
                 return null;
-                
+
             // Get a random quiz question
             var skip = _random.Next(0, count);
             return await _context.QuizQuestions.Skip(skip).FirstOrDefaultAsync();
@@ -56,7 +56,7 @@ namespace VocabMaster.Data.Repositories
             var randomIndex = _random.Next(0, availableQuestions.Count);
             return availableQuestions[randomIndex];
         }
-        
+
         /// <summary>
         /// Gets a quiz question by id
         /// </summary>
@@ -66,7 +66,7 @@ namespace VocabMaster.Data.Repositories
         {
             return await _context.QuizQuestions.FindAsync(id);
         }
-        
+
         /// <summary>
         /// Creates a new quiz question
         /// </summary>
@@ -78,7 +78,7 @@ namespace VocabMaster.Data.Repositories
             await _context.SaveChangesAsync();
             return quizQuestion;
         }
-        
+
         /// <summary>
         /// Checks if there are any quiz questions
         /// </summary>
@@ -97,4 +97,4 @@ namespace VocabMaster.Data.Repositories
             return await _context.QuizQuestions.CountAsync();
         }
     }
-} 
+}

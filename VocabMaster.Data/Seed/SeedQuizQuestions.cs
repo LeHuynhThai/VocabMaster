@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using VocabMaster.Core.Entities;
 
@@ -76,4 +73,4 @@ namespace VocabMaster.Data.Seed
             await context.SaveChangesAsync();
         }
     }
-} 
+}

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
@@ -97,22 +97,22 @@ namespace VocabMaster.Data.Repositories
             {
                 _logger?.LogInformation("START: MarkAsCompleted - UserId={UserId}, QuizQuestionId={QuizQuestionId}, WasCorrect={WasCorrect}",
                     completedQuiz.UserId, completedQuiz.QuizQuestionId, completedQuiz.WasCorrect);
-                
+
                 // Check if already completed
                 _logger?.LogInformation("Checking if record already exists");
                 var existingRecord = await _context.CompletedQuizzes
                     .FirstOrDefaultAsync(cq => cq.UserId == completedQuiz.UserId && cq.QuizQuestionId == completedQuiz.QuizQuestionId);
-                
+
                 if (existingRecord != null)
                 {
                     _logger?.LogInformation("Record already exists: Id={Id}, UserId={UserId}, QuizQuestionId={QuestionId}, WasCorrect={WasCorrect}",
                         existingRecord.Id, existingRecord.UserId, existingRecord.QuizQuestionId, existingRecord.WasCorrect);
                     return existingRecord;
                 }
-                
+
                 // Add new record
                 _logger?.LogInformation("Record does not exist, adding new record");
-                
+
                 try
                 {
                     await _context.CompletedQuizzes.AddAsync(completedQuiz);
@@ -129,10 +129,10 @@ namespace VocabMaster.Data.Repositories
                     }
                     throw;
                 }
-                
+
                 _logger?.LogInformation("Successfully marked quiz question {QuizQuestionId} as completed by user {UserId}",
                     completedQuiz.QuizQuestionId, completedQuiz.UserId);
-                
+
                 return completedQuiz;
             }
             catch (Exception ex)
@@ -142,4 +142,4 @@ namespace VocabMaster.Data.Repositories
             }
         }
     }
-} 
+}
