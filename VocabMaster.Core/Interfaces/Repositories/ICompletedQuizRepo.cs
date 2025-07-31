@@ -1,4 +1,4 @@
-using VocabMaster.Core.Entities;
+﻿using VocabMaster.Core.Entities;
 
 namespace VocabMaster.Core.Interfaces.Repositories
 {
@@ -36,4 +36,4 @@ namespace VocabMaster.Core.Interfaces.Repositories
         /// <returns>The created completed quiz record</returns>
         Task<CompletedQuiz> MarkAsCompleted(CompletedQuiz completedQuiz);
     }
-} 
+}

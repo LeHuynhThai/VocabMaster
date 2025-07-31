@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace VocabMaster.Core.Entities
@@ -29,4 +29,4 @@ namespace VocabMaster.Core.Entities
         [ForeignKey("QuizQuestionId")]
         public virtual QuizQuestion QuizQuestion { get; set; }
     }
-} 
+}

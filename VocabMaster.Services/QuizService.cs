@@ -1,9 +1,5 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
@@ -47,16 +43,16 @@ namespace VocabMaster.Services
             {
                 // Check if we have any quiz questions
                 bool hasQuestions = await _quizQuestionRepo.AnyQuizQuestions();
-                
+
                 // If not, create one from vocabulary
                 if (!hasQuestions)
                 {
                     await CreateQuizQuestionFromVocabulary();
                 }
-                
+
                 // Get a random quiz question
                 var question = await _quizQuestionRepo.GetRandomQuizQuestion();
-                
+
                 if (question == null)
                 {
                     _logger.LogWarning("No quiz questions available");
@@ -69,11 +65,11 @@ namespace VocabMaster.Services
 
                 // Map to DTO
                 var questionDto = _mapper.Map<QuizQuestionDto>(question);
-                
+
                 // Log the DTO details to verify mapping
                 _logger.LogInformation("Mapped to DTO: Word={Word}, CorrectAnswer={CorrectAnswer}, WrongAnswer1={WrongAnswer1}, WrongAnswer2={WrongAnswer2}, WrongAnswer3={WrongAnswer3}",
                     questionDto.Word, questionDto.CorrectAnswer, questionDto.WrongAnswer1, questionDto.WrongAnswer2, questionDto.WrongAnswer3);
-                
+
                 return questionDto;
             }
             catch (Exception ex)
@@ -94,26 +90,26 @@ namespace VocabMaster.Services
             {
                 // Check if we have any quiz questions
                 bool hasQuestions = await _quizQuestionRepo.AnyQuizQuestions();
-                
+
                 // If not, create one from vocabulary
                 if (!hasQuestions)
                 {
                     await CreateQuizQuestionFromVocabulary();
                 }
-                
+
                 // Get IDs of completed questions for this user
                 var completedQuestionIds = await _completedQuizRepo.GetCompletedQuizQuestionIdsByUserId(userId);
-                
+
                 // Get a random quiz question that hasn't been completed by this user
                 var question = await _quizQuestionRepo.GetRandomUnansweredQuizQuestion(completedQuestionIds);
-                
+
                 // If all questions have been answered, get a random question
                 if (question == null)
                 {
                     _logger.LogInformation("User {UserId} has completed all quiz questions, returning a random one", userId);
                     question = await _quizQuestionRepo.GetRandomQuizQuestion();
                 }
-                
+
                 if (question == null)
                 {
                     _logger.LogWarning("No quiz questions available for user {UserId}", userId);
@@ -122,7 +118,7 @@ namespace VocabMaster.Services
 
                 // Map to DTO
                 var questionDto = _mapper.Map<QuizQuestionDto>(question);
-                
+
                 return questionDto;
             }
             catch (Exception ex)
@@ -142,7 +138,7 @@ namespace VocabMaster.Services
             {
                 // Get random vocabulary for the question
                 var vocabularies = await _vocabularyRepo.GetRandomVocabularies(4);
-                
+
                 if (vocabularies.Count < 4)
                 {
                     _logger.LogWarning("Not enough vocabulary items to create a quiz question");
@@ -151,7 +147,7 @@ namespace VocabMaster.Services
 
                 // Select one vocabulary item for the question
                 var questionVocab = vocabularies[0];
-                
+
                 // Create quiz question
                 var quizQuestion = new QuizQuestion
                 {
@@ -188,7 +184,7 @@ namespace VocabMaster.Services
             {
                 // Get the quiz question
                 var question = await _quizQuestionRepo.GetQuizQuestionById(questionId);
-                
+
                 if (question == null)
                 {
                     _logger.LogWarning("Quiz question not found: {QuestionId}", questionId);
@@ -202,7 +198,7 @@ namespace VocabMaster.Services
 
                 // Check if the answer is correct
                 bool isCorrect = question.CorrectAnswer == answer;
-                
+
                 return new QuizResultDto
                 {
                     IsCorrect = isCorrect,
@@ -230,12 +226,12 @@ namespace VocabMaster.Services
             {
                 _logger.LogInformation("CheckAnswerAndMarkCompleted called with QuestionId={QuestionId}, Answer={Answer}, UserId={UserId}",
                     questionId, answer, userId);
-                
+
                 // Get the result first
                 var result = await CheckAnswer(questionId, answer);
                 _logger.LogInformation("CheckAnswer result: IsCorrect={IsCorrect}, CorrectAnswer={CorrectAnswer}",
                     result.IsCorrect, result.CorrectAnswer);
-                
+
                 // If answer is correct, mark it as completed
                 if (result.IsCorrect)
                 {
@@ -246,10 +242,10 @@ namespace VocabMaster.Services
                         QuizQuestionId = questionId,
                         WasCorrect = true
                     };
-                    
+
                     _logger.LogInformation("Calling MarkAsCompleted with UserId={UserId}, QuizQuestionId={QuizQuestionId}, WasCorrect=true",
                         completedQuiz.UserId, completedQuiz.QuizQuestionId);
-                    
+
                     try
                     {
                         var markedResult = await _completedQuizRepo.MarkAsCompleted(completedQuiz);
@@ -271,10 +267,10 @@ namespace VocabMaster.Services
                         QuizQuestionId = questionId,
                         WasCorrect = false
                     };
-                    
+
                     _logger.LogInformation("Calling MarkAsCompleted with UserId={UserId}, QuizQuestionId={QuizQuestionId}, WasCorrect=false",
                         completedQuiz.UserId, completedQuiz.QuizQuestionId);
-                    
+
                     try
                     {
                         var markedResult = await _completedQuizRepo.MarkAsCompleted(completedQuiz);
@@ -286,7 +282,7 @@ namespace VocabMaster.Services
                         throw;
                     }
                 }
-                
+
                 _logger.LogInformation("CheckAnswerAndMarkCompleted completed successfully");
                 return result;
             }
@@ -327,12 +323,12 @@ namespace VocabMaster.Services
             {
                 // Get total number of quiz questions
                 int totalQuestions = await _quizQuestionRepo.CountQuizQuestions();
-                
+
                 // Get user's completed quizzes
                 var completedQuizzes = await _completedQuizRepo.GetByUserId(userId);
                 int completedCount = completedQuizzes.Count;
                 int correctCount = completedQuizzes.Count(cq => cq.WasCorrect);
-                
+
                 return new QuizStatsDto
                 {
                     TotalQuestions = totalQuestions,
@@ -366,4 +362,4 @@ namespace VocabMaster.Services
             }
         }
     }
-} 
+}

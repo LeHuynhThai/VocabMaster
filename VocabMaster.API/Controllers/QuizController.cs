@@ -63,12 +63,12 @@ namespace VocabMaster.API.Controllers
                     // Nếu không lấy được ID người dùng, trả về câu hỏi ngẫu nhiên thông thường
                     _logger.LogWarning("User ID not found, returning random question instead");
                     var question = await _quizService.GetRandomQuestion();
-                    
+
                     if (question == null)
                     {
                         return NotFound(new { message = "Không tìm thấy câu hỏi nào" });
                     }
-                    
+
                     return Ok(question);
                 }
 
@@ -165,10 +165,10 @@ namespace VocabMaster.API.Controllers
                 }
 
                 var result = await _quizService.CheckAnswerAndMarkCompleted(
-                    quizAnswerDto.QuestionId, 
+                    quizAnswerDto.QuestionId,
                     quizAnswerDto.SelectedAnswer,
                     userId.Value);
-                
+
                 return Ok(result);
             }
             catch (Exception ex)
@@ -251,7 +251,7 @@ namespace VocabMaster.API.Controllers
             {
                 // Kiểm tra nhiều loại claim có thể chứa user id
                 var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)
-                              ?? User.Claims.FirstOrDefault(c => c.Type == "userId") 
+                              ?? User.Claims.FirstOrDefault(c => c.Type == "userId")
                               ?? User.Claims.FirstOrDefault(c => c.Type == "id")
                               ?? User.Claims.FirstOrDefault(c => c.Type == "sub");
 
@@ -263,7 +263,7 @@ namespace VocabMaster.API.Controllers
                 // Ghi log chi tiết claims hiện có để gỡ lỗi
                 _logger.LogWarning("User ID claim not found or not valid. Available claims: {Claims}",
                     string.Join(", ", User.Claims.Select(c => $"{c.Type}: {c.Value}")));
-                
+
                 return null;
             }
             catch (Exception ex)
@@ -288,4 +288,4 @@ namespace VocabMaster.API.Controllers
             return userId.Value;
         }
     }
-} 
+}

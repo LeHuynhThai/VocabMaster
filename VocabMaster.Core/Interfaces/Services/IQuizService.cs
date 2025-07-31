@@ -1,4 +1,4 @@
-using VocabMaster.Core.DTOs;
+﻿using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 
 namespace VocabMaster.Core.Interfaces.Services
@@ -20,13 +20,13 @@ namespace VocabMaster.Core.Interfaces.Services
         /// <param name="userId">ID of the user</param>
         /// <returns>A random uncompleted quiz question DTO</returns>
         Task<QuizQuestionDto> GetRandomUncompletedQuestion(int userId);
-        
+
         /// <summary>
         /// Creates a quiz question with random answers from vocabulary
         /// </summary>
         /// <returns>The created quiz question</returns>
         Task<QuizQuestion> CreateQuizQuestionFromVocabulary();
-        
+
         /// <summary>
         /// Verifies an answer to a quiz question
         /// </summary>
@@ -76,4 +76,4 @@ namespace VocabMaster.Core.Interfaces.Services
         public double CompletionPercentage { get; set; }
         public double CorrectPercentage { get; set; }
     }
-} 
+}

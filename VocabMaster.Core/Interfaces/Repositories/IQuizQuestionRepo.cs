@@ -1,4 +1,4 @@
-using VocabMaster.Core.Entities;
+﻿using VocabMaster.Core.Entities;
 
 namespace VocabMaster.Core.Interfaces.Repositories
 {
@@ -19,21 +19,21 @@ namespace VocabMaster.Core.Interfaces.Repositories
         /// <param name="excludeIds">IDs to exclude</param>
         /// <returns>A random quiz question not in the excluded IDs</returns>
         Task<QuizQuestion> GetRandomUnansweredQuizQuestion(List<int> excludeIds);
-        
+
         /// <summary>
         /// Gets a quiz question by id
         /// </summary>
         /// <param name="id">The quiz question id</param>
         /// <returns>The quiz question if found, null otherwise</returns>
         Task<QuizQuestion> GetQuizQuestionById(int id);
-        
+
         /// <summary>
         /// Creates a new quiz question
         /// </summary>
         /// <param name="quizQuestion">The quiz question to create</param>
         /// <returns>The created quiz question</returns>
         Task<QuizQuestion> CreateQuizQuestion(QuizQuestion quizQuestion);
-        
+
         /// <summary>
         /// Checks if there are any quiz questions
         /// </summary>
@@ -46,4 +46,4 @@ namespace VocabMaster.Core.Interfaces.Repositories
         /// <returns>The total number of quiz questions</returns>
         Task<int> CountQuizQuestions();
     }
-} 
+}
