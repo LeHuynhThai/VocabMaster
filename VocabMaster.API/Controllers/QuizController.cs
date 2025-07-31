@@ -90,31 +90,6 @@ namespace VocabMaster.API.Controllers
         }
 
         /// <summary>
-        /// Creates a new quiz question from vocabulary
-        /// </summary>
-        /// <returns>Created quiz question</returns>
-        [HttpPost("create")]
-        public async Task<IActionResult> CreateQuestion()
-        {
-            try
-            {
-                var question = await _quizService.CreateQuizQuestionFromVocabulary();
-
-                if (question == null)
-                {
-                    return BadRequest(new { message = "Không thể tạo câu hỏi mới" });
-                }
-
-                return Ok(new { message = "Đã tạo câu hỏi mới", questionId = question.Id });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating quiz question");
-                return StatusCode(500, new { message = "Đã xảy ra lỗi khi tạo câu hỏi" });
-            }
-        }
-
-        /// <summary>
         /// Checks the answer to a quiz question
         /// </summary>
         /// <param name="quizAnswerDto">The answer to check</param>

@@ -44,12 +44,6 @@ namespace VocabMaster.Services
                 // Check if we have any quiz questions
                 bool hasQuestions = await _quizQuestionRepo.AnyQuizQuestions();
 
-                // If not, create one from vocabulary
-                if (!hasQuestions)
-                {
-                    await CreateQuizQuestionFromVocabulary();
-                }
-
                 // Get a random quiz question
                 var question = await _quizQuestionRepo.GetRandomQuizQuestion();
 
@@ -91,12 +85,6 @@ namespace VocabMaster.Services
                 // Check if we have any quiz questions
                 bool hasQuestions = await _quizQuestionRepo.AnyQuizQuestions();
 
-                // If not, create one from vocabulary
-                if (!hasQuestions)
-                {
-                    await CreateQuizQuestionFromVocabulary();
-                }
-
                 // Get IDs of completed questions for this user
                 var completedQuestionIds = await _completedQuizRepo.GetCompletedQuizQuestionIdsByUserId(userId);
 
@@ -124,50 +112,6 @@ namespace VocabMaster.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting random uncompleted quiz question for user {UserId}", userId);
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Creates a quiz question with random answers from vocabulary
-        /// </summary>
-        /// <returns>The created quiz question</returns>
-        public async Task<QuizQuestion> CreateQuizQuestionFromVocabulary()
-        {
-            try
-            {
-                // Get random vocabulary for the question
-                var vocabularies = await _vocabularyRepo.GetRandomVocabularies(4);
-
-                if (vocabularies.Count < 4)
-                {
-                    _logger.LogWarning("Not enough vocabulary items to create a quiz question");
-                    return null;
-                }
-
-                // Select one vocabulary item for the question
-                var questionVocab = vocabularies[0];
-
-                // Create quiz question
-                var quizQuestion = new QuizQuestion
-                {
-                    Word = questionVocab.Word,
-                    CorrectAnswer = questionVocab.Vietnamese,
-                    WrongAnswer1 = vocabularies[1].Vietnamese,
-                    WrongAnswer2 = vocabularies[2].Vietnamese,
-                    WrongAnswer3 = vocabularies[3].Vietnamese
-                };
-
-                // Log the created question
-                _logger.LogInformation("Created quiz question: Word={Word}, CorrectAnswer={CorrectAnswer}, WrongAnswer1={WrongAnswer1}, WrongAnswer2={WrongAnswer2}, WrongAnswer3={WrongAnswer3}",
-                    quizQuestion.Word, quizQuestion.CorrectAnswer, quizQuestion.WrongAnswer1, quizQuestion.WrongAnswer2, quizQuestion.WrongAnswer3);
-
-                // Save the quiz question
-                return await _quizQuestionRepo.CreateQuizQuestion(quizQuestion);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating quiz question from vocabulary");
                 throw;
             }
         }
