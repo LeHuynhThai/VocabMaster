@@ -15,7 +15,7 @@ namespace VocabMaster.Data.Repositories
         // get user by name
         public async Task<User> GetByName(string name)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Name == name); // find
+            return await _context.Users.FirstOrDefaultAsync(u => u.Name == name);
         }
 
         // get user by id
