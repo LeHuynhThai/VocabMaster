@@ -1,12 +1,16 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Services;
@@ -15,70 +19,59 @@ namespace VocabMaster.Services;
 
 public class AccountService : IAccountService
 {
-    private readonly IUserRepo _userRepository; // User repository
-    private readonly IHttpContextAccessor _httpContextAccessor; // Http context accessor
-    private readonly IMapper _mapper; // AutoMapper
-    private readonly IConfiguration _configuration; // Configuration
-    private readonly IHttpClientFactory _httpClientFactory; // Http client factory
+    private readonly IUserRepo _userRepository;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IMapper _mapper;
+    private readonly IConfiguration _configuration;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<AccountService> _logger;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     // Constructor
-    public AccountService(IUserRepo userRepository,
-                         IHttpContextAccessor httpContextAccessor,
-                         IMapper mapper,
-                         IConfiguration configuration,
-                         IHttpClientFactory httpClientFactory)
+    public AccountService(
+        IUserRepo userRepository,
+        IHttpContextAccessor httpContextAccessor,
+        IMapper mapper,
+        IConfiguration configuration,
+        IHttpClientFactory httpClientFactory,
+        ILogger<AccountService> logger)
     {
-        _userRepository = userRepository;
-        _httpContextAccessor = httpContextAccessor;
-        _mapper = mapper;
-        _configuration = configuration;
-        _httpClientFactory = httpClientFactory;
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
     }
 
-    // Login - Cập nhật để sử dụng JWT
+    // Login
     public async Task<TokenResponseDto> Login(string name, string password)
     {
-        var user = await _userRepository.ValidateUser(name, password); // ValidateUser method in UserRepo
-        if (user != null) // If user exists
-        {
-            // Tạo JWT token
-            return await GenerateJwtToken(user);
-        }
-
-        return null;
+        var user = await _userRepository.ValidateUser(name, password);
+        return user != null ? await GenerateJwtToken(user) : null;
     }
 
-    // Tạo JWT token
+    // Create JWT token
     public async Task<TokenResponseDto> GenerateJwtToken(User user)
     {
-        // Lấy cấu hình JWT từ appsettings.json
+        if (user == null) throw new ArgumentNullException(nameof(user));
+        
         var jwtSettings = _configuration.GetSection("JWT");
         var secretKey = jwtSettings["Secret"];
         var issuer = jwtSettings["Issuer"];
         var audience = jwtSettings["Audience"];
         var expiryInDays = int.Parse(jwtSettings["ExpiryInDays"]);
 
-        // Tạo claims cho token - Cập nhật để thêm nhiều loại claim chứa userId
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, user.Name),
-            new Claim(ClaimTypes.Role, user.Role.ToString()),
-            // Thêm NameIdentifier claim - đây là chuẩn mà nhiều framework sử dụng
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            // Giữ claim UserId hiện tại để đảm bảo tương thích ngược
-            new Claim("UserId", user.Id.ToString()),
-            // Thêm các claim khác với tên phổ biến để tăng tính tương thích
-            new Claim("userId", user.Id.ToString()),
-            new Claim("id", user.Id.ToString()),
-            new Claim("sub", user.Id.ToString())
-        };
-
-        // Tạo key và credentials
+        var claims = CreateUserClaims(user);
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        // Tạo token
         var tokenExpiration = DateTime.UtcNow.AddDays(expiryInDays);
+        
         var token = new JwtSecurityToken(
             issuer: issuer,
             audience: audience,
@@ -87,7 +80,6 @@ public class AccountService : IAccountService
             signingCredentials: credentials
         );
 
-        // Trả về token response
         return new TokenResponseDto
         {
             AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
@@ -98,172 +90,6 @@ public class AccountService : IAccountService
         };
     }
 
-    // Xác thực người dùng Google
-    public async Task<TokenResponseDto> AuthenticateGoogleUser(GoogleAuthDto googleAuth)
-    {
-        try
-        {
-            // Xử lý token trống hoặc null
-            if (googleAuth == null || string.IsNullOrEmpty(googleAuth.AccessToken))
-            {
-                Console.WriteLine("Error: GoogleAuthDto or AccessToken is null/empty");
-                return null;
-            }
-
-            Console.WriteLine($"Starting Google authentication with token length: {googleAuth.AccessToken.Length}");
-
-            // Lấy thông tin người dùng từ Google
-            var googleUserInfo = await GetGoogleUserInfo(googleAuth.AccessToken);
-
-            if (googleUserInfo == null)
-            {
-                Console.WriteLine("Error: Failed to get Google user info");
-                return null;
-            }
-
-            // Log thông tin user nhận được từ Google
-            Console.WriteLine($"Google user info received: {googleUserInfo}");
-            Console.WriteLine($"Email: {googleUserInfo.Email}, Name: {googleUserInfo.Name}");
-
-            // Nếu không có email thì không thể xử lý
-            if (string.IsNullOrEmpty(googleUserInfo.Email))
-            {
-                Console.WriteLine("Error: Google user email is missing");
-                return null;
-            }
-
-            // Kiểm tra xem người dùng đã tồn tại trong hệ thống chưa
-            var existingUser = await _userRepository.GetByName(googleUserInfo.Email);
-            Console.WriteLine($"Existing user found: {existingUser != null}");
-
-            if (existingUser == null)
-            {
-                // Tạo người dùng mới nếu chưa tồn tại
-                var newUser = new User
-                {
-                    Name = googleUserInfo.Email, // Sử dụng email làm tên đăng nhập
-                    Password = HashPassword(Guid.NewGuid().ToString()), // Tạo mật khẩu ngẫu nhiên
-                    Role = UserRole.User
-                };
-
-                Console.WriteLine($"Creating new user with email: {newUser.Name}");
-                await _userRepository.Add(newUser);
-                existingUser = await _userRepository.GetByName(googleUserInfo.Email);
-
-                if (existingUser == null)
-                {
-                    Console.WriteLine("Error: Failed to create new user");
-                    return null;
-                }
-            }
-
-            // Tạo JWT token cho người dùng
-            Console.WriteLine($"Generating JWT token for user ID: {existingUser.Id}");
-            var tokenResponse = await GenerateJwtToken(existingUser);
-            Console.WriteLine("JWT token generated successfully");
-
-            return tokenResponse;
-        }
-        catch (Exception ex)
-        {
-            // Log lỗi chi tiết
-            Console.WriteLine($"Error authenticating Google user: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
-            return null;
-        }
-    }
-
-    // Lấy thông tin người dùng từ Google
-    public async Task<GoogleUserInfoDto> GetGoogleUserInfo(string accessToken)
-    {
-        try
-        {
-            if (string.IsNullOrEmpty(accessToken))
-            {
-                Console.WriteLine("Error: AccessToken is null or empty");
-                return null;
-            }
-
-            Console.WriteLine($"Getting user info with token length: {accessToken.Length}");
-            Console.WriteLine($"Token preview: {accessToken.Substring(0, Math.Min(20, accessToken.Length))}...");
-
-            var httpClient = _httpClientFactory.CreateClient("GoogleApi");
-
-            // Thử nhiều cách gọi API khác nhau
-
-            // Cách 1: Sử dụng Authorization header
-            var url1 = "https://www.googleapis.com/oauth2/v3/userinfo";
-            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-
-            Console.WriteLine($"Trying method 1 with URL: {url1}");
-            var response1 = await httpClient.GetAsync(url1);
-            var content1 = await response1.Content.ReadAsStringAsync();
-
-            Console.WriteLine($"Method 1 response status: {response1.StatusCode}");
-            Console.WriteLine($"Method 1 response content: {content1}");
-
-            if (response1.IsSuccessStatusCode)
-            {
-                var options = new System.Text.Json.JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
-
-                var userInfo = JsonSerializer.Deserialize<GoogleUserInfoDto>(content1, options);
-
-                if (userInfo == null)
-                {
-                    Console.WriteLine("Failed to deserialize Google user info");
-                    return null;
-                }
-
-                Console.WriteLine($"Successfully obtained user info for: {userInfo.Email}");
-                return userInfo;
-            }
-
-            // Cách 2: Sử dụng query parameter
-            httpClient.DefaultRequestHeaders.Authorization = null;
-            var url2 = $"https://www.googleapis.com/oauth2/v3/userinfo?access_token={accessToken}";
-
-            Console.WriteLine($"Trying method 2 with URL parameter");
-            var response2 = await httpClient.GetAsync(url2);
-            var content2 = await response2.Content.ReadAsStringAsync();
-
-            Console.WriteLine($"Method 2 response status: {response2.StatusCode}");
-            Console.WriteLine($"Method 2 response content: {content2}");
-
-            if (response2.IsSuccessStatusCode)
-            {
-                var options = new System.Text.Json.JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
-
-                var userInfo = JsonSerializer.Deserialize<GoogleUserInfoDto>(content2, options);
-
-                if (userInfo == null)
-                {
-                    Console.WriteLine("Failed to deserialize Google user info");
-                    return null;
-                }
-
-                Console.WriteLine($"Successfully obtained user info for: {userInfo.Email}");
-                return userInfo;
-            }
-
-            // Cả hai cách đều thất bại
-            Console.WriteLine("Both methods failed to get user info from Google");
-            return null;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error getting Google user info: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
-            return null;
-        }
-    }
-
-    // Create user claims
     private List<Claim> CreateUserClaims(User user)
     {
         return new List<Claim>
@@ -278,57 +104,191 @@ public class AccountService : IAccountService
         };
     }
 
-    private AuthenticationProperties CreateAuthenticationProperties()
+    // Authenticate Google user
+    public async Task<TokenResponseDto> AuthenticateGoogleUser(GoogleAuthDto googleAuth)
     {
-        return new AuthenticationProperties
+        try
         {
-            IsPersistent = true // Keep the user logged in even after the browser is closed
+            if (googleAuth == null || string.IsNullOrEmpty(googleAuth.AccessToken))
+            {
+                _logger.LogError("GoogleAuthDto or AccessToken is null/empty");
+                return null;
+            }
+
+            _logger.LogInformation($"Starting Google authentication with token length: {googleAuth.AccessToken.Length}");
+
+            var googleUserInfo = await GetGoogleUserInfo(googleAuth.AccessToken);
+            if (googleUserInfo == null || string.IsNullOrEmpty(googleUserInfo.Email))
+            {
+                _logger.LogError("Failed to get valid Google user info or email is missing");
+                return null;
+            }
+
+            _logger.LogInformation($"Google user info received: {googleUserInfo}");
+
+            var existingUser = await _userRepository.GetByName(googleUserInfo.Email);
+            _logger.LogInformation($"Existing user found: {existingUser != null}");
+
+            if (existingUser == null)
+            {
+                existingUser = await CreateGoogleUser(googleUserInfo);
+                if (existingUser == null) return null;
+            }
+
+            _logger.LogInformation($"Generating JWT token for user ID: {existingUser.Id}");
+            return await GenerateJwtToken(existingUser);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error authenticating Google user");
+            return null;
+        }
+    }
+
+    private async Task<User> CreateGoogleUser(GoogleUserInfoDto googleUserInfo)
+    {
+        var newUser = new User
+        {
+            Name = googleUserInfo.Email,
+            Password = HashPassword(Guid.NewGuid().ToString()),
+            Role = UserRole.User
         };
+
+        _logger.LogInformation($"Creating new user with email: {newUser.Name}");
+        await _userRepository.Add(newUser);
+        return await _userRepository.GetByName(googleUserInfo.Email);
+    }
+
+    // Get user info from Google
+    public async Task<GoogleUserInfoDto> GetGoogleUserInfo(string accessToken)
+    {
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            _logger.LogError("AccessToken is null or empty");
+            return null;
+        }
+
+        try
+        {
+            _logger.LogInformation($"Getting user info with token length: {accessToken.Length}");
+            var httpClient = _httpClientFactory.CreateClient("GoogleApi");
+            
+            // Try method 1: Using Authorization header
+            var userInfo = await TryGetGoogleUserInfo(
+                httpClient, 
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                useAuthHeader: true, 
+                accessToken);
+                
+            if (userInfo != null) return userInfo;
+            
+            // Try method 2: Using query parameter
+            return await TryGetGoogleUserInfo(
+                httpClient,
+                $"https://www.googleapis.com/oauth2/v3/userinfo?access_token={accessToken}",
+                useAuthHeader: false,
+                accessToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting Google user info");
+            return null;
+        }
+    }
+    
+    private async Task<GoogleUserInfoDto> TryGetGoogleUserInfo(HttpClient httpClient, string url, bool useAuthHeader, string accessToken)
+    {
+        try
+        {
+            if (useAuthHeader)
+            {
+                httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+            }
+            else
+            {
+                httpClient.DefaultRequestHeaders.Authorization = null;
+            }
+            
+            _logger.LogInformation($"Trying URL: {url}");
+            var response = await httpClient.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+            
+            _logger.LogInformation($"Response status: {response.StatusCode}");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning($"Failed to get user info. Status: {response.StatusCode}, Content: {content}");
+                return null;
+            }
+            
+            var userInfo = JsonSerializer.Deserialize<GoogleUserInfoDto>(content, _jsonOptions);
+            if (userInfo == null)
+            {
+                _logger.LogError("Failed to deserialize Google user info");
+                return null;
+            }
+            
+            _logger.LogInformation($"Successfully obtained user info for: {userInfo.Email}");
+            return userInfo;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error in TryGetGoogleUserInfo ({(useAuthHeader ? "auth header" : "query param")})");
+            return null;
+        }
     }
 
     public async Task<bool> Register(User user)
     {
-        if (await _userRepository.IsNameExist(user.Name)) // IsNameExist method in UserRepo
+        if (user == null) throw new ArgumentNullException(nameof(user));
+        
+        if (await _userRepository.IsNameExist(user.Name))
             return false;
 
         user.Password = HashPassword(user.Password);
-
-        await _userRepository.Add(user); // Add method in UserRepo
+        await _userRepository.Add(user);
         return true;
     }
 
     public async Task Logout()
     {
-        // Không cần thực hiện gì với JWT vì token được lưu ở client
-        // JWT sẽ hết hạn theo thời gian đã cấu hình
+        // JWT doesn't need server-side logout
+        await Task.CompletedTask;
     }
 
     public string HashPassword(string password)
     {
+        if (string.IsNullOrEmpty(password))
+            throw new ArgumentException("Password cannot be null or empty", nameof(password));
+            
         return BCrypt.Net.BCrypt.HashPassword(password);
     }
 
     public async Task<User> GetCurrentUser()
     {
-        if (_httpContextAccessor.HttpContext == null || !_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+        if (_httpContextAccessor.HttpContext == null || 
+            !_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
         {
             return null;
         }
 
-        // Tìm kiếm nhiều loại claim có thể chứa userId
-        var userId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? _httpContextAccessor.HttpContext.User.FindFirst("UserId")?.Value
-            ?? _httpContextAccessor.HttpContext.User.FindFirst("userId")?.Value
-            ?? _httpContextAccessor.HttpContext.User.FindFirst("id")?.Value
-            ?? _httpContextAccessor.HttpContext.User.FindFirst("sub")?.Value;
-
+        var userId = FindUserIdFromClaims(_httpContextAccessor.HttpContext.User);
         if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int id))
         {
             return null;
         }
 
-        var user = await _userRepository.GetById(id);
-        return user;
+        return await _userRepository.GetById(id);
+    }
+    
+    private string FindUserIdFromClaims(ClaimsPrincipal user)
+    {
+        return user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? user.FindFirst("UserId")?.Value
+            ?? user.FindFirst("userId")?.Value
+            ?? user.FindFirst("id")?.Value
+            ?? user.FindFirst("sub")?.Value;
     }
 }
 
