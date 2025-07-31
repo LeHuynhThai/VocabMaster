@@ -3,9 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace VocabMaster.Core.Entities
 {
-    /// <summary>
-    /// Entity to store completed quiz questions for each user
-    /// </summary>
     public class CompletedQuiz
     {
         [Key]

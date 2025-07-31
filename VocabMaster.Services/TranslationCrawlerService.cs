@@ -6,9 +6,6 @@ using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Services
 {
-    /// <summary>
-    /// Service for crawling Vietnamese translations for English vocabulary
-    /// </summary>
     public class TranslationCrawlerService : ITranslationCrawlerService
     {
         private readonly HttpClient _httpClient;
@@ -17,13 +14,6 @@ namespace VocabMaster.Services
         private readonly string _translationApiUrl;
         private readonly int _delayBetweenRequestsMs;
 
-        /// <summary>
-        /// Initializes a new instance of the TranslationCrawlerService
-        /// </summary>
-        /// <param name="logger">Logger for the service</param>
-        /// <param name="vocabularyRepository">Repository for vocabulary operations</param>
-        /// <param name="configuration">Application configuration</param>
-        /// <param name="httpClientFactory">Factory for creating HttpClient instances</param>
         public TranslationCrawlerService(
             ILogger<TranslationCrawlerService> logger,
             IVocabularyRepo vocabularyRepository,
@@ -43,10 +33,6 @@ namespace VocabMaster.Services
             _delayBetweenRequestsMs = configuration?.GetValue<int>("TranslationDelayMs") ?? 1000;
         }
 
-        /// <summary>
-        /// Crawls Vietnamese translations for all English vocabulary in the database
-        /// </summary>
-        /// <returns>Number of translations successfully crawled</returns>
         public async Task<int> CrawlAllTranslations()
         {
             try
@@ -114,11 +100,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Translates a single English word to Vietnamese
-        /// </summary>
-        /// <param name="word">The English word to translate</param>
-        /// <returns>Vietnamese translation or null if not found</returns>
         public async Task<string> TranslateWord(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
@@ -193,11 +174,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Fallback translation method using a simple dictionary or another API
-        /// </summary>
-        /// <param name="word">The English word to translate</param>
-        /// <returns>Vietnamese translation or null if not found</returns>
         private string FallbackTranslate(string word)
         {
             try
@@ -298,9 +274,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Response class for translation API
-        /// </summary>
         private class TranslationResponse
         {
             public string Result { get; set; }

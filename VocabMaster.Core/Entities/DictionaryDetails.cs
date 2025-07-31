@@ -2,9 +2,6 @@
 
 namespace VocabMaster.Core.Entities
 {
-    /// <summary>
-    /// Entity to store detailed dictionary information for a word
-    /// </summary>
     public class DictionaryDetails
     {
         [Key]

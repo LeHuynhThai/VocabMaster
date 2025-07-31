@@ -7,9 +7,6 @@ using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Services
 {
-    /// <summary>
-    /// Service for quiz operations
-    /// </summary>
     public class QuizService : IQuizService
     {
         private readonly IQuizQuestionRepo _quizQuestionRepo;
@@ -29,14 +26,10 @@ namespace VocabMaster.Services
             _quizQuestionRepo = quizQuestionRepo;
             _vocabularyRepo = vocabularyRepo;
             _completedQuizRepo = completedQuizRepo;
-            _mapper = mapper;
+            _mapper = mapper;       
             _logger = logger;
         }
 
-        /// <summary>
-        /// Gets a random quiz question
-        /// </summary>
-        /// <returns>A random quiz question DTO</returns>
         public async Task<QuizQuestionDto> GetRandomQuestion()
         {
             try
@@ -73,11 +66,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Gets a random quiz question that hasn't been completed by the user
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <returns>A random uncompleted quiz question DTO</returns>
         public async Task<QuizQuestionDto> GetRandomUncompletedQuestion(int userId)
         {
             try
@@ -116,12 +104,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Verifies an answer to a quiz question
-        /// </summary>
-        /// <param name="questionId">The ID of the question</param>
-        /// <param name="answer">The selected answer</param>
-        /// <returns>Quiz result with information about correct/incorrect answer</returns>
         public async Task<QuizResultDto> CheckAnswer(int questionId, string answer)
         {
             try
@@ -157,13 +139,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Verifies an answer to a quiz question and marks it as completed if correct
-        /// </summary>
-        /// <param name="questionId">The ID of the question</param>
-        /// <param name="answer">The selected answer</param>
-        /// <param name="userId">The ID of the user</param>
-        /// <returns>Quiz result with information about correct/incorrect answer</returns>
         public async Task<QuizResultDto> CheckAnswerAndMarkCompleted(int questionId, string answer, int userId)
         {
             try
@@ -237,11 +212,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Gets all completed quiz questions for a user
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <returns>List of completed quiz questions</returns>
         public async Task<List<CompletedQuizDto>> GetCompletedQuizzes(int userId)
         {
             try
@@ -256,11 +226,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Gets statistics about a user's quiz progress
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <returns>Quiz statistics</returns>
         public async Task<QuizStatsDto> GetQuizStatistics(int userId)
         {
             try
@@ -289,10 +254,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Gets the total number of quiz questions in the system
-        /// </summary>
-        /// <returns>Total number of questions</returns>
         public async Task<int> CountTotalQuestions()
         {
             try
