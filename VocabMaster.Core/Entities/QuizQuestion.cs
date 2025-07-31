@@ -2,13 +2,10 @@
 
 namespace VocabMaster.Core.Entities
 {
-    /// <summary>
-    /// Entity to store quiz questions for vocabulary testing
-    /// </summary>
     public class QuizQuestion
     {
         [Key]
-        public int Id { get; set; }
+        public int Id { get; set; } 
 
         [Required]
         [MaxLength(100)]

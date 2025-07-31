@@ -8,9 +8,6 @@ using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Services
 {
-    /// <summary>
-    /// Service for dictionary operations including word lookup and random word generation
-    /// </summary>
     public class DictionaryService : IDictionaryService
     {
         private readonly HttpClient _httpClient;
@@ -22,15 +19,6 @@ namespace VocabMaster.Services
         private readonly Random _random = new Random();
         private const int MAX_ATTEMPTS = 5;
 
-        /// <summary>
-        /// Initializes a new instance of the DictionaryService
-        /// </summary>
-        /// <param name="logger">Logger for the service</param>
-        /// <param name="vocabularyRepository">Repository for vocabulary operations</param>
-        /// <param name="learnedWordRepository">Repository for learned words operations</param>
-        /// <param name="dictionaryDetailsRepository">Repository for dictionary details operations</param>
-        /// <param name="configuration">Application configuration</param>
-        /// <param name="httpClientFactory">Factory for creating HttpClient instances</param>
         public DictionaryService(
             ILogger<DictionaryService> logger,
             IVocabularyRepo vocabularyRepository,
@@ -51,10 +39,6 @@ namespace VocabMaster.Services
             _dictionaryApiUrl = configuration?.GetValue<string>("DictionaryApiUrl") ?? "https://api.dictionaryapi.dev/api/v2/entries/en/";
         }
 
-        /// <summary>
-        /// Gets a random word and its definition
-        /// </summary>
-        /// <returns>Dictionary response with word details or null if not found</returns>
         public async Task<DictionaryResponseDto> GetRandomWord()
         {
             try
@@ -78,11 +62,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Gets a random word, optionally trying to exclude words already learned by the user
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <returns>Dictionary response with word details or null if not found</returns>
         public async Task<DictionaryResponseDto> GetRandomWordExcludeLearned(int userId)
         {
             try
@@ -107,9 +86,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Helper method to try getting a random word excluding learned ones
-        /// </summary>
         private async Task<DictionaryResponseDto> TryGetRandomWordExcludeLearned(int userId)
         {
             try
@@ -159,11 +135,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Gets the definition of a word from the dictionary API
-        /// </summary>
-        /// <param name="word">The word to look up</param>
-        /// <returns>Dictionary response with word details or null if not found</returns>
         public async Task<DictionaryResponseDto> GetWordDefinition(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
@@ -223,11 +194,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Gets the definition of a word from the local database if available, otherwise from the API
-        /// </summary>
-        /// <param name="word">The word to look up</param>
-        /// <returns>Dictionary response with word details or null if not found</returns>
         public async Task<DictionaryResponseDto> GetWordDefinitionFromCache(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
@@ -322,11 +288,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Caches the definition of a word in the local database
-        /// </summary>
-        /// <param name="word">The word to cache</param>
-        /// <returns>True if successful, false otherwise</returns>
         public async Task<bool> CacheWordDefinition(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
@@ -366,10 +327,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Caches the definitions of all words in the vocabulary repository
-        /// </summary>
-        /// <returns>Number of words successfully cached</returns>
         public async Task<int> CacheAllVocabularyDefinitions()
         {
             try
@@ -446,12 +403,7 @@ namespace VocabMaster.Services
                 return 0;
             }
         }
-
-        /// <summary>
-        /// Helper method to cache a definition
-        /// </summary>
-        /// <param name="definition">The definition to cache</param>
-        /// <returns>True if successful, false otherwise</returns>
+    
         private async Task<DictionaryDetails> CacheDefinition(DictionaryResponseDto definition)
         {
             if (definition == null)
