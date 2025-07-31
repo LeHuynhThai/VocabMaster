@@ -27,7 +27,7 @@ namespace VocabMaster.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _cache = cache;
         }
-
+        // Add a word to the learned list
         public async Task<bool> AddLearnedWord(int userId, string word)
         {
             try
