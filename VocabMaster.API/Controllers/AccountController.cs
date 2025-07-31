@@ -22,7 +22,7 @@ public class AccountController : ControllerBase
         _logger = logger;
     }
 
-    // API Login POST - Cập nhật để sử dụng JWT
+    // Login
     [HttpPost("login")]
     [Produces("application/json")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto model)
@@ -41,7 +41,7 @@ public class AccountController : ControllerBase
         return Unauthorized(new { message = "Invalid username or password" });
     }
 
-    // Xử lý Google Login với bắt lỗi chi tiết hơn
+    // Google Login
     [HttpPost("google-login")]
     [Produces("application/json")]
     [AllowAnonymous]
@@ -57,6 +57,7 @@ public class AccountController : ControllerBase
                 return BadRequest("Dữ liệu không hợp lệ");
             }
 
+            // Debug
             Console.WriteLine($"GoogleAuth: accessToken length={googleAuth.AccessToken?.Length ?? 0}, idToken length={googleAuth.IdToken?.Length ?? 0}");
 
             if (string.IsNullOrEmpty(googleAuth.AccessToken))
@@ -65,14 +66,13 @@ public class AccountController : ControllerBase
                 return BadRequest("AccessToken không được cung cấp");
             }
 
-            // IdToken không còn là bắt buộc
+            // IdToken is optional
             if (string.IsNullOrEmpty(googleAuth.IdToken))
             {
                 Console.WriteLine("IdToken không được cung cấp, nhưng tiếp tục xử lý với AccessToken");
-                // Không return lỗi
             }
 
-            // In ra thông tin token để debug
+            // Debug
             Console.WriteLine($"Token preview: {googleAuth.AccessToken.Substring(0, Math.Min(20, googleAuth.AccessToken.Length))}...");
 
             try
@@ -110,7 +110,7 @@ public class AccountController : ControllerBase
         }
     }
 
-    // Endpoint kiểm tra token Google OAuth
+    // Validate Google Token
     [HttpPost("validate-google-token")]
     [Produces("application/json")]
     [AllowAnonymous]
@@ -125,7 +125,7 @@ public class AccountController : ControllerBase
                 return BadRequest(new { valid = false, message = "Token is missing" });
             }
 
-            // Chỉ lấy thông tin người dùng từ Google, không tạo JWT
+            // Get user info from Google, not create JWT
             var userInfo = await _accountService.GetGoogleUserInfo(googleAuth.AccessToken);
 
             if (userInfo != null)
@@ -153,7 +153,7 @@ public class AccountController : ControllerBase
         }
     }
 
-    // API Register POST
+    // Register
     [HttpPost("register")]
     [Produces("application/json")]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto model)
@@ -173,16 +173,16 @@ public class AccountController : ControllerBase
         return BadRequest(new { message = "Username already exists" });
     }
 
-    // API Logout - JWT không cần endpoint logout nhưng giữ lại để tương thích
+    // Logout
     [HttpGet("logout")]
     [Authorize]
     public IActionResult Logout()
     {
-        // JWT không cần server-side logout
+        // JWT doesn't need server-side logout
         return Ok(new { success = true, message = "Logout successful" });
     }
 
-    // API Get Current User
+    // Get Current User
     [HttpGet("currentuser")]
     [Authorize]
     public async Task<IActionResult> GetCurrentUser()
@@ -202,7 +202,7 @@ public class AccountController : ControllerBase
         });
     }
 
-    // API Refresh Token - Tạo token mới từ user hiện tại
+    // Refresh Token
     [HttpGet("refresh-token")]
     [Authorize]
     public async Task<IActionResult> RefreshToken()
@@ -217,7 +217,7 @@ public class AccountController : ControllerBase
         return Ok(tokenResponse);
     }
 
-    // Endpoint test để kiểm tra kết nối đến API
+    // Test
     [HttpGet("test")]
     [AllowAnonymous]
     public IActionResult Test()
