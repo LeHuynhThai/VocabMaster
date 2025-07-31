@@ -5,20 +5,12 @@ using VocabMaster.Core.Interfaces.Repositories;
 
 namespace VocabMaster.Data.Repositories
 {
-    /// <summary>
-    /// Repository for vocabulary operations
-    /// </summary>
     public class VocabRepo : IVocabularyRepo
     {
         private readonly AppDbContext _context;
         private readonly ILogger<VocabRepo> _logger;
         private readonly Random _random;
 
-        /// <summary>
-        /// Initializes a new instance of the VocabRepo
-        /// </summary>
-        /// <param name="context">Database context</param>
-        /// <param name="logger">Logger for the repository</param>
         public VocabRepo(
             AppDbContext context,
             ILogger<VocabRepo> logger = null)
@@ -28,20 +20,14 @@ namespace VocabMaster.Data.Repositories
             _random = new Random();
         }
 
-        /// <summary>
-        /// Gets the total count of vocabularies in the database
-        /// </summary>
-        /// <returns>Count of vocabularies</returns>
+        // Get total count of vocabularies
         public async Task<int> Count()
         {
             _logger?.LogInformation("Getting total count of vocabularies");
             return await _context.Vocabularies.CountAsync();
         }
 
-        /// <summary>
-        /// Gets a random vocabulary from the database
-        /// </summary>
-        /// <returns>Random vocabulary or null if none exist</returns>
+        // Get a random vocabulary
         public async Task<Vocabulary> GetRandom()
         {
             try
@@ -83,70 +69,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        /// <summary>
-        /// Gets multiple random vocabulary items
-        /// </summary>
-        /// <param name="count">Number of random vocabulary items to get</param>
-        /// <returns>List of random vocabulary items</returns>
-        public async Task<List<Vocabulary>> GetRandomVocabularies(int count)
-        {
-            try
-            {
-                if (count <= 0)
-                {
-                    _logger?.LogWarning("Invalid count requested: {Count}", count);
-                    return new List<Vocabulary>();
-                }
-
-                var totalVocabularies = await _context.Vocabularies.CountAsync();
-
-                if (totalVocabularies == 0)
-                {
-                    _logger?.LogWarning("No vocabularies found in the database");
-                    return new List<Vocabulary>();
-                }
-
-                _logger?.LogInformation("Retrieving {Count} random vocabularies from {Total} total", count, totalVocabularies);
-
-                // If requested count is greater than available vocabularies, return all
-                if (count >= totalVocabularies)
-                {
-                    _logger?.LogInformation("Requested count exceeds available vocabularies, returning all");
-                    return await _context.Vocabularies.ToListAsync();
-                }
-
-                // Get all vocabularies and select random ones
-                var allVocabularies = await _context.Vocabularies.ToListAsync();
-                var result = new List<Vocabulary>();
-                var selectedIndices = new HashSet<int>();
-
-                while (result.Count < count)
-                {
-                    var randomIndex = _random.Next(allVocabularies.Count);
-
-                    // Ensure we don't select the same vocabulary twice
-                    if (!selectedIndices.Contains(randomIndex))
-                    {
-                        selectedIndices.Add(randomIndex);
-                        result.Add(allVocabularies[randomIndex]);
-                    }
-                }
-
-                _logger?.LogInformation("Successfully retrieved {Count} random vocabularies", result.Count);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Error retrieving random vocabularies");
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Gets a random vocabulary excluding words that the user has already learned
-        /// </summary>
-        /// <param name="learnedWords">List of words that the user has already learned</param>
-        /// <returns>Random vocabulary excluding learned words, or null if all words have been learned</returns>
+        // Get a random vocabulary excluding learned words
         public async Task<Vocabulary> GetRandomExcludeLearned(List<string> learnedWords)
         {
             try
@@ -187,10 +110,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        /// <summary>
-        /// Gets all vocabularies
-        /// </summary>
-        /// <returns>List of all vocabularies</returns>
+        // Get all vocabularies
         public async Task<List<Vocabulary>> GetAll()
         {
             try
@@ -207,11 +127,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        /// <summary>
-        /// Updates a vocabulary in the repository
-        /// </summary>
-        /// <param name="vocabulary">The vocabulary to update</param>
-        /// <returns>True if successful, false otherwise</returns>
+        // Update a vocabulary, use for crawl Vietnamese from api
         public async Task<bool> Update(Vocabulary vocabulary)
         {
             try
@@ -234,9 +150,7 @@ namespace VocabMaster.Data.Repositories
 
                 // Update properties
                 existingVocabulary.Vietnamese = vocabulary.Vietnamese;
-                // Update other properties as needed
 
-                // Save changes
                 await _context.SaveChangesAsync();
 
                 _logger?.LogInformation("Successfully updated vocabulary: {Word}", vocabulary.Word);
