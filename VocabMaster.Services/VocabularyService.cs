@@ -1,14 +1,12 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Services
 {
-    /// <summary>
-    /// Service for vocabulary operations
-    /// </summary>
     public class VocabularyService : IVocabularyService
     {
         private readonly IVocabularyRepo _vocabularyRepository;
@@ -18,13 +16,6 @@ namespace VocabMaster.Services
         private const string LearnedWordsCacheKey = "LearnedWords_";
         private const int CacheExpirationMinutes = 15;
 
-        /// <summary>
-        /// Initializes a new instance of the VocabularyService
-        /// </summary>
-        /// <param name="vocabularyRepository">Repository for vocabulary operations</param>
-        /// <param name="learnedWordRepository">Repository for learned words operations</param>
-        /// <param name="logger">Logger for the service</param>
-        /// <param name="cache">Memory cache for improved performance</param>
         public VocabularyService(
             IVocabularyRepo vocabularyRepository,
             ILearnedWordRepo learnedWordRepository,
@@ -37,12 +28,6 @@ namespace VocabMaster.Services
             _cache = cache;
         }
 
-        /// <summary>
-        /// Adds a word to the user's learned words list
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <param name="word">Word to add to learned list</param>
-        /// <returns>True if successful, false otherwise</returns>
         public async Task<bool> AddLearnedWord(int userId, string word)
         {
             try
@@ -78,17 +63,11 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Marks a word as learned for a specific user
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <param name="word">Word to mark as learned</param>
-        /// <returns>Result of the operation with success status and data</returns>
-        public async Task<MarkWordResult> MarkWordAsLearned(int userId, string word)
+        public async Task<MarkWordResultDto> MarkWordAsLearned(int userId, string word)
         {
             if (string.IsNullOrWhiteSpace(word))
             {
-                return new MarkWordResult { Success = false, ErrorMessage = "Word cannot be empty" };
+                return new MarkWordResultDto { Success = false, ErrorMessage = "Word cannot be empty" };
             }
 
             try
@@ -97,7 +76,7 @@ namespace VocabMaster.Services
                 if (await IsWordLearned(userId, word))
                 {
                     _logger.LogWarning("User {UserId} tried to mark already learned word: {Word}", userId, word);
-                    return new MarkWordResult { Success = false, ErrorMessage = "This word is already marked as learned" };
+                    return new MarkWordResultDto { Success = false, ErrorMessage = "This word is already marked as learned" };
                 }
 
                 // Create new learned word
@@ -115,26 +94,21 @@ namespace VocabMaster.Services
                 if (result)
                 {
                     _logger.LogInformation("Successfully marked word '{Word}' as learned for user {UserId}", word, userId);
-                    return new MarkWordResult { Success = true, Data = learnedWord };
+                    return new MarkWordResultDto { Success = true, Data = learnedWord };
                 }
                 else
                 {
                     _logger.LogWarning("Failed to mark word as learned for user {UserId}: {Word}", userId, word);
-                    return new MarkWordResult { Success = false, ErrorMessage = "Failed to save learned word. Please try again." };
+                    return new MarkWordResultDto { Success = false, ErrorMessage = "Failed to save learned word. Please try again." };
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error marking word as learned for user {UserId}: {Word}", userId, word);
-                return new MarkWordResult { Success = false, ErrorMessage = "An error occurred. Please try again." };
+                return new MarkWordResultDto { Success = false, ErrorMessage = "An error occurred. Please try again." };
             }
         }
 
-        /// <summary>
-        /// Gets all learned words for a specific user
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <returns>List of learned words</returns>
         public async Task<List<LearnedWord>> GetUserLearnedVocabularies(int userId)
         {
             try
@@ -149,13 +123,6 @@ namespace VocabMaster.Services
             }
         }
 
-
-        /// <summary>
-        /// Removes a learned word for a specific user by ID
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <param name="wordId">ID of the learned word to remove</param>
-        /// <returns>True if successful, false otherwise</returns>
         public async Task<bool> RemoveLearnedWordById(int userId, int wordId)
         {
             try
@@ -185,12 +152,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Checks if a word is in the user's learned words list
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <param name="word">Word to check</param>
-        /// <returns>True if the word is learned, false otherwise</returns>
         public async Task<bool> IsWordLearned(int userId, string word)
         {
             try
@@ -232,10 +193,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Invalidates the user's cache
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
         private void InvalidateUserCache(int userId)
         {
             if (_cache != null)
@@ -248,12 +205,6 @@ namespace VocabMaster.Services
             }
         }
 
-        /// <summary>
-        /// Gets a learned word by its ID for a specific user
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <param name="wordId">ID of the learned word</param>
-        /// <returns>The learned word or null if not found</returns>
         public async Task<LearnedWord> GetLearnedWordById(int userId, int wordId)
         {
             try
