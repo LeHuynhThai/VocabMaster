@@ -11,15 +11,24 @@ namespace VocabMaster.API.Controllers;
 [Route("api/[controller]")]
 public class AccountController : ControllerBase
 {
-    private readonly IAccountService _accountService;
+    private readonly IAuthenticationService _authenticationService;
+    private readonly ITokenService _tokenService;
+    private readonly IExternalAuthService _externalAuthService;
     private readonly IMapper _mapper;
     private readonly ILogger<AccountController> _logger;
 
-    public AccountController(IAccountService accountService, IMapper mapper, ILogger<AccountController> logger)
+    public AccountController(
+        IAuthenticationService authenticationService,
+        ITokenService tokenService,
+        IExternalAuthService externalAuthService,
+        IMapper mapper,
+        ILogger<AccountController> logger)
     {
-        _accountService = accountService;
-        _mapper = mapper;
-        _logger = logger;
+        _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
+        _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
+        _externalAuthService = externalAuthService ?? throw new ArgumentNullException(nameof(externalAuthService));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     // Login
@@ -32,7 +41,7 @@ public class AccountController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var tokenResponse = await _accountService.Login(model.Name, model.Password);
+        var tokenResponse = await _authenticationService.Login(model.Name, model.Password);
         if (tokenResponse != null)
         {
             return Ok(tokenResponse);
@@ -77,7 +86,7 @@ public class AccountController : ControllerBase
 
             try
             {
-                var tokenResponse = await _accountService.AuthenticateGoogleUser(googleAuth);
+                var tokenResponse = await _externalAuthService.AuthenticateGoogleUser(googleAuth);
 
                 if (tokenResponse == null)
                 {
@@ -126,7 +135,7 @@ public class AccountController : ControllerBase
             }
 
             // Get user info from Google, not create JWT
-            var userInfo = await _accountService.GetGoogleUserInfo(googleAuth.AccessToken);
+            var userInfo = await _externalAuthService.GetGoogleUserInfo(googleAuth.AccessToken);
 
             if (userInfo != null)
             {
@@ -165,7 +174,7 @@ public class AccountController : ControllerBase
 
         var user = _mapper.Map<User>(model);
 
-        if (await _accountService.Register(user))
+        if (await _authenticationService.Register(user))
         {
             return Ok(new { success = true, message = "Registration successful" });
         }
@@ -187,7 +196,7 @@ public class AccountController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetCurrentUser()
     {
-        var user = await _accountService.GetCurrentUser();
+        var user = await _authenticationService.GetCurrentUser();
         if (user == null)
         {
             return Unauthorized();
@@ -207,13 +216,13 @@ public class AccountController : ControllerBase
     [Authorize]
     public async Task<IActionResult> RefreshToken()
     {
-        var user = await _accountService.GetCurrentUser();
+        var user = await _authenticationService.GetCurrentUser();
         if (user == null)
         {
             return Unauthorized();
         }
 
-        var tokenResponse = await _accountService.GenerateJwtToken(user);
+        var tokenResponse = await _tokenService.GenerateJwtToken(user);
         return Ok(tokenResponse);
     }
 
