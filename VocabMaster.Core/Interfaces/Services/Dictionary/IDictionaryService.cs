@@ -13,7 +13,7 @@ namespace VocabMaster.Core.Interfaces.Services
         Task<DictionaryResponseDto> GetWordDefinitionFromCache(string word);
 
         Task<bool> CacheWordDefinition(string word);
-        
+
         Task<int> CacheAllVocabularyDefinitions();
     }
 }

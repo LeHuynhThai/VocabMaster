@@ -4,11 +4,14 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services;
+using VocabMaster.Core.Interfaces.Services.Dictionary;
+using VocabMaster.Core.Interfaces.Services.Vocabulary;
 using VocabMaster.Data;
 using VocabMaster.Data.Repositories;
 using VocabMaster.Data.Seed;
 using VocabMaster.Services;
 using VocabMaster.Services.Authentication;
+using VocabMaster.Services.Dictionary;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -128,6 +131,17 @@ builder.Services.AddHttpClient("GoogleApi", client =>
 
 // Add memory caching
 builder.Services.AddMemoryCache();
+
+// services for dictionary
+builder.Services.AddScoped<IDictionaryCacheService, DictionaryCacheService>();
+builder.Services.AddScoped<IDictionaryLookupService, DictionaryLookupService>();
+builder.Services.AddScoped<IRandomWordService, RandomWordService>();
+
+// services for vocabulary
+builder.Services.AddScoped<IVocabularyService, VocabularyService>();
+
+// services for quiz
+builder.Services.AddScoped<IQuizService, QuizService>();
 
 var app = builder.Build();
 

@@ -1,4 +1,4 @@
-namespace VocabMaster.Core.DTOs
+﻿namespace VocabMaster.Core.DTOs
 {
     public class TranslationResponseDto
     {
@@ -6,4 +6,4 @@ namespace VocabMaster.Core.DTOs
         public string SourceLanguage { get; set; }
         public string TargetLanguage { get; set; }
     }
-} 
+}

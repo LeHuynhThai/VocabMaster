@@ -2,7 +2,7 @@
 {
     public interface ITranslationCrawlerService
     {
-        Task<int> CrawlAllTranslations();        
+        Task<int> CrawlAllTranslations();
         Task<string> TranslateWord(string word);
     }
 }

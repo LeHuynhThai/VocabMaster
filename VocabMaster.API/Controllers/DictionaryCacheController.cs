@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VocabMaster.Core.Interfaces.Services;
+using VocabMaster.Core.Interfaces.Services.Dictionary;
 
 namespace VocabMaster.API.Controllers
 {
@@ -7,68 +9,85 @@ namespace VocabMaster.API.Controllers
     [Route("api/[controller]")]
     public class DictionaryCacheController : ControllerBase
     {
-        private readonly IDictionaryService _dictionaryService;
+        private readonly IDictionaryCacheService _dictionaryCacheService;
+        private readonly IDictionaryLookupService _dictionaryLookupService;
+        private readonly IRandomWordService _randomWordService;
         private readonly ILogger<DictionaryCacheController> _logger;
 
         public DictionaryCacheController(
-            IDictionaryService dictionaryService,
+            IDictionaryCacheService dictionaryCacheService,
+            IDictionaryLookupService dictionaryLookupService,
+            IRandomWordService randomWordService,
             ILogger<DictionaryCacheController> logger)
         {
-            _dictionaryService = dictionaryService ?? throw new ArgumentNullException(nameof(dictionaryService));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _dictionaryCacheService = dictionaryCacheService;
+            _dictionaryLookupService = dictionaryLookupService;
+            _randomWordService = randomWordService;
+            _logger = logger;
         }
 
-        /// <summary>
-        /// Caches the definition of a word
-        /// </summary>
-        /// <param name="word">The word to cache</param>
-        /// <returns>Success status</returns>
-        [HttpPost("word/{word}")]
-        public async Task<IActionResult> CacheWord(string word)
+        [HttpGet("random")]
+        public async Task<IActionResult> GetRandomWord()
         {
-            try
+            var result = await _randomWordService.GetRandomWord();
+            if (result == null)
             {
-                _logger.LogInformation("Caching definition for word: {Word}", word);
-                var result = await _dictionaryService.CacheWordDefinition(word);
-
-                if (result)
-                {
-                    _logger.LogInformation("Successfully cached definition for word: {Word}", word);
-                    return Ok(new { success = true, message = $"Successfully cached definition for word: {word}" });
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to cache definition for word: {Word}", word);
-                    return BadRequest(new { success = false, message = $"Failed to cache definition for word: {word}" });
-                }
+                return NotFound(new { message = "No random word found" });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error caching definition for word: {Word}", word);
-                return StatusCode(500, new { success = false, message = "An error occurred while caching the definition" });
-            }
+            return Ok(result);
         }
 
-        /// <summary>
-        /// Caches the definitions of all words in the vocabulary repository
-        /// </summary>
-        /// <returns>Number of words successfully cached</returns>
-        [HttpPost("all")]
-        public async Task<IActionResult> CacheAllWords()
+        [HttpGet("random/exclude-learned/{userId}")]
+        public async Task<IActionResult> GetRandomWordExcludeLearned(int userId)
         {
-            try
+            var result = await _randomWordService.GetRandomWordExcludeLearned(userId);
+            if (result == null)
             {
-                _logger.LogInformation("Starting to cache all vocabulary definitions");
-                var result = await _dictionaryService.CacheAllVocabularyDefinitions();
+                return NotFound(new { message = "No random word found" });
+            }
+            return Ok(result);
+        }
 
-                _logger.LogInformation("Finished caching vocabulary definitions. Success count: {Count}", result);
-                return Ok(new { success = true, count = result, message = $"Successfully cached {result} definitions" });
-            }
-            catch (Exception ex)
+        [HttpGet("word/{word}")]
+        public async Task<IActionResult> GetWordDefinition(string word)
+        {
+            var result = await _dictionaryLookupService.GetWordDefinition(word);
+            if (result == null)
             {
-                _logger.LogError(ex, "Error caching all vocabulary definitions");
-                return StatusCode(500, new { success = false, message = "An error occurred while caching the definitions" });
+                return NotFound(new { message = $"No definition found for word: {word}" });
             }
+            return Ok(result);
+        }
+
+        [HttpGet("cache/{word}")]
+        public async Task<IActionResult> GetWordDefinitionFromCache(string word)
+        {
+            var result = await _dictionaryLookupService.GetWordDefinitionFromCache(word);
+            if (result == null)
+            {
+                return NotFound(new { message = $"No definition found for word: {word}" });
+            }
+            return Ok(result);
+        }
+
+        [HttpPost("cache/{word}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CacheWordDefinition(string word)
+        {
+            var result = await _dictionaryCacheService.CacheWordDefinition(word);
+            if (!result)
+            {
+                return BadRequest(new { message = $"Failed to cache definition for word: {word}" });
+            }
+            return Ok(new { message = $"Successfully cached definition for word: {word}" });
+        }
+
+        [HttpPost("cache-all")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CacheAllVocabularyDefinitions()
+        {
+            var result = await _dictionaryCacheService.CacheAllVocabularyDefinitions();
+            return Ok(new { message = $"Successfully cached {result} vocabulary definitions" });
         }
     }
 }

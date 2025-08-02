@@ -1,4 +1,4 @@
-using VocabMaster.Core.Entities;
+﻿using VocabMaster.Core.Entities;
 
 namespace VocabMaster.Core.DTOs
 {
@@ -8,4 +8,4 @@ namespace VocabMaster.Core.DTOs
         public string ErrorMessage { get; set; }
         public LearnedWord Data { get; set; }
     }
-} 
+}

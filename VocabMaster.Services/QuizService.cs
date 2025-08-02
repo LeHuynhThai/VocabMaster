@@ -26,7 +26,7 @@ namespace VocabMaster.Services
             _quizQuestionRepo = quizQuestionRepo;
             _vocabularyRepo = vocabularyRepo;
             _completedQuizRepo = completedQuizRepo;
-            _mapper = mapper;       
+            _mapper = mapper;
             _logger = logger;
         }
 
