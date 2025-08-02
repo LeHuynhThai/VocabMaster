@@ -8,9 +8,6 @@ using VocabMaster.Core.Interfaces.Services.Vocabulary;
 
 namespace VocabMaster.API.Controllers
 {
-    /// <summary>
-    /// Controller for word generation and dictionary lookup operations
-    /// </summary>
     [ApiController]
     [Authorize]
     [Route("api/[controller]")]
@@ -19,43 +16,30 @@ namespace VocabMaster.API.Controllers
     {
         private readonly IRandomWordService _randomWordService;
         private readonly IDictionaryLookupService _dictionaryLookupService;
-        private readonly IVocabularyService _vocabularyService;
+        private readonly ILearnedWordService _learnedWordService;
+        private readonly IWordStatusService _wordStatusService;
         private readonly ILogger<WordGeneratorController> _logger;
         private readonly IMemoryCache _cache;
         private const string RandomWordCacheKey = "RandomWord_";
         private const string LookupCacheKey = "Lookup_";
         private const int CacheExpirationMinutes = 30;
 
-        /// <summary>
-        /// Initializes a new instance of the WordGeneratorController
-        /// </summary>
-        /// <param name="randomWordService">Service for random word operations</param>
-        /// <param name="dictionaryLookupService">Service for dictionary lookup operations</param>
-        /// <param name="vocabularyService">Service for vocabulary operations</param>
-        /// <param name="logger">Logger for the controller</param>
-        /// <param name="cache">Memory cache for improved performance</param>
         public WordGeneratorController(
             IRandomWordService randomWordService,
             IDictionaryLookupService dictionaryLookupService,
-            IVocabularyService vocabularyService,
+            ILearnedWordService learnedWordService,
+            IWordStatusService wordStatusService,
             ILogger<WordGeneratorController> logger,
             IMemoryCache cache = null)
         {
             _randomWordService = randomWordService ?? throw new ArgumentNullException(nameof(randomWordService));
             _dictionaryLookupService = dictionaryLookupService ?? throw new ArgumentNullException(nameof(dictionaryLookupService));
-            _vocabularyService = vocabularyService ?? throw new ArgumentNullException(nameof(vocabularyService));
+            _learnedWordService = learnedWordService ?? throw new ArgumentNullException(nameof(learnedWordService));
+            _wordStatusService = wordStatusService ?? throw new ArgumentNullException(nameof(wordStatusService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _cache = cache;
         }
 
-        /// <summary>
-        /// Gets a random word excluding words already learned by the current user
-        /// </summary>
-        /// <returns>A simplified random word with its definition</returns>
-        /// <response code="200">Returns the random word with its definition</response>
-        /// <response code="401">If the user is not authenticated</response>
-        /// <response code="404">If no words are available or all words have been learned</response>
-        /// <response code="500">If an error occurs during processing</response>
         [HttpGet("getrandomword")]
         [ProducesResponseType(typeof(VocabularyResponseDto), 200)]
         [ProducesResponseType(typeof(object), 401)]
@@ -90,10 +74,8 @@ namespace VocabMaster.API.Controllers
                     return NotFound(new { message = "No word found or all words have been learned" });
                 }
 
-                // Check if the word is already learned
-                bool isLearned = await _vocabularyService.IsWordLearned(userId, randomWord.Word);
+                bool isLearned = await _wordStatusService.IsWordLearned(userId, randomWord.Word);
 
-                // Debug Vietnamese translation
                 _logger.LogInformation("Random word {Word} has Vietnamese translation: {HasVietnamese}",
                     randomWord.Word, !string.IsNullOrEmpty(randomWord.Vietnamese) ? "Yes" : "No");
 
@@ -123,14 +105,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Gets a new random word, bypassing cache
-        /// </summary>
-        /// <returns>A simplified random word with its definition</returns>
-        /// <response code="200">Returns the random word with its definition</response>
-        /// <response code="401">If the user is not authenticated</response>
-        /// <response code="404">If no words are available or all words have been learned</response>
-        /// <response code="500">If an error occurs during processing</response>
         [HttpGet("getnewrandomword")]
         [ProducesResponseType(typeof(VocabularyResponseDto), 200)]
         [ProducesResponseType(typeof(object), 401)]
@@ -163,10 +137,8 @@ namespace VocabMaster.API.Controllers
                     return NotFound(new { message = "No word found or all words have been learned" });
                 }
 
-                // Check if the word is already learned
-                bool isLearned = await _vocabularyService.IsWordLearned(userId, randomWord.Word);
+                bool isLearned = await _wordStatusService.IsWordLearned(userId, randomWord.Word);
 
-                // Debug Vietnamese translation
                 _logger.LogInformation("New random word {Word} has Vietnamese translation: {HasVietnamese}",
                     randomWord.Word, !string.IsNullOrEmpty(randomWord.Vietnamese) ? "Yes" : "No");
 
@@ -196,15 +168,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Looks up a word in the dictionary
-        /// </summary>
-        /// <param name="word">The word to look up</param>
-        /// <returns>A simplified word with its definition</returns>
-        /// <response code="200">Returns the word with its definition</response>
-        /// <response code="400">If the word is null or empty</response>
-        /// <response code="404">If the word is not found</response>
-        /// <response code="500">If an error occurs during processing</response>
         [HttpGet("lookup/{word}")]
         [Authorize]
         public async Task<IActionResult> Lookup(string word)
@@ -236,13 +199,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Checks if a word is learned by the current user
-        /// </summary>
-        /// <param name="word">The word to check</param>
-        /// <returns>Whether the word is learned</returns>
-        /// <response code="200">Returns whether the word is learned</response>
-        /// <response code="401">If the user is not authenticated</response>
         [HttpGet("islearned/{word}")]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 401)]
@@ -258,7 +214,7 @@ namespace VocabMaster.API.Controllers
             try
             {
                 _logger.LogInformation("Checking if word {Word} is learned by user {UserId}", word, userId);
-                bool isLearned = await _vocabularyService.IsWordLearned(userId, word);
+                bool isLearned = await _wordStatusService.IsWordLearned(userId, word);
 
                 return Ok(new { isLearned });
             }
@@ -269,15 +225,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Adds a word to the user's learned words list
-        /// </summary>
-        /// <param name="word">The word to add</param>
-        /// <returns>Result of the operation</returns>
-        /// <response code="200">If the word was added successfully</response>
-        /// <response code="400">If the word is null or empty</response>
-        /// <response code="401">If the user is not authenticated</response>
-        /// <response code="500">If an error occurs during processing</response>
         [HttpPost("learned/{word}")]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]
@@ -300,11 +247,10 @@ namespace VocabMaster.API.Controllers
             try
             {
                 _logger.LogInformation("Adding word {Word} to learned list for user {UserId}", word, userId);
-                var result = await _vocabularyService.MarkWordAsLearned(userId, word);
+                var result = await _learnedWordService.MarkWordAsLearned(userId, word);
 
                 if (result.Success)
                 {
-                    // Invalidate random word cache
                     if (_cache != null)
                     {
                         string cacheKey = $"{RandomWordCacheKey}{userId}";
@@ -325,10 +271,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Gets the user ID from the claims principal
-        /// </summary>
-        /// <returns>User ID or 0 if not found or invalid</returns>
         private int GetUserIdFromClaims()
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier) ??

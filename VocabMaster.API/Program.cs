@@ -12,6 +12,7 @@ using VocabMaster.Data.Seed;
 using VocabMaster.Services;
 using VocabMaster.Services.Authentication;
 using VocabMaster.Services.Dictionary;
+using VocabMaster.Services.Vocabulary;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -137,8 +138,10 @@ builder.Services.AddScoped<IDictionaryCacheService, DictionaryCacheService>();
 builder.Services.AddScoped<IDictionaryLookupService, DictionaryLookupService>();
 builder.Services.AddScoped<IRandomWordService, RandomWordService>();
 
+
 // services for vocabulary
-builder.Services.AddScoped<IVocabularyService, VocabularyService>();
+builder.Services.AddScoped<IWordStatusService, WordStatusService>();
+builder.Services.AddScoped<ILearnedWordService, LearnedWordService>();
 
 // services for quiz
 builder.Services.AddScoped<IQuizService, QuizService>();
