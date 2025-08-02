@@ -1,12 +1,9 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Services;
@@ -29,7 +26,7 @@ namespace VocabMaster.Services.Authentication
         public async Task<TokenResponseDto> GenerateJwtToken(User user)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
-            
+
             var jwtSettings = _configuration.GetSection("JWT");
             var secretKey = jwtSettings["Secret"];
             var issuer = jwtSettings["Issuer"];
@@ -40,7 +37,7 @@ namespace VocabMaster.Services.Authentication
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var tokenExpiration = DateTime.UtcNow.AddDays(expiryInDays);
-            
+
             var token = new JwtSecurityToken(
                 issuer: issuer,
                 audience: audience,
@@ -82,4 +79,4 @@ namespace VocabMaster.Services.Authentication
                 ?? user.FindFirst("sub")?.Value;
         }
     }
-} 
+}

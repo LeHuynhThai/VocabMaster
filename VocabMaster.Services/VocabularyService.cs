@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
-using VocabMaster.Core.Interfaces.Services;
+using VocabMaster.Core.Interfaces.Services.Vocabulary;
 
 namespace VocabMaster.Services
 {

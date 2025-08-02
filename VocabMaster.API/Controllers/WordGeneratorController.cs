@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 using VocabMaster.Core.DTOs;
-using VocabMaster.Core.Interfaces.Services;
+using VocabMaster.Core.Interfaces.Services.Dictionary;
+using VocabMaster.Core.Interfaces.Services.Vocabulary;
 
 namespace VocabMaster.API.Controllers
 {
@@ -16,7 +17,8 @@ namespace VocabMaster.API.Controllers
     [Produces("application/json")]
     public class WordGeneratorController : ControllerBase
     {
-        private readonly IDictionaryService _dictionaryService;
+        private readonly IRandomWordService _randomWordService;
+        private readonly IDictionaryLookupService _dictionaryLookupService;
         private readonly IVocabularyService _vocabularyService;
         private readonly ILogger<WordGeneratorController> _logger;
         private readonly IMemoryCache _cache;
@@ -27,17 +29,20 @@ namespace VocabMaster.API.Controllers
         /// <summary>
         /// Initializes a new instance of the WordGeneratorController
         /// </summary>
-        /// <param name="dictionaryService">Service for dictionary operations</param>
+        /// <param name="randomWordService">Service for random word operations</param>
+        /// <param name="dictionaryLookupService">Service for dictionary lookup operations</param>
         /// <param name="vocabularyService">Service for vocabulary operations</param>
         /// <param name="logger">Logger for the controller</param>
         /// <param name="cache">Memory cache for improved performance</param>
         public WordGeneratorController(
-            IDictionaryService dictionaryService,
+            IRandomWordService randomWordService,
+            IDictionaryLookupService dictionaryLookupService,
             IVocabularyService vocabularyService,
             ILogger<WordGeneratorController> logger,
             IMemoryCache cache = null)
         {
-            _dictionaryService = dictionaryService ?? throw new ArgumentNullException(nameof(dictionaryService));
+            _randomWordService = randomWordService ?? throw new ArgumentNullException(nameof(randomWordService));
+            _dictionaryLookupService = dictionaryLookupService ?? throw new ArgumentNullException(nameof(dictionaryLookupService));
             _vocabularyService = vocabularyService ?? throw new ArgumentNullException(nameof(vocabularyService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _cache = cache;
@@ -77,7 +82,7 @@ namespace VocabMaster.API.Controllers
                 }
 
                 _logger.LogInformation("Getting random word for user {UserId}", userId);
-                var randomWord = await _dictionaryService.GetRandomWordExcludeLearned(userId);
+                var randomWord = await _randomWordService.GetRandomWordExcludeLearned(userId);
 
                 if (randomWord == null)
                 {
@@ -150,7 +155,7 @@ namespace VocabMaster.API.Controllers
                 }
 
                 _logger.LogInformation("Getting new random word for user {UserId}", userId);
-                var randomWord = await _dictionaryService.GetRandomWordExcludeLearned(userId);
+                var randomWord = await _randomWordService.GetRandomWordExcludeLearned(userId);
 
                 if (randomWord == null)
                 {
@@ -209,7 +214,7 @@ namespace VocabMaster.API.Controllers
                 _logger.LogInformation("Looking up definition for word: {Word}", word);
 
                 // Get the definition from cache or API
-                var definition = await _dictionaryService.GetWordDefinitionFromCache(word);
+                var definition = await _dictionaryLookupService.GetWordDefinitionFromCache(word);
 
                 if (definition == null)
                 {

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Interfaces.Services;
+using VocabMaster.Core.Interfaces.Services.Vocabulary;
 
 namespace VocabMaster.API.Controllers
 {

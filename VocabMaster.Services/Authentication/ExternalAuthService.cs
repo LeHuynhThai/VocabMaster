@@ -1,8 +1,5 @@
-using Microsoft.Extensions.Logging;
-using System;
-using System.Net.Http;
+﻿using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using System.Threading.Tasks;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Services;
@@ -30,7 +27,7 @@ namespace VocabMaster.Services.Authentication
             _passwordService = passwordService ?? throw new ArgumentNullException(nameof(passwordService));
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            
+
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
@@ -89,16 +86,16 @@ namespace VocabMaster.Services.Authentication
             {
                 _logger.LogInformation($"Getting user info with token length: {accessToken.Length}");
                 var httpClient = _httpClientFactory.CreateClient("GoogleApi");
-                
+
                 // Try method 1: Using Authorization header
                 var userInfo = await TryGetGoogleUserInfo(
-                    httpClient, 
+                    httpClient,
                     "https://www.googleapis.com/oauth2/v3/userinfo",
-                    useAuthHeader: true, 
+                    useAuthHeader: true,
                     accessToken);
-                    
+
                 if (userInfo != null) return userInfo;
-                
+
                 // Try method 2: Using query parameter
                 return await TryGetGoogleUserInfo(
                     httpClient,
@@ -112,40 +109,40 @@ namespace VocabMaster.Services.Authentication
                 return null;
             }
         }
-        
+
         private async Task<GoogleUserInfoDto> TryGetGoogleUserInfo(HttpClient httpClient, string url, bool useAuthHeader, string accessToken)
         {
             try
             {
                 if (useAuthHeader)
                 {
-                    httpClient.DefaultRequestHeaders.Authorization = 
+                    httpClient.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
                 }
                 else
                 {
                     httpClient.DefaultRequestHeaders.Authorization = null;
                 }
-                
+
                 _logger.LogInformation($"Trying URL: {url}");
                 var response = await httpClient.GetAsync(url);
                 var content = await response.Content.ReadAsStringAsync();
-                
+
                 _logger.LogInformation($"Response status: {response.StatusCode}");
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning($"Failed to get user info. Status: {response.StatusCode}, Content: {content}");
                     return null;
                 }
-                
+
                 var userInfo = JsonSerializer.Deserialize<GoogleUserInfoDto>(content, _jsonOptions);
                 if (userInfo == null)
                 {
                     _logger.LogError("Failed to deserialize Google user info");
                     return null;
                 }
-                
+
                 _logger.LogInformation($"Successfully obtained user info for: {userInfo.Email}");
                 return userInfo;
             }
@@ -170,4 +167,4 @@ namespace VocabMaster.Services.Authentication
             return await _userRepository.GetByName(googleUserInfo.Email);
         }
     }
-} 
+}

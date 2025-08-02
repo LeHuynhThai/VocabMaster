@@ -5,7 +5,7 @@ namespace VocabMaster.Core.Entities
     public class QuizQuestion
     {
         [Key]
-        public int Id { get; set; } 
+        public int Id { get; set; }
 
         [Required]
         [MaxLength(100)]

@@ -1,5 +1,4 @@
-using Microsoft.Extensions.Logging;
-using System;
+﻿using Microsoft.Extensions.Logging;
 using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Services.Authentication
@@ -17,7 +16,7 @@ namespace VocabMaster.Services.Authentication
         {
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password cannot be null or empty", nameof(password));
-                
+
             return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
@@ -25,11 +24,11 @@ namespace VocabMaster.Services.Authentication
         {
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password cannot be null or empty", nameof(password));
-                
+
             if (string.IsNullOrEmpty(hash))
                 throw new ArgumentException("Hash cannot be null or empty", nameof(hash));
-                
+
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
     }
-} 
+}

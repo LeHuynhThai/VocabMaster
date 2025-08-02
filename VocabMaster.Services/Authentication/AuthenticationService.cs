@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
@@ -37,7 +37,7 @@ namespace VocabMaster.Services.Authentication
         public async Task<bool> Register(User user)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
-            
+
             if (await _userRepository.IsNameExist(user.Name))
                 return false;
 
@@ -54,7 +54,7 @@ namespace VocabMaster.Services.Authentication
 
         public async Task<User> GetCurrentUser()
         {
-            if (_httpContextAccessor.HttpContext == null || 
+            if (_httpContextAccessor.HttpContext == null ||
                 !_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
             {
                 return null;
@@ -69,4 +69,4 @@ namespace VocabMaster.Services.Authentication
             return await _userRepository.GetById(id);
         }
     }
-} 
+}

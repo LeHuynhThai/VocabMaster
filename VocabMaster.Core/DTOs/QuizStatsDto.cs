@@ -1,4 +1,4 @@
-namespace VocabMaster.Core.DTOs
+﻿namespace VocabMaster.Core.DTOs
 {
     public class QuizStatsDto
     {
@@ -8,4 +8,4 @@ namespace VocabMaster.Core.DTOs
         public double CompletionPercentage { get; set; }
         public double CorrectPercentage { get; set; }
     }
-} 
+}

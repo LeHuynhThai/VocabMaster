@@ -1,5 +1,4 @@
-using VocabMaster.Core.DTOs;
-using VocabMaster.Core.Entities;
+﻿using VocabMaster.Core.DTOs;
 
 namespace VocabMaster.Core.Interfaces.Services
 {
@@ -7,7 +6,7 @@ namespace VocabMaster.Core.Interfaces.Services
     public interface IExternalAuthService
     {
         Task<TokenResponseDto> AuthenticateGoogleUser(GoogleAuthDto googleAuth);
-        
+
         Task<GoogleUserInfoDto> GetGoogleUserInfo(string accessToken);
     }
-} 
+}
