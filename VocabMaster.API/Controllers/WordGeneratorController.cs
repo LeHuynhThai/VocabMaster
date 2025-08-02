@@ -53,7 +53,7 @@ namespace VocabMaster.API.Controllers
                 if (userId <= 0)
                 {
                     _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
-                    return Unauthorized(new { message = "Invalid user authentication" });
+                    return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
                 }
 
                 // Try to get from cache first
@@ -101,7 +101,11 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting random word");
-                return StatusCode(500, new { message = "An error occurred while getting a random word" });
+                return StatusCode(500, new { 
+                    error = "server_error", 
+                    message = "Đã xảy ra lỗi khi lấy từ ngẫu nhiên",
+                    details = ex.Message
+                });
             }
         }
 
@@ -118,7 +122,7 @@ namespace VocabMaster.API.Controllers
                 if (userId <= 0)
                 {
                     _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
-                    return Unauthorized(new { message = "Invalid user authentication" });
+                    return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
                 }
 
                 // Invalidate cache
@@ -164,7 +168,11 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting new random word");
-                return StatusCode(500, new { message = "An error occurred while getting a new random word" });
+                return StatusCode(500, new { 
+                    error = "server_error", 
+                    message = "Đã xảy ra lỗi khi lấy từ ngẫu nhiên mới",
+                    details = ex.Message
+                });
             }
         }
 
@@ -182,7 +190,10 @@ namespace VocabMaster.API.Controllers
                 if (definition == null)
                 {
                     _logger.LogWarning("No definition found for word: {Word}", word);
-                    return NotFound(new { message = $"No definition found for word: {word}" });
+                    return NotFound(new { 
+                        error = "word_not_found", 
+                        message = $"Không tìm thấy định nghĩa cho từ: {word}" 
+                    });
                 }
 
                 // Debug Vietnamese translation
@@ -195,7 +206,11 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error looking up definition for word: {Word}", word);
-                return StatusCode(500, new { message = "An error occurred while looking up the definition" });
+                return StatusCode(500, new { 
+                    error = "lookup_error", 
+                    message = $"Đã xảy ra lỗi khi tra cứu định nghĩa cho từ: {word}",
+                    details = ex.Message
+                });
             }
         }
 
@@ -208,7 +223,7 @@ namespace VocabMaster.API.Controllers
             if (userId <= 0)
             {
                 _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
-                return Unauthorized(new { message = "Invalid user authentication" });
+                return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
             }
 
             try
@@ -221,7 +236,11 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error checking if word {Word} is learned", word);
-                return StatusCode(500, new { message = "An error occurred while checking if the word is learned" });
+                return StatusCode(500, new { 
+                    error = "check_error", 
+                    message = $"Đã xảy ra lỗi khi kiểm tra từ {word} đã học hay chưa",
+                    details = ex.Message
+                });
             }
         }
 
@@ -234,14 +253,17 @@ namespace VocabMaster.API.Controllers
         {
             if (string.IsNullOrWhiteSpace(word))
             {
-                return BadRequest(new { message = "Word cannot be empty" });
+                return BadRequest(new { 
+                    error = "invalid_input", 
+                    message = "Từ không được để trống" 
+                });
             }
 
             var userId = GetUserIdFromClaims();
             if (userId <= 0)
             {
                 _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
-                return Unauthorized(new { message = "Invalid user authentication" });
+                return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
             }
 
             try
@@ -261,13 +283,20 @@ namespace VocabMaster.API.Controllers
                 }
                 else
                 {
-                    return BadRequest(new { message = result.ErrorMessage ?? "Cannot mark word as learned" });
+                    return BadRequest(new { 
+                        error = "mark_error", 
+                        message = result.ErrorMessage ?? "Không thể đánh dấu từ đã học" 
+                    });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error adding word {Word} to learned list", word);
-                return StatusCode(500, new { message = "An error occurred while adding the word to learned list" });
+                return StatusCode(500, new { 
+                    error = "add_error", 
+                    message = $"Đã xảy ra lỗi khi thêm từ {word} vào danh sách từ đã học",
+                    details = ex.Message
+                });
             }
         }
 
