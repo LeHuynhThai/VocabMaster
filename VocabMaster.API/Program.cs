@@ -13,6 +13,9 @@ using VocabMaster.Services;
 using VocabMaster.Services.Authentication;
 using VocabMaster.Services.Dictionary;
 using VocabMaster.Services.Vocabulary;
+using VocabMaster.Core.DTOs;
+using VocabMaster.Core.Interfaces.Services.Quiz;
+using VocabMaster.Services.Quiz;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -144,7 +147,9 @@ builder.Services.AddScoped<IWordStatusService, WordStatusService>();
 builder.Services.AddScoped<ILearnedWordService, LearnedWordService>();
 
 // services for quiz
-builder.Services.AddScoped<IQuizService, QuizService>();
+builder.Services.AddScoped<IQuizQuestionService, QuizQuestionService>();
+builder.Services.AddScoped<IQuizAnswerService, QuizAnswerService>();
+builder.Services.AddScoped<IQuizProgressService, QuizProgressService>();
 
 var app = builder.Build();
 

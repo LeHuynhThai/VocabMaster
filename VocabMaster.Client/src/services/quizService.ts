@@ -64,20 +64,6 @@ const quizService = {
   },
 
   /**
-   * Creates a new quiz question
-   * @returns ID of the created question
-   */
-  createQuestion: async (): Promise<number> => {
-    try {
-      const response = await api.post(API_ENDPOINTS.QUIZ_CREATE);
-      return response.data.questionId;
-    } catch (error: any) {
-      console.error('Error creating quiz question:', error);
-      throw error;
-    }
-  },
-
-  /**
    * Checks an answer to a quiz question
    * @param questionId ID of the question
    * @param selectedAnswer Selected answer text
