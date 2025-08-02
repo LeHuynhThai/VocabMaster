@@ -74,7 +74,7 @@ namespace VocabMaster.API.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CacheWordDefinition(string word)
         {
-            var result = await _dictionaryCacheService.CacheWordDefinition(word);
+            var result = await _dictionaryLookupService.CacheWordDefinition(word);
             if (!result)
             {
                 return BadRequest(new { message = $"Failed to cache definition for word: {word}" });
@@ -86,7 +86,7 @@ namespace VocabMaster.API.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CacheAllVocabularyDefinitions()
         {
-            var result = await _dictionaryCacheService.CacheAllVocabularyDefinitions();
+            var result = await _dictionaryLookupService.CacheAllVocabularyDefinitions();
             return Ok(new { message = $"Successfully cached {result} vocabulary definitions" });
         }
     }

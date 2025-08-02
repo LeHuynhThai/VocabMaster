@@ -6,6 +6,7 @@ using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Core.Interfaces.Services.Dictionary;
 using VocabMaster.Core.Interfaces.Services.Vocabulary;
+using VocabMaster.Core.Interfaces.Services.Translation;
 using VocabMaster.Data;
 using VocabMaster.Data.Repositories;
 using VocabMaster.Data.Seed;
@@ -16,6 +17,7 @@ using VocabMaster.Services.Vocabulary;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Interfaces.Services.Quiz;
 using VocabMaster.Services.Quiz;
+using VocabMaster.Services.Translation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -150,6 +152,19 @@ builder.Services.AddScoped<ILearnedWordService, LearnedWordService>();
 builder.Services.AddScoped<IQuizQuestionService, QuizQuestionService>();
 builder.Services.AddScoped<IQuizAnswerService, QuizAnswerService>();
 builder.Services.AddScoped<IQuizProgressService, QuizProgressService>();
+
+// add HttpClient for Translation API
+builder.Services.AddHttpClient("TranslationApi", client =>
+{
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// services for translation
+builder.Services.AddScoped<ITranslationApiService, TranslationApiService>();
+builder.Services.AddScoped<IFallbackTranslationService, FallbackTranslationService>();
+builder.Services.AddScoped<ITranslationService, TranslationService>();
+builder.Services.AddScoped<IVocabularyTranslationService, VocabularyTranslationService>();
 
 var app = builder.Build();
 

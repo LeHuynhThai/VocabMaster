@@ -81,7 +81,7 @@ namespace VocabMaster.Services.Dictionary
             {
                 _logger.LogInformation("Caching definition for word: {Word}", word);
 
-                // Check if already cached
+                // check if already cached
                 var exists = await _dictionaryDetailsRepository.Exists(word);
                 if (exists)
                 {
@@ -89,8 +89,6 @@ namespace VocabMaster.Services.Dictionary
                     return true;
                 }
 
-                // Không thể gọi DictionaryLookupService vì sẽ tạo ra circular dependency
-                // Trả về false để biểu thị rằng không thể cache từ này
                 _logger.LogWarning("Cannot cache word definition due to service architecture constraints");
                 return false;
             }
@@ -117,8 +115,6 @@ namespace VocabMaster.Services.Dictionary
 
                 _logger.LogInformation("Found {Count} vocabularies to cache", vocabularies.Count);
 
-                // Không thể cache tất cả từ vì sẽ tạo ra circular dependency
-                // Trả về 0 để biểu thị rằng không có từ nào được cache
                 _logger.LogWarning("Cannot cache all vocabulary definitions due to service architecture constraints");
                 return 0;
             }

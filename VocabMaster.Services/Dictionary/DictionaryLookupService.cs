@@ -193,5 +193,112 @@ namespace VocabMaster.Services.Dictionary
                 return null;
             }
         }
+
+        public async Task<bool> CacheWordDefinition(string word)
+        {
+            if (string.IsNullOrWhiteSpace(word))
+            {
+                _logger.LogWarning("Word parameter is null or empty");
+                return false;
+            }
+
+            try
+            {
+                _logger.LogInformation("Caching definition for word: {Word}", word);
+
+                // check if already cached
+                var exists = await _dictionaryDetailsRepository.Exists(word);
+                if (exists)
+                {
+                    _logger.LogInformation("Word {Word} is already cached", word);
+                    return true;
+                }
+
+                // get definition from API
+                var definition = await GetWordDefinition(word);
+                if (definition == null)
+                {
+                    _logger.LogWarning("No definition found from API for word: {Word}", word);
+                    return false;
+                }
+
+                // cache definition
+                var result = await _dictionaryCacheService.CacheDefinition(definition);
+                
+                return result != null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error caching definition for word: {Word}", word);
+                return false;
+            }
+        }
+
+        public async Task<int> CacheAllVocabularyDefinitions()
+        {
+            try
+            {
+                _logger.LogInformation("Starting to cache all vocabulary definitions");
+
+                // get all vocabularies
+                var vocabularies = await _vocabularyRepository.GetAll();
+                if (vocabularies == null || !vocabularies.Any())
+                {
+                    _logger.LogWarning("No vocabularies found to cache");
+                    return 0;
+                }
+
+                _logger.LogInformation("Found {Count} vocabularies to cache", vocabularies.Count);
+
+                int successCount = 0;
+                int failCount = 0;
+
+                // process each vocabulary
+                foreach (var vocabulary in vocabularies)
+                {
+                    try
+                    {
+                        // check if already cached
+                        var exists = await _dictionaryDetailsRepository.Exists(vocabulary.Word);
+                        if (exists)
+                        {
+                            _logger.LogInformation("Word {Word} is already cached", vocabulary.Word);
+                            continue;
+                        }
+
+                        // cache new word
+                        var success = await CacheWordDefinition(vocabulary.Word);
+                        if (success)
+                        {
+                            successCount++;
+                            _logger.LogInformation("Successfully cached definition for word: {Word}", vocabulary.Word);
+                        }
+                        else
+                        {
+                            failCount++;
+                            _logger.LogWarning("Failed to cache definition for word: {Word}", vocabulary.Word);
+                        }
+
+                        // add delay to avoid API overload
+                        await Task.Delay(1000);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error processing word: {Word}", vocabulary.Word);
+                        failCount++;
+                    }
+                }
+
+                _logger.LogInformation("Finished caching vocabulary definitions. Success: {SuccessCount}, Failed: {FailCount}",
+                    successCount, failCount);
+
+                return successCount;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error caching all vocabulary definitions");
+                return 0;
+            }
+        }
     }
 }
