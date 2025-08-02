@@ -8,6 +8,7 @@ using VocabMaster.Data;
 using VocabMaster.Data.Repositories;
 using VocabMaster.Data.Seed;
 using VocabMaster.Services;
+using VocabMaster.Services.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,11 +47,12 @@ builder.Services.AddScoped<IDictionaryDetailsRepo, DictionaryDetailsRepo>();
 builder.Services.AddScoped<IQuizQuestionRepo, QuizQuestionRepo>();
 builder.Services.AddScoped<ICompletedQuizRepo, CompletedQuizRepo>();
 
-// Add Services
-builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<IVocabularyService, VocabularyService>();
-builder.Services.AddScoped<IDictionaryService, DictionaryService>();
-builder.Services.AddScoped<IQuizService, QuizService>();
+
+// services for authentication
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IExternalAuthService, ExternalAuthService>();
+builder.Services.AddScoped<IPasswordService, PasswordService>();
 
 // Add HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
@@ -127,7 +129,6 @@ builder.Services.AddHttpClient("GoogleApi", client =>
 // Add memory caching
 builder.Services.AddMemoryCache();
 
-// Use connection string from appsettings.json
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

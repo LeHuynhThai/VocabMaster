@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services;
 
@@ -272,13 +273,6 @@ namespace VocabMaster.Services
                 _logger.LogError(ex, "Error in fallback translation for word: {Word}", word);
                 return null;
             }
-        }
-
-        private class TranslationResponse
-        {
-            public string Result { get; set; }
-            public string SourceLanguage { get; set; }
-            public string TargetLanguage { get; set; }
         }
     }
 }

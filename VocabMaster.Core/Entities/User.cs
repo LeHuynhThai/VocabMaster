@@ -17,16 +17,9 @@ namespace VocabMaster.Core.Entities
 
         public UserRole Role { get; set; } = UserRole.User;
 
-        // Navigation property
-        public virtual ICollection<LearnedWord> LearnedVocabularies { get; set; }
-
-
-        public User()
-        {
-            LearnedVocabularies = new HashSet<LearnedWord>();
-        }
+        // user can have many learned words, and learned words cannot duplicate (HashSet)
+        public virtual ICollection<LearnedWord> LearnedVocabularies { get; set; } = new HashSet<LearnedWord>();
     }
-
     public enum UserRole
     {
         User

@@ -62,7 +62,7 @@ namespace VocabMaster.Services
                 return false;
             }
         }
-
+        // Mark a word as learned
         public async Task<MarkWordResultDto> MarkWordAsLearned(int userId, string word)
         {
             if (string.IsNullOrWhiteSpace(word))
@@ -108,7 +108,7 @@ namespace VocabMaster.Services
                 return new MarkWordResultDto { Success = false, ErrorMessage = "An error occurred. Please try again." };
             }
         }
-
+        // Get all learned words for a user
         public async Task<List<LearnedWord>> GetUserLearnedVocabularies(int userId)
         {
             try
@@ -122,7 +122,7 @@ namespace VocabMaster.Services
                 return new List<LearnedWord>();
             }
         }
-
+        // Remove a learned word by ID
         public async Task<bool> RemoveLearnedWordById(int userId, int wordId)
         {
             try
@@ -151,7 +151,7 @@ namespace VocabMaster.Services
                 return false;
             }
         }
-
+        // Check if a word is learned
         public async Task<bool> IsWordLearned(int userId, string word)
         {
             try
@@ -192,7 +192,7 @@ namespace VocabMaster.Services
                 return false;
             }
         }
-
+        // Invalidate the user cache
         private void InvalidateUserCache(int userId)
         {
             if (_cache != null)
@@ -204,7 +204,7 @@ namespace VocabMaster.Services
                 _cache.Remove($"RandomWord_{userId}");
             }
         }
-
+        // Get a learned word by ID
         public async Task<LearnedWord> GetLearnedWordById(int userId, int wordId)
         {
             try
