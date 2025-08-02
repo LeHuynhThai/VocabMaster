@@ -4,57 +4,39 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 using VocabMaster.Core.DTOs;
-using VocabMaster.Core.Interfaces.Services;
+using VocabMaster.Core.Interfaces.Services.Dictionary;
 using VocabMaster.Core.Interfaces.Services.Vocabulary;
 
 namespace VocabMaster.API.Controllers
 {
-    /// <summary>
-    /// Controller for managing learned words
-    /// </summary>
     [ApiController]
     [Authorize]
     [Route("api/[controller]")]
     [Produces("application/json")]
     public class LearnedWordController : ControllerBase
     {
-        private readonly IVocabularyService _vocabularyService;
-        private readonly IDictionaryService _dictionaryService;
+        private readonly ILearnedWordService _learnedWordService;
+        private readonly IDictionaryLookupService _dictionaryLookupService;
         private readonly ILogger<LearnedWordController> _logger;
         private readonly IMemoryCache _cache;
         private readonly IMapper _mapper;
         private const string LearnedWordsListCacheKey = "LearnedWordsList_";
         private const int CacheExpirationMinutes = 5;
 
-        /// <summary>
-        /// Initializes a new instance of the LearnedWordController
-        /// </summary>
-        /// <param name="vocabularyService">Service for vocabulary operations</param>
-        /// <param name="dictionaryService">Service for dictionary operations</param>
-        /// <param name="logger">Logger for the controller</param>
-        /// <param name="mapper">AutoMapper instance</param>
-        /// <param name="cache">Memory cache for improved performance</param>
         public LearnedWordController(
-            IVocabularyService vocabularyService,
-            IDictionaryService dictionaryService,
+            ILearnedWordService learnedWordService,
+            IDictionaryLookupService dictionaryLookupService,
             ILogger<LearnedWordController> logger,
             IMapper mapper,
             IMemoryCache cache = null)
         {
-            _vocabularyService = vocabularyService ?? throw new ArgumentNullException(nameof(vocabularyService));
-            _dictionaryService = dictionaryService ?? throw new ArgumentNullException(nameof(dictionaryService));
+            _learnedWordService = learnedWordService ?? throw new ArgumentNullException(nameof(learnedWordService));
+            _dictionaryLookupService = dictionaryLookupService ?? throw new ArgumentNullException(nameof(dictionaryLookupService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _cache = cache;
         }
 
-        /// <summary>
-        /// Gets the user's learned words
-        /// </summary>
-        /// <returns>List of learned words</returns>
-        /// <response code="200">Returns the list of learned words</response>
-        /// <response code="401">If the user is not authenticated</response>
-        /// <response code="500">If an error occurs during processing</response>
         [HttpGet]
         [ProducesResponseType(typeof(List<LearnedWordDto>), 200)]
         [ProducesResponseType(typeof(object), 401)]
@@ -63,7 +45,6 @@ namespace VocabMaster.API.Controllers
         {
             try
             {
-                // Get UserId from Claims
                 var userId = GetUserIdFromClaims();
                 if (userId <= 0)
                 {
@@ -71,10 +52,8 @@ namespace VocabMaster.API.Controllers
                     return Unauthorized(new { message = "Invalid user authentication" });
                 }
 
-                // check if cache is disabled
                 bool skipCache = Request.Query.ContainsKey("t");
 
-                // Try to get from cache first (only if not skipping cache)
                 string cacheKey = $"{LearnedWordsListCacheKey}{userId}";
                 if (!skipCache && _cache != null && _cache.TryGetValue(cacheKey, out List<LearnedWordDto> cachedWords))
                 {
@@ -82,21 +61,17 @@ namespace VocabMaster.API.Controllers
                     return Ok(cachedWords);
                 }
 
-                // Get learned words
                 _logger.LogInformation("Getting learned words for user {UserId}", userId);
-                var learnedWords = await _vocabularyService.GetUserLearnedVocabularies(userId);
+                var learnedWords = await _learnedWordService.GetUserLearnedVocabularies(userId);
 
-                // if no words, return empty list instead of error
                 if (learnedWords == null)
                 {
                     _logger.LogInformation("No learned words found for user {UserId}", userId);
                     return Ok(new List<LearnedWordDto>());
                 }
 
-                // Convert to response DTOs using AutoMapper
                 var response = _mapper.Map<List<LearnedWordDto>>(learnedWords);
 
-                // Cache the result (only if not skipping cache)
                 if (!skipCache && _cache != null)
                 {
                     var cacheOptions = new MemoryCacheEntryOptions()
@@ -111,20 +86,10 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading learned words");
-                // return empty list instead of error 500 to avoid client error
                 return Ok(new List<LearnedWordDto>());
             }
         }
 
-        /// <summary>
-        /// Gets details of a specific learned word
-        /// </summary>
-        /// <param name="id">ID of the learned word</param>
-        /// <returns>Detailed information about the learned word</returns>
-        /// <response code="200">Returns the learned word details</response>
-        /// <response code="401">If the user is not authenticated</response>
-        /// <response code="404">If the word is not found</response>
-        /// <response code="500">If an error occurs during processing</response>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(VocabularyResponseDto), 200)]
         [ProducesResponseType(typeof(object), 401)]
@@ -134,7 +99,6 @@ namespace VocabMaster.API.Controllers
         {
             try
             {
-                // Get UserId from Claims
                 var userId = GetUserIdFromClaims();
                 if (userId <= 0)
                 {
@@ -142,22 +106,18 @@ namespace VocabMaster.API.Controllers
                     return Unauthorized(new { message = "Invalid user authentication" });
                 }
 
-                // Get the learned word
-                var learnedWord = await _vocabularyService.GetLearnedWordById(userId, id);
+                var learnedWord = await _learnedWordService.GetLearnedWordById(userId, id);
                 if (learnedWord == null)
                 {
                     return NotFound(new { message = "Learned word not found" });
                 }
 
-                // Get detailed information about the word
-                var wordDetails = await _dictionaryService.GetWordDefinition(learnedWord.Word);
+                var wordDetails = await _dictionaryLookupService.GetWordDefinition(learnedWord.Word);
                 if (wordDetails == null)
                 {
-                    // Return basic information if detailed information is not available
                     return Ok(_mapper.Map<LearnedWordDto>(learnedWord));
                 }
 
-                // Convert to vocabulary response
                 var response = VocabularyResponseDto.FromDictionaryResponse(wordDetails, learnedWord.Id, true);
 
                 return Ok(response);
@@ -169,15 +129,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Adds a word to the user's learned words list
-        /// </summary>
-        /// <param name="request">Request containing the word to add</param>
-        /// <returns>Result of the operation</returns>
-        /// <response code="200">If the word was added successfully</response>
-        /// <response code="400">If the request is invalid or the word is already learned</response>
-        /// <response code="401">If the user is not authenticated</response>
-        /// <response code="500">If an error occurs during processing</response>
         [HttpPost]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]
@@ -190,7 +141,6 @@ namespace VocabMaster.API.Controllers
                 return BadRequest(new { message = "Word cannot be empty" });
             }
 
-            // Get UserId from Claims
             var userId = GetUserIdFromClaims();
             if (userId <= 0)
             {
@@ -201,11 +151,10 @@ namespace VocabMaster.API.Controllers
             try
             {
                 _logger.LogInformation("Adding word '{Word}' to learned list for user {UserId}", request.Word, userId);
-                var result = await _vocabularyService.MarkWordAsLearned(userId, request.Word.Trim());
+                var result = await _learnedWordService.MarkWordAsLearned(userId, request.Word.Trim());
 
                 if (result.Success)
                 {
-                    // Invalidate cache
                     InvalidateCache(userId);
 
                     return Ok(new
@@ -226,16 +175,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Removes a learned word by its ID
-        /// </summary>
-        /// <param name="id">ID of the learned word to remove</param>
-        /// <returns>Result of the operation</returns>
-        /// <response code="200">If the word was removed successfully</response>
-        /// <response code="400">If the ID is invalid</response>
-        /// <response code="401">If the user is not authenticated</response>
-        /// <response code="404">If the word is not found or doesn't belong to the user</response>
-        /// <response code="500">If an error occurs during processing</response>
         [HttpDelete("{id}")]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]
@@ -249,7 +188,6 @@ namespace VocabMaster.API.Controllers
                 return BadRequest(new { message = "Invalid word ID" });
             }
 
-            // Get UserId from Claims
             var userId = GetUserIdFromClaims();
             if (userId <= 0)
             {
@@ -260,13 +198,11 @@ namespace VocabMaster.API.Controllers
             try
             {
                 _logger.LogInformation("Removing learned word with ID {WordId} for user {UserId}", id, userId);
-                var result = await _vocabularyService.RemoveLearnedWordById(userId, id);
+                var result = await _learnedWordService.RemoveLearnedWordById(userId, id);
 
                 if (result)
                 {
-                    // Invalidate cache
                     InvalidateCache(userId);
-
                     return Ok(new { success = true });
                 }
                 else
@@ -281,10 +217,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Gets the user ID from the claims principal
-        /// </summary>
-        /// <returns>User ID or 0 if not found or invalid</returns>
         private int GetUserIdFromClaims()
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier) ??
@@ -299,10 +231,6 @@ namespace VocabMaster.API.Controllers
             return 0;
         }
 
-        /// <summary>
-        /// Invalidates the user's cache
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
         private void InvalidateCache(int userId)
         {
             if (_cache != null)
