@@ -42,13 +42,17 @@ const QuizPage: React.FC = () => {
     setResult(null);
 
     try {
-      // Get an uncompleted question instead of a random question
       const questionData = await quizService.getRandomUncompletedQuestion();
+      if (!questionData) {
+        throw new Error('Không nhận được dữ liệu câu hỏi từ server');
+      }
       setQuestion(questionData);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching quiz question:', error);
-      setError(MESSAGES.ERROR_QUIZ_FETCH);
-      showToast(MESSAGES.ERROR_QUIZ_FETCH, 'danger');
+      // Hiển thị thông báo lỗi cụ thể hơn
+      const errorMessage = error.response?.data?.message || MESSAGES.ERROR_QUIZ_FETCH;
+      setError(errorMessage);
+      showToast(errorMessage, 'danger');
     } finally {
       setLoading(false);
     }

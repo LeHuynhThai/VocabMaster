@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using VocabMaster.Core.DTOs;
-using VocabMaster.Core.Interfaces.Services;
+using VocabMaster.Core.Interfaces.Services.Quiz;
 
 namespace VocabMaster.API.Controllers
 {
@@ -11,73 +11,85 @@ namespace VocabMaster.API.Controllers
     [Authorize]
     public class QuizController : ControllerBase
     {
-        private readonly IQuizService _quizService;
+        private readonly IQuizQuestionService _quizQuestionService;
+        private readonly IQuizAnswerService _quizAnswerService;
+        private readonly IQuizProgressService _quizProgressService;
         private readonly ILogger<QuizController> _logger;
 
         public QuizController(
-            IQuizService quizService,
+            IQuizQuestionService quizQuestionService,
+            IQuizAnswerService quizAnswerService,
+            IQuizProgressService quizProgressService,
             ILogger<QuizController> logger)
         {
-            _quizService = quizService;
-            _logger = logger;
+            _quizQuestionService = quizQuestionService ?? throw new ArgumentNullException(nameof(quizQuestionService));
+            _quizAnswerService = quizAnswerService ?? throw new ArgumentNullException(nameof(quizAnswerService));
+            _quizProgressService = quizProgressService ?? throw new ArgumentNullException(nameof(quizProgressService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        /// <summary>
-        /// Gets a random quiz question
-        /// </summary>
-        /// <returns>Random quiz question</returns>
         [HttpGet("random")]
         public async Task<IActionResult> GetRandomQuestion()
         {
             try
             {
-                var question = await _quizService.GetRandomQuestion();
+                _logger.LogInformation("Getting random quiz question");
+                
+                var question = await _quizQuestionService.GetRandomQuestion();
 
                 if (question == null)
                 {
-                    return NotFound(new { message = "Không tìm thấy câu hỏi nào" });
+                    _logger.LogWarning("No quiz questions available");
+                    return NotFound(new { 
+                        error = "question_not_found", 
+                        message = "Không tìm thấy câu hỏi nào. Vui lòng thêm câu hỏi vào hệ thống." 
+                    });
                 }
 
+                _logger.LogInformation("Successfully retrieved random question: {QuestionId}", question.Id);
                 return Ok(question);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting random quiz question");
-                return StatusCode(500, new { message = "Đã xảy ra lỗi khi tải câu hỏi" });
+                _logger.LogError(ex, "Unhandled error getting random quiz question: {Message}", ex.Message);
+                return StatusCode(500, new { 
+                    error = "server_error", 
+                    message = "Đã xảy ra lỗi khi tải câu hỏi. Vui lòng thử lại sau.",
+                    details = ex.Message 
+                });
             }
         }
 
-        /// <summary>
-        /// Gets a random uncompleted quiz question for the current user
-        /// </summary>
-        /// <returns>Random uncompleted quiz question</returns>
-        [HttpGet("random-uncompleted")]
+        [HttpGet("uncompleted")]
         public async Task<IActionResult> GetRandomUncompletedQuestion()
         {
             try
             {
-                // Xử lý trường hợp không có userId
                 var userId = GetUserIdSafe();
                 if (userId == null)
                 {
-                    // Nếu không lấy được ID người dùng, trả về câu hỏi ngẫu nhiên thông thường
                     _logger.LogWarning("User ID not found, returning random question instead");
-                    var question = await _quizService.GetRandomQuestion();
+                    var question = await _quizQuestionService.GetRandomQuestion();
 
                     if (question == null)
                     {
-                        return NotFound(new { message = "Không tìm thấy câu hỏi nào" });
+                        return NotFound(new { 
+                            error = "question_not_found", 
+                            message = "Không tìm thấy câu hỏi nào" 
+                        });
                     }
 
                     return Ok(question);
                 }
 
-                // Trường hợp có userId
-                var uncompletedQuestion = await _quizService.GetRandomUncompletedQuestion(userId.Value);
+                var uncompletedQuestion = await _quizQuestionService.GetRandomUncompletedQuestion(userId.Value);
 
                 if (uncompletedQuestion == null)
                 {
-                    return NotFound(new { message = "Không tìm thấy câu hỏi nào" });
+                    return NotFound(new { 
+                        error = "question_not_found", 
+                        message = "Không tìm thấy câu hỏi nào" 
+                    });
                 }
 
                 return Ok(uncompletedQuestion);
@@ -85,61 +97,63 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting random uncompleted quiz question");
-                return StatusCode(500, new { message = "Đã xảy ra lỗi khi tải câu hỏi" });
+                return StatusCode(500, new { 
+                    error = "question_error", 
+                    message = "Đã xảy ra lỗi khi tải câu hỏi",
+                    details = ex.Message 
+                });
             }
         }
 
-        /// <summary>
-        /// Checks the answer to a quiz question
-        /// </summary>
-        /// <param name="quizAnswerDto">The answer to check</param>
-        /// <returns>Result of the answer check</returns>
-        [HttpPost("check-answer")]
+        [HttpPost("check")]
         public async Task<IActionResult> CheckAnswer([FromBody] QuizAnswerDto quizAnswerDto)
         {
             try
             {
                 if (quizAnswerDto == null)
                 {
-                    return BadRequest(new { message = "Dữ liệu câu trả lời không hợp lệ" });
+                    return BadRequest(new { 
+                        error = "invalid_input", 
+                        message = "Dữ liệu câu trả lời không hợp lệ" 
+                    });
                 }
 
-                var result = await _quizService.CheckAnswer(quizAnswerDto.QuestionId, quizAnswerDto.SelectedAnswer);
+                var result = await _quizAnswerService.CheckAnswer(quizAnswerDto.QuestionId, quizAnswerDto.SelectedAnswer);
                 return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error checking quiz answer");
-                return StatusCode(500, new { message = "Đã xảy ra lỗi khi kiểm tra câu trả lời" });
+                return StatusCode(500, new { 
+                    error = "check_error", 
+                    message = "Đã xảy ra lỗi khi kiểm tra câu trả lời",
+                    details = ex.Message 
+                });
             }
         }
 
-        /// <summary>
-        /// Checks the answer to a quiz question and marks it as completed if correct
-        /// </summary>
-        /// <param name="quizAnswerDto">The answer to check</param>
-        /// <returns>Result of the answer check</returns>
-        [HttpPost("check-answer-and-complete")]
+        [HttpPost("check-complete")]
         public async Task<IActionResult> CheckAnswerAndMarkCompleted([FromBody] QuizAnswerDto quizAnswerDto)
         {
             try
             {
                 if (quizAnswerDto == null)
                 {
-                    return BadRequest(new { message = "Dữ liệu câu trả lời không hợp lệ" });
+                    return BadRequest(new { 
+                        error = "invalid_input", 
+                        message = "Dữ liệu câu trả lời không hợp lệ" 
+                    });
                 }
 
-                // Xử lý trường hợp không có userId
                 var userId = GetUserIdSafe();
                 if (userId == null)
                 {
-                    // Nếu không lấy được ID người dùng, chỉ kiểm tra câu trả lời mà không đánh dấu
                     _logger.LogWarning("User ID not found, checking answer without marking completed");
-                    var resultUserId = await _quizService.CheckAnswer(quizAnswerDto.QuestionId, quizAnswerDto.SelectedAnswer);
+                    var resultUserId = await _quizAnswerService.CheckAnswer(quizAnswerDto.QuestionId, quizAnswerDto.SelectedAnswer);
                     return Ok(resultUserId);
                 }
 
-                var result = await _quizService.CheckAnswerAndMarkCompleted(
+                var result = await _quizAnswerService.CheckAnswerAndMarkCompleted(
                     quizAnswerDto.QuestionId,
                     quizAnswerDto.SelectedAnswer,
                     userId.Value);
@@ -149,56 +163,52 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error checking and marking quiz answer");
-                return StatusCode(500, new { message = "Đã xảy ra lỗi khi kiểm tra câu trả lời" });
+                return StatusCode(500, new { 
+                    error = "check_error", 
+                    message = "Đã xảy ra lỗi khi kiểm tra câu trả lời",
+                    details = ex.Message 
+                });
             }
         }
 
-        /// <summary>
-        /// Gets all completed quiz questions for the current user
-        /// </summary>
-        /// <returns>List of completed quiz questions</returns>
         [HttpGet("completed")]
         public async Task<IActionResult> GetCompletedQuizzes()
         {
             try
             {
-                // Xử lý trường hợp không có userId
                 var userId = GetUserIdSafe();
                 if (userId == null)
                 {
-                    // Nếu không lấy được ID người dùng, trả về danh sách rỗng
                     _logger.LogWarning("User ID not found, returning empty completed list");
                     return Ok(new List<CompletedQuizDto>());
                 }
 
-                var completedQuizzes = await _quizService.GetCompletedQuizzes(userId.Value);
+                var completedQuizzes = await _quizProgressService.GetCompletedQuizzes(userId.Value);
                 return Ok(completedQuizzes);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting completed quizzes");
-                return StatusCode(500, new { message = "Đã xảy ra lỗi khi tải danh sách câu hỏi đã hoàn thành" });
+                return StatusCode(500, new { 
+                    error = "completed_error", 
+                    message = "Đã xảy ra lỗi khi tải danh sách câu hỏi đã hoàn thành",
+                    details = ex.Message 
+                });
             }
         }
 
-        /// <summary>
-        /// Gets statistics about the current user's quiz progress
-        /// </summary>
-        /// <returns>Quiz statistics</returns>
         [HttpGet("stats")]
         public async Task<IActionResult> GetQuizStatistics()
         {
             try
             {
-                // Xử lý trường hợp không có userId
                 var userId = GetUserIdSafe();
                 if (userId == null)
                 {
-                    // Nếu không lấy được ID người dùng, trả về thống kê mặc định
                     _logger.LogWarning("User ID not found, returning default stats");
                     return Ok(new QuizStatsDto
                     {
-                        TotalQuestions = await _quizService.CountTotalQuestions(),
+                        TotalQuestions = await _quizQuestionService.CountTotalQuestions(),
                         CompletedQuestions = 0,
                         CorrectAnswers = 0,
                         CompletionPercentage = 0,
@@ -206,25 +216,24 @@ namespace VocabMaster.API.Controllers
                     });
                 }
 
-                var stats = await _quizService.GetQuizStatistics(userId.Value);
+                var stats = await _quizProgressService.GetQuizStatistics(userId.Value);
                 return Ok(stats);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting quiz statistics");
-                return StatusCode(500, new { message = "Đã xảy ra lỗi khi tải thống kê trắc nghiệm" });
+                return StatusCode(500, new { 
+                    error = "stats_error", 
+                    message = "Đã xảy ra lỗi khi tải thống kê trắc nghiệm",
+                    details = ex.Message 
+                });
             }
         }
 
-        /// <summary>
-        /// Gets the current user ID from claims safely
-        /// </summary>
-        /// <returns>The current user ID or null if not found</returns>
         private int? GetUserIdSafe()
         {
             try
             {
-                // Kiểm tra nhiều loại claim có thể chứa user id
                 var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)
                               ?? User.Claims.FirstOrDefault(c => c.Type == "userId")
                               ?? User.Claims.FirstOrDefault(c => c.Type == "id")
@@ -235,7 +244,6 @@ namespace VocabMaster.API.Controllers
                     return userId;
                 }
 
-                // Ghi log chi tiết claims hiện có để gỡ lỗi
                 _logger.LogWarning("User ID claim not found or not valid. Available claims: {Claims}",
                     string.Join(", ", User.Claims.Select(c => $"{c.Type}: {c.Value}")));
 
@@ -248,11 +256,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Gets the current user ID from claims
-        /// </summary>
-        /// <returns>The current user ID</returns>
-        /// <exception cref="UnauthorizedAccessException">Thrown when user ID is not found in claims</exception>
         private int GetCurrentUserId()
         {
             var userId = GetUserIdSafe();
