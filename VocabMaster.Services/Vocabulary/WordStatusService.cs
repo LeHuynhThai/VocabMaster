@@ -1,9 +1,5 @@
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services.Vocabulary;
 
@@ -80,4 +76,4 @@ namespace VocabMaster.Services.Vocabulary
             }
         }
     }
-} 
+}

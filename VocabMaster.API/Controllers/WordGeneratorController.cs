@@ -101,27 +101,28 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting random word");
-                return StatusCode(500, new { 
-                    error = "server_error", 
+                return StatusCode(500, new
+                {
+                    error = "server_error",
                     message = "Đã xảy ra lỗi khi lấy từ ngẫu nhiên",
                     details = ex.Message
                 });
             }
         }
 
-        [HttpGet("getnewrandomword")]
+        [HttpGet("newrandomword")]
         [ProducesResponseType(typeof(VocabularyResponseDto), 200)]
         [ProducesResponseType(typeof(object), 401)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> GetNewRandomWord()
+        public async Task<IActionResult> GetRandomWordExcludeLearned()
         {
             try
             {
                 var userId = GetUserIdFromClaims();
                 if (userId <= 0)
                 {
-                    _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
+                    _logger.LogWarning("Invalid user ID from claims when getting random word excluding learned");
                     return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
                 }
 
@@ -130,28 +131,22 @@ namespace VocabMaster.API.Controllers
                 if (_cache != null)
                 {
                     _cache.Remove(cacheKey);
+                    _logger.LogInformation("Cache invalidated for user {UserId}", userId);
                 }
 
-                _logger.LogInformation("Getting new random word for user {UserId}", userId);
+                _logger.LogInformation("Getting random word excluding learned for user {UserId}", userId);
                 var randomWord = await _randomWordService.GetRandomWordExcludeLearned(userId);
 
                 if (randomWord == null)
                 {
-                    _logger.LogInformation("No random word found for user {UserId}", userId);
+                    _logger.LogInformation("No random word found for user {UserId} - all words may be learned", userId);
                     return NotFound(new { message = "No word found or all words have been learned" });
                 }
 
                 bool isLearned = await _wordStatusService.IsWordLearned(userId, randomWord.Word);
 
-                _logger.LogInformation("New random word {Word} has Vietnamese translation: {HasVietnamese}",
-                    randomWord.Word, !string.IsNullOrEmpty(randomWord.Vietnamese) ? "Yes" : "No");
-
                 // Convert to simplified response
                 var response = VocabularyResponseDto.FromDictionaryResponse(randomWord, 0, isLearned, randomWord.Vietnamese);
-
-                // Debug response
-                _logger.LogInformation("Response for new word {Word} has Vietnamese: {HasVietnamese}",
-                    response.Word, !string.IsNullOrEmpty(response.Vietnamese) ? "Yes" : "No");
 
                 // Cache the result
                 if (_cache != null)
@@ -161,16 +156,18 @@ namespace VocabMaster.API.Controllers
                         .SetPriority(CacheItemPriority.Normal);
 
                     _cache.Set(cacheKey, response, cacheOptions);
+                    _logger.LogInformation("Random word cached for user {UserId}", userId);
                 }
 
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting new random word");
-                return StatusCode(500, new { 
-                    error = "server_error", 
-                    message = "Đã xảy ra lỗi khi lấy từ ngẫu nhiên mới",
+                _logger.LogError(ex, "Error getting random word excluding learned for user ID {UserId}", GetUserIdFromClaims());
+                return StatusCode(500, new
+                {
+                    error = "server_error",
+                    message = "Đã xảy ra lỗi khi lấy từ ngẫu nhiên chưa học",
                     details = ex.Message
                 });
             }
@@ -190,9 +187,10 @@ namespace VocabMaster.API.Controllers
                 if (definition == null)
                 {
                     _logger.LogWarning("No definition found for word: {Word}", word);
-                    return NotFound(new { 
-                        error = "word_not_found", 
-                        message = $"Không tìm thấy định nghĩa cho từ: {word}" 
+                    return NotFound(new
+                    {
+                        error = "word_not_found",
+                        message = $"Không tìm thấy định nghĩa cho từ: {word}"
                     });
                 }
 
@@ -206,8 +204,9 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error looking up definition for word: {Word}", word);
-                return StatusCode(500, new { 
-                    error = "lookup_error", 
+                return StatusCode(500, new
+                {
+                    error = "lookup_error",
                     message = $"Đã xảy ra lỗi khi tra cứu định nghĩa cho từ: {word}",
                     details = ex.Message
                 });
@@ -236,8 +235,9 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error checking if word {Word} is learned", word);
-                return StatusCode(500, new { 
-                    error = "check_error", 
+                return StatusCode(500, new
+                {
+                    error = "check_error",
                     message = $"Đã xảy ra lỗi khi kiểm tra từ {word} đã học hay chưa",
                     details = ex.Message
                 });
@@ -253,9 +253,10 @@ namespace VocabMaster.API.Controllers
         {
             if (string.IsNullOrWhiteSpace(word))
             {
-                return BadRequest(new { 
-                    error = "invalid_input", 
-                    message = "Từ không được để trống" 
+                return BadRequest(new
+                {
+                    error = "invalid_input",
+                    message = "Từ không được để trống"
                 });
             }
 
@@ -283,17 +284,19 @@ namespace VocabMaster.API.Controllers
                 }
                 else
                 {
-                    return BadRequest(new { 
-                        error = "mark_error", 
-                        message = result.ErrorMessage ?? "Không thể đánh dấu từ đã học" 
+                    return BadRequest(new
+                    {
+                        error = "mark_error",
+                        message = result.ErrorMessage ?? "Không thể đánh dấu từ đã học"
                     });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error adding word {Word} to learned list", word);
-                return StatusCode(500, new { 
-                    error = "add_error", 
+                return StatusCode(500, new
+                {
+                    error = "add_error",
                     message = $"Đã xảy ra lỗi khi thêm từ {word} vào danh sách từ đã học",
                     details = ex.Message
                 });

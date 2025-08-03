@@ -13,7 +13,6 @@ namespace VocabMaster.Data
         public DbSet<User> Users { get; set; }
         public DbSet<LearnedWord> LearnedVocabularies { get; set; }
         public DbSet<Vocabulary> Vocabularies { get; set; }
-        public DbSet<DictionaryDetails> DictionaryDetails { get; set; }
         public DbSet<QuizQuestion> QuizQuestions { get; set; }
         public DbSet<CompletedQuiz> CompletedQuizzes { get; set; }
 
@@ -33,9 +32,9 @@ namespace VocabMaster.Data
                 .HasForeignKey(lv => lv.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Create unique index for Word in DictionaryDetails
-            builder.Entity<DictionaryDetails>()
-                .HasIndex(dd => dd.Word)
+            // Create unique index for Word in Vocabulary
+            builder.Entity<Vocabulary>()
+                .HasIndex(v => v.Word)
                 .IsUnique();
 
             // Create composite index for UserId and QuizQuestionId in CompletedQuiz

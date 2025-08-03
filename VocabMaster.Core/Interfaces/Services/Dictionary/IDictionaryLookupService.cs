@@ -1,4 +1,5 @@
 ﻿using VocabMaster.Core.DTOs;
+using VocabMaster.Core.Interfaces.Services.Dictionary;
 
 namespace VocabMaster.Core.Interfaces.Services.Dictionary
 {

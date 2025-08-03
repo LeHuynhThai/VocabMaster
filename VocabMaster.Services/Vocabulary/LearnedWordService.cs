@@ -1,7 +1,4 @@
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Logging;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
@@ -139,4 +136,4 @@ namespace VocabMaster.Services.Vocabulary
             }
         }
     }
-} 
+}

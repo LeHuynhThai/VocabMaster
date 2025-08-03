@@ -1,7 +1,5 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Threading.Tasks;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services.Quiz;
@@ -114,4 +112,4 @@ namespace VocabMaster.Services.Quiz
             }
         }
     }
-} 
+}

@@ -48,9 +48,10 @@ namespace VocabMaster.API.Controllers
                 var userId = GetUserIdFromClaims();
                 if (userId <= 0)
                 {
-                    return Unauthorized(new { 
-                        error = "auth_error", 
-                        message = "Không thể xác thực người dùng" 
+                    return Unauthorized(new
+                    {
+                        error = "auth_error",
+                        message = "Không thể xác thực người dùng"
                     });
                 }
 
@@ -89,8 +90,9 @@ namespace VocabMaster.API.Controllers
             {
                 _logger.LogError(ex, "Error loading learned words");
                 // Thay vì trả về danh sách rỗng, trả về lỗi với thông tin chi tiết
-                return StatusCode(500, new { 
-                    error = "load_error", 
+                return StatusCode(500, new
+                {
+                    error = "load_error",
                     message = "Đã xảy ra lỗi khi tải danh sách từ đã học",
                     details = ex.Message
                 });
@@ -109,18 +111,20 @@ namespace VocabMaster.API.Controllers
                 var userId = GetUserIdFromClaims();
                 if (userId <= 0)
                 {
-                    return Unauthorized(new { 
-                        error = "auth_error", 
-                        message = "Không thể xác thực người dùng" 
+                    return Unauthorized(new
+                    {
+                        error = "auth_error",
+                        message = "Không thể xác thực người dùng"
                     });
                 }
 
                 var learnedWord = await _learnedWordService.GetLearnedWordById(userId, id);
                 if (learnedWord == null)
                 {
-                    return NotFound(new { 
-                        error = "word_not_found", 
-                        message = $"Không tìm thấy từ đã học với ID: {id}" 
+                    return NotFound(new
+                    {
+                        error = "word_not_found",
+                        message = $"Không tìm thấy từ đã học với ID: {id}"
                     });
                 }
 
@@ -137,8 +141,9 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting learned word details");
-                return StatusCode(500, new { 
-                    error = "details_error", 
+                return StatusCode(500, new
+                {
+                    error = "details_error",
                     message = $"Đã xảy ra lỗi khi lấy chi tiết từ đã học với ID: {id}",
                     details = ex.Message
                 });
@@ -154,18 +159,20 @@ namespace VocabMaster.API.Controllers
         {
             if (request == null || string.IsNullOrWhiteSpace(request.Word))
             {
-                return BadRequest(new { 
-                    error = "invalid_input", 
-                    message = "Từ không được để trống" 
+                return BadRequest(new
+                {
+                    error = "invalid_input",
+                    message = "Từ không được để trống"
                 });
             }
 
             var userId = GetUserIdFromClaims();
             if (userId <= 0)
             {
-                return Unauthorized(new { 
-                    error = "auth_error", 
-                    message = "Không thể xác thực người dùng" 
+                return Unauthorized(new
+                {
+                    error = "auth_error",
+                    message = "Không thể xác thực người dùng"
                 });
             }
 
@@ -186,17 +193,19 @@ namespace VocabMaster.API.Controllers
                 }
                 else
                 {
-                    return BadRequest(new { 
-                        error = "mark_error", 
-                        message = result.ErrorMessage ?? "Không thể đánh dấu từ đã học. Vui lòng thử lại." 
+                    return BadRequest(new
+                    {
+                        error = "mark_error",
+                        message = result.ErrorMessage ?? "Không thể đánh dấu từ đã học. Vui lòng thử lại."
                     });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error marking word as learned: {Word}", request.Word);
-                return StatusCode(500, new { 
-                    error = "add_error", 
+                return StatusCode(500, new
+                {
+                    error = "add_error",
                     message = $"Đã xảy ra lỗi khi thêm từ {request.Word} vào danh sách từ đã học",
                     details = ex.Message
                 });
@@ -213,18 +222,20 @@ namespace VocabMaster.API.Controllers
         {
             if (id <= 0)
             {
-                return BadRequest(new { 
-                    error = "invalid_id", 
-                    message = "ID từ không hợp lệ" 
+                return BadRequest(new
+                {
+                    error = "invalid_id",
+                    message = "ID từ không hợp lệ"
                 });
             }
 
             var userId = GetUserIdFromClaims();
             if (userId <= 0)
             {
-                return Unauthorized(new { 
-                    error = "auth_error", 
-                    message = "Không thể xác thực người dùng" 
+                return Unauthorized(new
+                {
+                    error = "auth_error",
+                    message = "Không thể xác thực người dùng"
                 });
             }
 
@@ -240,17 +251,19 @@ namespace VocabMaster.API.Controllers
                 }
                 else
                 {
-                    return NotFound(new { 
-                        error = "word_not_found", 
-                        message = $"Không tìm thấy từ đã học với ID: {id} hoặc bạn không có quyền xóa nó" 
+                    return NotFound(new
+                    {
+                        error = "word_not_found",
+                        message = $"Không tìm thấy từ đã học với ID: {id} hoặc bạn không có quyền xóa nó"
                     });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error removing learned word: {Id}", id);
-                return StatusCode(500, new { 
-                    error = "delete_error", 
+                return StatusCode(500, new
+                {
+                    error = "delete_error",
                     message = $"Đã xảy ra lỗi khi xóa từ đã học với ID: {id}",
                     details = ex.Message
                 });

@@ -5,17 +5,21 @@ using System.Text;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Core.Interfaces.Services.Dictionary;
+using VocabMaster.Core.Interfaces.Services.Quiz;
+using VocabMaster.Core.Interfaces.Services.Translation;
 using VocabMaster.Core.Interfaces.Services.Vocabulary;
 using VocabMaster.Data;
 using VocabMaster.Data.Repositories;
 using VocabMaster.Data.Seed;
-using VocabMaster.Services;
 using VocabMaster.Services.Authentication;
 using VocabMaster.Services.Dictionary;
-using VocabMaster.Services.Vocabulary;
-using VocabMaster.Core.DTOs;
-using VocabMaster.Core.Interfaces.Services.Quiz;
 using VocabMaster.Services.Quiz;
+using VocabMaster.Services.Translation;
+using VocabMaster.Services.Vocabulary;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using VocabMaster.Core.DTOs;
+using VocabMaster.Core.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -137,10 +141,8 @@ builder.Services.AddHttpClient("GoogleApi", client =>
 builder.Services.AddMemoryCache();
 
 // services for dictionary
-builder.Services.AddScoped<IDictionaryCacheService, DictionaryCacheService>();
 builder.Services.AddScoped<IDictionaryLookupService, DictionaryLookupService>();
-builder.Services.AddScoped<IRandomWordService, RandomWordService>();
-
+builder.Services.AddScoped<IDictionaryCacheService, DictionaryCacheService>();
 
 // services for vocabulary
 builder.Services.AddScoped<IWordStatusService, WordStatusService>();
@@ -150,6 +152,23 @@ builder.Services.AddScoped<ILearnedWordService, LearnedWordService>();
 builder.Services.AddScoped<IQuizQuestionService, QuizQuestionService>();
 builder.Services.AddScoped<IQuizAnswerService, QuizAnswerService>();
 builder.Services.AddScoped<IQuizProgressService, QuizProgressService>();
+
+// add HttpClient for Translation API
+builder.Services.AddHttpClient("TranslationApi", client =>
+{
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// services for translation
+builder.Services.AddScoped<ITranslationApiService, TranslationApiService>();
+builder.Services.AddScoped<IFallbackTranslationService, FallbackTranslationService>();
+builder.Services.AddScoped<ITranslationService, TranslationService>();
+builder.Services.AddScoped<IVocabularyTranslationService, VocabularyTranslationService>();
+
+// Add RandomWordService
+builder.Services.AddScoped<IRandomWordService, RandomWordService>();
+
 
 var app = builder.Build();
 

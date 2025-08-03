@@ -4,11 +4,11 @@ namespace VocabMaster.Core.Interfaces.Repositories
 {
     public interface IDictionaryDetailsRepo
     {
-        Task<DictionaryDetails> GetByWord(string word);
+        Task<Vocabulary> GetByWord(string word);
 
-        Task<DictionaryDetails> AddOrUpdate(DictionaryDetails details);
+        Task<Vocabulary> AddOrUpdate(Vocabulary details);
 
-        Task<List<DictionaryDetails>> GetAll();
+        Task<List<Vocabulary>> GetAll();
 
         Task<bool> Exists(string word);
     }

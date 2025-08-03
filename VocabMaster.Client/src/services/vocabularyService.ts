@@ -19,7 +19,7 @@ const vocabularyService = {
    * @returns Random word data
    */
   getNewRandomWord: async (): Promise<Vocabulary> => {
-    const response = await api.get('/api/wordgenerator/getnewrandomword');
+    const response = await api.get('/api/wordgenerator/newrandomword');
     return response.data;
   },
 

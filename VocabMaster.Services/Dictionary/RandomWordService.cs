@@ -40,7 +40,39 @@ namespace VocabMaster.Services.Dictionary
                 }
 
                 _logger.LogInformation("Found random word: {Word}", vocabulary.Word);
-                return await _dictionaryLookupService.GetWordDefinitionFromCache(vocabulary.Word);
+                
+                try 
+                {
+                    var response = await _dictionaryLookupService.GetWordDefinitionFromCache(vocabulary.Word);
+                    if (response == null)
+                    {
+                        _logger.LogWarning("GetWordDefinitionFromCache returned null for word: {Word}, trying from direct API...", vocabulary.Word);
+                        response = await _dictionaryLookupService.GetWordDefinition(vocabulary.Word);
+                    }
+                    
+                    if (response == null)
+                    {
+                        _logger.LogWarning("Both cache and direct API returned null for word: {Word}. Creating basic response...", vocabulary.Word);
+                        // Create a minimal response if both cache and API fail
+                        response = new DictionaryResponseDto 
+                        {
+                            Word = vocabulary.Word,
+                            Vietnamese = vocabulary.Vietnamese
+                        };
+                    }
+                    
+                    return response;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error getting word definition for {Word}, creating basic response", vocabulary.Word);
+                    // Return basic info even if lookup fails
+                    return new DictionaryResponseDto 
+                    {
+                        Word = vocabulary.Word,
+                        Vietnamese = vocabulary.Vietnamese
+                    };
+                }
             }
             catch (Exception ex)
             {
@@ -53,6 +85,7 @@ namespace VocabMaster.Services.Dictionary
         {
             try
             {
+                _logger.LogInformation("Getting random word excluding learned ones for user {UserId}", userId);
                 // First try to get a word excluding learned ones
                 var result = await TryGetRandomWordExcludeLearned(userId);
 
@@ -80,7 +113,13 @@ namespace VocabMaster.Services.Dictionary
                 _logger.LogInformation("Getting learned words for user {UserId}", userId);
                 var learnedVocabularies = await _learnedWordRepository.GetByUserId(userId);
 
-                if (learnedVocabularies == null || !learnedVocabularies.Any())
+                if (learnedVocabularies == null)
+                {
+                    _logger.LogWarning("learnedVocabularies is null for user {UserId}", userId);
+                    learnedVocabularies = new List<Core.Entities.LearnedWord>();
+                }
+                
+                if (!learnedVocabularies.Any())
                 {
                     _logger.LogInformation("No learned vocabularies found for user {UserId}, returning any random word", userId);
                     return await GetRandomWord();
@@ -104,7 +143,44 @@ namespace VocabMaster.Services.Dictionary
                         if (randomVocab != null && !learnedWords.Contains(randomVocab.Word.ToLowerInvariant()))
                         {
                             _logger.LogInformation("Found unlearned random word on attempt {Attempt}: {Word}", attempt + 1, randomVocab.Word);
-                            return await _dictionaryLookupService.GetWordDefinitionFromCache(randomVocab.Word);
+                            try
+                            {
+                                var response = await _dictionaryLookupService.GetWordDefinitionFromCache(randomVocab.Word);
+                                if (response != null)
+                                {
+                                    return response;
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("GetWordDefinitionFromCache returned null for word: {Word}, trying direct API...", randomVocab.Word);
+                                    response = await _dictionaryLookupService.GetWordDefinition(randomVocab.Word);
+                                    
+                                    if (response != null)
+                                    {
+                                        return response;
+                                    }
+                                    else
+                                    {
+                                        _logger.LogWarning("Both cache and API failed for word: {Word}, creating basic response", randomVocab.Word);
+                                        // Create a minimal response if both cache and API fail
+                                        return new DictionaryResponseDto
+                                        {
+                                            Word = randomVocab.Word,
+                                            Vietnamese = randomVocab.Vietnamese
+                                        };
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Error getting definition for word {Word}, creating basic response", randomVocab.Word);
+                                // Return basic info even if lookup fails
+                                return new DictionaryResponseDto
+                                {
+                                    Word = randomVocab.Word,
+                                    Vietnamese = randomVocab.Vietnamese
+                                };
+                            }
                         }
                     }
 
@@ -113,7 +189,37 @@ namespace VocabMaster.Services.Dictionary
                 }
 
                 _logger.LogInformation("Found random unlearned word: {Word}", vocabulary.Word);
-                return await _dictionaryLookupService.GetWordDefinitionFromCache(vocabulary.Word);
+                try
+                {
+                    var response = await _dictionaryLookupService.GetWordDefinitionFromCache(vocabulary.Word);
+                    if (response == null)
+                    {
+                        _logger.LogWarning("GetWordDefinitionFromCache returned null for word: {Word}, trying direct API...", vocabulary.Word);
+                        response = await _dictionaryLookupService.GetWordDefinition(vocabulary.Word);
+                        
+                        if (response == null)
+                        {
+                            _logger.LogWarning("Both cache and API failed for word: {Word}, creating basic response", vocabulary.Word);
+                            // Create a minimal response if both cache and API fail
+                            return new DictionaryResponseDto 
+                            {
+                                Word = vocabulary.Word,
+                                Vietnamese = vocabulary.Vietnamese
+                            };
+                        }
+                    }
+                    return response;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error getting definition for word {Word}, creating basic response", vocabulary.Word);
+                    // Return basic info even if lookup fails
+                    return new DictionaryResponseDto 
+                    {
+                        Word = vocabulary.Word,
+                        Vietnamese = vocabulary.Vietnamese
+                    };
+                }
             }
             catch (Exception ex)
             {
