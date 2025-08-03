@@ -39,8 +39,7 @@ namespace VocabMaster.Services.Dictionary
                     return null;
                 }
 
-                _logger.LogInformation("Found random word: {Word}", vocabulary.Word);
-                
+                // try to get word definition from cache
                 try 
                 {
                     var response = await _dictionaryLookupService.GetWordDefinitionFromCache(vocabulary.Word);
@@ -53,25 +52,15 @@ namespace VocabMaster.Services.Dictionary
                     if (response == null)
                     {
                         _logger.LogWarning("Both cache and direct API returned null for word: {Word}. Creating basic response...", vocabulary.Word);
-                        // Create a minimal response if both cache and API fail
-                        response = new DictionaryResponseDto 
-                        {
-                            Word = vocabulary.Word,
-                            Vietnamese = vocabulary.Vietnamese
-                        };
+                        return null;
                     }
                     
                     return response;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error getting word definition for {Word}, creating basic response", vocabulary.Word);
-                    // Return basic info even if lookup fails
-                    return new DictionaryResponseDto 
-                    {
-                        Word = vocabulary.Word,
-                        Vietnamese = vocabulary.Vietnamese
-                    };
+                    _logger.LogError(ex, "Error getting word definition for {Word}", vocabulary.Word);
+                    return null;
                 }
             }
             catch (Exception ex)

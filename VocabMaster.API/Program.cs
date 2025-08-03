@@ -120,14 +120,6 @@ builder.Services.AddAuthentication(options =>
 // Add Authorization
 builder.Services.AddAuthorization();
 
-// Add HttpClient services
-builder.Services.AddHttpClient("DictionaryApi", client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("DictionaryApiUrl") ??
-                                "https://api.dictionaryapi.dev/api/v2/entries/en/");
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
 
 // Add HttpClient for Google API
 builder.Services.AddHttpClient("GoogleApi", client =>
@@ -139,6 +131,9 @@ builder.Services.AddHttpClient("GoogleApi", client =>
 
 // Add memory caching
 builder.Services.AddMemoryCache();
+
+// Add new TranslationService (replaces old translation services)
+builder.Services.AddScoped<TranslationService>();
 
 // services for dictionary
 builder.Services.AddScoped<IDictionaryLookupService, DictionaryLookupService>();
@@ -153,18 +148,6 @@ builder.Services.AddScoped<IQuizQuestionService, QuizQuestionService>();
 builder.Services.AddScoped<IQuizAnswerService, QuizAnswerService>();
 builder.Services.AddScoped<IQuizProgressService, QuizProgressService>();
 
-// add HttpClient for Translation API
-builder.Services.AddHttpClient("TranslationApi", client =>
-{
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
-
-// services for translation
-builder.Services.AddScoped<ITranslationApiService, TranslationApiService>();
-builder.Services.AddScoped<IFallbackTranslationService, FallbackTranslationService>();
-builder.Services.AddScoped<ITranslationService, TranslationService>();
-builder.Services.AddScoped<IVocabularyTranslationService, VocabularyTranslationService>();
 
 // Add RandomWordService
 builder.Services.AddScoped<IRandomWordService, RandomWordService>();
