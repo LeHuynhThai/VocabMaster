@@ -21,7 +21,7 @@ export const API_ENDPOINTS = {
   LOGOUT: '/api/account/logout',
   CURRENT_USER: '/api/account/currentuser',
   RANDOM_WORD: '/api/wordgenerator/getrandomword',
-  NEW_RANDOM_WORD: '/api/wordgenerator/getnewrandomword',
+  NEW_RANDOM_WORD: '/api/wordgenerator/newrandomword',
   LOOKUP_WORD: '/api/wordgenerator/lookup',
   IS_LEARNED: '/api/wordgenerator/islearned',
   LEARNED_WORDS: '/api/learnedword',

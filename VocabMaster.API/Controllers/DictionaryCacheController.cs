@@ -20,7 +20,7 @@ namespace VocabMaster.API.Controllers
         }
 
         [HttpPost("cache-all")]
-        [Authorize]
+        [AllowAnonymous]
         public async Task<IActionResult> CacheAllVocabularyDefinitions()
         {
             _logger.LogInformation("Starting cache all vocabulary definitions process");

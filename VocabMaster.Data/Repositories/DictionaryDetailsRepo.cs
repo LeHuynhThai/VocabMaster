@@ -28,8 +28,8 @@ namespace VocabMaster.Data.Repositories
         /// Gets dictionary details by word
         /// </summary>
         /// <param name="word">The word to look up</param>
-        /// <returns>Dictionary details or null if not found</returns>
-        public async Task<DictionaryDetails> GetByWord(string word)
+        /// <returns>Vocabulary or null if not found</returns>
+        public async Task<Vocabulary> GetByWord(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
             {
@@ -39,92 +39,92 @@ namespace VocabMaster.Data.Repositories
 
             try
             {
-                _logger.LogInformation("Getting dictionary details for word: {Word}", word);
-                return await _context.DictionaryDetails
-                    .FirstOrDefaultAsync(dd => dd.Word.ToLower() == word.ToLower());
+                _logger.LogInformation("Getting vocabulary details for word: {Word}", word);
+                return await _context.Vocabularies
+                    .FirstOrDefaultAsync(v => v.Word.ToLower() == word.ToLower());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting dictionary details for word: {Word}", word);
+                _logger.LogError(ex, "Error getting vocabulary details for word: {Word}", word);
                 return null;
             }
         }
 
         /// <summary>
-        /// Adds or updates a dictionary details entity
+        /// Adds or updates a vocabulary entity
         /// </summary>
-        /// <param name="details">The dictionary details to add or update</param>
+        /// <param name="details">The vocabulary to add or update</param>
         /// <returns>The added or updated entity</returns>
-        public async Task<DictionaryDetails> AddOrUpdate(DictionaryDetails details)
+        public async Task<Vocabulary> AddOrUpdate(Vocabulary details)
         {
             if (details == null)
             {
-                _logger.LogWarning("Dictionary details parameter is null");
+                _logger.LogWarning("Vocabulary details parameter is null");
                 return null;
             }
 
             try
             {
-                _logger.LogInformation("Adding or updating dictionary details for word: {Word}", details.Word);
+                _logger.LogInformation("Adding or updating vocabulary details for word: {Word}", details.Word);
 
                 // Check if the word already exists
-                var existingDetails = await _context.DictionaryDetails
-                    .FirstOrDefaultAsync(dd => dd.Word.ToLower() == details.Word.ToLower());
+                var existingDetails = await _context.Vocabularies
+                    .FirstOrDefaultAsync(v => v.Word.ToLower() == details.Word.ToLower());
 
                 if (existingDetails != null)
                 {
-                    _logger.LogInformation("Updating existing dictionary details for word: {Word}", details.Word);
+                    _logger.LogInformation("Updating existing vocabulary details for word: {Word}", details.Word);
 
                     // Update existing entry
                     existingDetails.PhoneticsJson = details.PhoneticsJson;
                     existingDetails.MeaningsJson = details.MeaningsJson;
                     existingDetails.UpdatedAt = DateTime.UtcNow;
 
-                    _context.DictionaryDetails.Update(existingDetails);
+                    _context.Vocabularies.Update(existingDetails);
                     await _context.SaveChangesAsync();
 
-                    _logger.LogInformation("Successfully updated dictionary details for word: {Word}", details.Word);
+                    _logger.LogInformation("Successfully updated vocabulary details for word: {Word}", details.Word);
                     return existingDetails;
                 }
                 else
                 {
-                    _logger.LogInformation("Adding new dictionary details for word: {Word}", details.Word);
+                    _logger.LogInformation("Adding new vocabulary details for word: {Word}", details.Word);
 
                     // Add new entry
-                    await _context.DictionaryDetails.AddAsync(details);
+                    await _context.Vocabularies.AddAsync(details);
                     await _context.SaveChangesAsync();
 
-                    _logger.LogInformation("Successfully added dictionary details for word: {Word}", details.Word);
+                    _logger.LogInformation("Successfully added vocabulary details for word: {Word}", details.Word);
                     return details;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding or updating dictionary details for word: {Word}", details.Word);
+                _logger.LogError(ex, "Error adding or updating vocabulary details for word: {Word}", details.Word);
                 return null;
             }
         }
 
         /// <summary>
-        /// Gets all dictionary details
+        /// Gets all vocabulary entries
         /// </summary>
-        /// <returns>List of all dictionary details</returns>
-        public async Task<List<DictionaryDetails>> GetAll()
+        /// <returns>List of all vocabulary entries</returns>
+        public async Task<List<Vocabulary>> GetAll()
         {
             try
             {
-                _logger.LogInformation("Getting all dictionary details");
-                return await _context.DictionaryDetails.ToListAsync();
+                _logger.LogInformation("Getting all vocabulary details");
+                return await _context.Vocabularies.ToListAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting all dictionary details");
-                return new List<DictionaryDetails>();
+                _logger.LogError(ex, "Error getting all vocabulary details");
+                return new List<Vocabulary>();
             }
         }
 
         /// <summary>
-        /// Checks if dictionary details exist for a word
+        /// Checks if vocabulary exists for a word
         /// </summary>
         /// <param name="word">The word to check</param>
         /// <returns>True if details exist, false otherwise</returns>
@@ -138,13 +138,13 @@ namespace VocabMaster.Data.Repositories
 
             try
             {
-                _logger.LogInformation("Checking if dictionary details exist for word: {Word}", word);
-                return await _context.DictionaryDetails
-                    .AnyAsync(dd => dd.Word.ToLower() == word.ToLower());
+                _logger.LogInformation("Checking if vocabulary exists for word: {Word}", word);
+                return await _context.Vocabularies
+                    .AnyAsync(v => v.Word.ToLower() == word.ToLower());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error checking if dictionary details exist for word: {Word}", word);
+                _logger.LogError(ex, "Error checking if vocabulary exists for word: {Word}", word);
                 return false;
             }
         }

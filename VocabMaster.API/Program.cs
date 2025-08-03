@@ -16,6 +16,10 @@ using VocabMaster.Services.Dictionary;
 using VocabMaster.Services.Quiz;
 using VocabMaster.Services.Translation;
 using VocabMaster.Services.Vocabulary;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using VocabMaster.Core.DTOs;
+using VocabMaster.Core.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -137,10 +141,8 @@ builder.Services.AddHttpClient("GoogleApi", client =>
 builder.Services.AddMemoryCache();
 
 // services for dictionary
-builder.Services.AddScoped<IDictionaryCacheService, DictionaryCacheService>();
 builder.Services.AddScoped<IDictionaryLookupService, DictionaryLookupService>();
-builder.Services.AddScoped<IRandomWordService, RandomWordService>();
-
+builder.Services.AddScoped<IDictionaryCacheService, DictionaryCacheService>();
 
 // services for vocabulary
 builder.Services.AddScoped<IWordStatusService, WordStatusService>();
@@ -164,8 +166,9 @@ builder.Services.AddScoped<IFallbackTranslationService, FallbackTranslationServi
 builder.Services.AddScoped<ITranslationService, TranslationService>();
 builder.Services.AddScoped<IVocabularyTranslationService, VocabularyTranslationService>();
 
-// Add IDictionaryApiService
-builder.Services.AddScoped<IDictionaryApiService, DictionaryApiService>();
+// Add RandomWordService
+builder.Services.AddScoped<IRandomWordService, RandomWordService>();
+
 
 var app = builder.Build();
 
