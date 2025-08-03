@@ -1,25 +1,96 @@
-﻿using Microsoft.Extensions.Logging;
-using VocabMaster.Core.Interfaces.Services.Translation;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using VocabMaster.Core.Interfaces.Repositories;
 
 namespace VocabMaster.Services.Translation
 {
-    public class TranslationService : ITranslationService
+    // Service for translating words from English to Vietnamese and updating vocabulary database
+    public class TranslationService
     {
-        private readonly ITranslationApiService _translationApiService;
-        private readonly IFallbackTranslationService _fallbackTranslationService;
+        private readonly HttpClient _httpClient;
+        private readonly IVocabularyRepo _vocabularyRepository;
         private readonly ILogger<TranslationService> _logger;
+        private readonly int _delayBetweenRequestsMs;
 
         public TranslationService(
-            ITranslationApiService translationApiService,
-            IFallbackTranslationService fallbackTranslationService,
-            ILogger<TranslationService> logger)
+            IVocabularyRepo vocabularyRepository,
+            ILogger<TranslationService> logger,
+            IConfiguration configuration = null,
+            HttpClient httpClient = null)
         {
-            _translationApiService = translationApiService ?? throw new ArgumentNullException(nameof(translationApiService));
-            _fallbackTranslationService = fallbackTranslationService ?? throw new ArgumentNullException(nameof(fallbackTranslationService));
+            _vocabularyRepository = vocabularyRepository ?? throw new ArgumentNullException(nameof(vocabularyRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _delayBetweenRequestsMs = configuration?.GetValue<int>("TranslationDelayMs") ?? 1000;
+            _httpClient = httpClient;
         }
 
-        public async Task<string> TranslateWord(string word)
+        // Main method for crawling and updating translations for all untranslated vocabulary
+        public async Task<int> CrawlAllTranslations()
+        {
+            try
+            {
+                _logger.LogInformation("Starting to crawl Vietnamese translations for all vocabulary");
+
+                // Get all vocabularies without Vietnamese translation
+                var vocabularies = await _vocabularyRepository.GetAll();
+                if (vocabularies == null || !vocabularies.Any())
+                {
+                    _logger.LogWarning("No vocabularies found to translate");
+                    return 0;
+                }
+
+                var untranslatedVocabularies = vocabularies.Where(v => string.IsNullOrEmpty(v.Vietnamese)).ToList();
+                _logger.LogInformation("Found {Count} vocabularies without Vietnamese translation", untranslatedVocabularies.Count);
+
+                int successCount = 0;
+                int failCount = 0;
+
+                // Process each vocabulary
+                foreach (var vocabulary in untranslatedVocabularies)
+                {
+                    try
+                    {
+                        // Get translation from Google API 
+                        var translation = await TranslateWordViaApi(vocabulary.Word);
+                        if (string.IsNullOrEmpty(translation))
+                        {
+                            _logger.LogWarning("Could not get translation for word: {Word}, skipping", vocabulary.Word);
+                            failCount++;
+                            continue;
+                        }
+
+                        // Update vocabulary with translation
+                        vocabulary.Vietnamese = translation;
+                        await _vocabularyRepository.Update(vocabulary);
+
+                        successCount++;
+                        _logger.LogInformation("Successfully translated word: {Word} to {Translation}", vocabulary.Word, translation);
+
+                        // Add a delay to avoid overloading the API
+                        await Task.Delay(_delayBetweenRequestsMs);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error processing word: {Word}", vocabulary.Word);
+                        failCount++;
+                    }
+                }
+
+                _logger.LogInformation("Finished crawling translations. Success: {SuccessCount}, Failed: {FailCount}",
+                    successCount, failCount);
+
+                return successCount;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error crawling all translations");
+                return 0;
+            }
+        }
+
+        // Translates a single word from English to Vietnamese using Google Translate API
+        private async Task<string> TranslateWordViaApi(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
             {
@@ -29,32 +100,58 @@ namespace VocabMaster.Services.Translation
 
             try
             {
-                _logger.LogInformation("Translating word: {Word}", word);
+                _logger.LogInformation("Translating word via API: {Word}", word);
 
-                // First try to translate using the API
-                var apiTranslation = await _translationApiService.TranslateWordViaApi(word);
-                if (!string.IsNullOrEmpty(apiTranslation))
+                // Use Google Translate API
+                string apiUrl = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q={Uri.EscapeDataString(word)}";
+                var response = await _httpClient.GetAsync(apiUrl);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    return apiTranslation;
+                    var content = await response.Content.ReadAsStringAsync();
+                    
+                    try
+                    {
+                        // Parse the JSON response from Google Translate
+                        using (JsonDocument document = JsonDocument.Parse(content))
+                        {
+                            var root = document.RootElement;
+                            
+                            // Navigate to the first translation
+                            // Google Translate API returns a nested array structure
+                            if (root.ValueKind == JsonValueKind.Array &&
+                                root[0].ValueKind == JsonValueKind.Array &&
+                                root[0][0].ValueKind == JsonValueKind.Array &&
+                                root[0][0][0].ValueKind == JsonValueKind.String)
+                            {
+                                string translation = root[0][0][0].GetString();
+
+                                if (!string.IsNullOrEmpty(translation))
+                                {
+                                    _logger.LogInformation("Successfully translated word via API: {Word} to {Translation}", word, translation);
+                                    return translation;
+                                }
+                            }
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.LogError(ex, "Error parsing Google Translate response for word: {Word}", word);
+                    }
                 }
 
-                // If API translation fails, use fallback
-                _logger.LogWarning("API translation failed for word: {Word}, using fallback", word);
-                return _fallbackTranslationService.TranslateWordFallback(word);
+                _logger.LogWarning("API translation failed for word: {Word}", word);
+                return null;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP request error while translating word: {Word}", word);
+                return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error translating word: {Word}", word);
-
-                // Try fallback as last resort
-                try
-                {
-                    return _fallbackTranslationService.TranslateWordFallback(word);
-                }
-                catch
-                {
-                    return null;
-                }
+                _logger.LogError(ex, "Unexpected error translating word via API: {Word}", word);
+                return null;
             }
         }
     }
