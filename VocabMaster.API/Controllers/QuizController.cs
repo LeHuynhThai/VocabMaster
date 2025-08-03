@@ -34,15 +34,16 @@ namespace VocabMaster.API.Controllers
             try
             {
                 _logger.LogInformation("Getting random quiz question");
-                
+
                 var question = await _quizQuestionService.GetRandomQuestion();
 
                 if (question == null)
                 {
                     _logger.LogWarning("No quiz questions available");
-                    return NotFound(new { 
-                        error = "question_not_found", 
-                        message = "Không tìm thấy câu hỏi nào. Vui lòng thêm câu hỏi vào hệ thống." 
+                    return NotFound(new
+                    {
+                        error = "question_not_found",
+                        message = "Không tìm thấy câu hỏi nào. Vui lòng thêm câu hỏi vào hệ thống."
                     });
                 }
 
@@ -52,10 +53,11 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unhandled error getting random quiz question: {Message}", ex.Message);
-                return StatusCode(500, new { 
-                    error = "server_error", 
+                return StatusCode(500, new
+                {
+                    error = "server_error",
                     message = "Đã xảy ra lỗi khi tải câu hỏi. Vui lòng thử lại sau.",
-                    details = ex.Message 
+                    details = ex.Message
                 });
             }
         }
@@ -73,9 +75,10 @@ namespace VocabMaster.API.Controllers
 
                     if (question == null)
                     {
-                        return NotFound(new { 
-                            error = "question_not_found", 
-                            message = "Không tìm thấy câu hỏi nào" 
+                        return NotFound(new
+                        {
+                            error = "question_not_found",
+                            message = "Không tìm thấy câu hỏi nào"
                         });
                     }
 
@@ -86,9 +89,10 @@ namespace VocabMaster.API.Controllers
 
                 if (uncompletedQuestion == null)
                 {
-                    return NotFound(new { 
-                        error = "question_not_found", 
-                        message = "Không tìm thấy câu hỏi nào" 
+                    return NotFound(new
+                    {
+                        error = "question_not_found",
+                        message = "Không tìm thấy câu hỏi nào"
                     });
                 }
 
@@ -97,10 +101,11 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting random uncompleted quiz question");
-                return StatusCode(500, new { 
-                    error = "question_error", 
+                return StatusCode(500, new
+                {
+                    error = "question_error",
                     message = "Đã xảy ra lỗi khi tải câu hỏi",
-                    details = ex.Message 
+                    details = ex.Message
                 });
             }
         }
@@ -112,9 +117,10 @@ namespace VocabMaster.API.Controllers
             {
                 if (quizAnswerDto == null)
                 {
-                    return BadRequest(new { 
-                        error = "invalid_input", 
-                        message = "Dữ liệu câu trả lời không hợp lệ" 
+                    return BadRequest(new
+                    {
+                        error = "invalid_input",
+                        message = "Dữ liệu câu trả lời không hợp lệ"
                     });
                 }
 
@@ -124,10 +130,11 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error checking quiz answer");
-                return StatusCode(500, new { 
-                    error = "check_error", 
+                return StatusCode(500, new
+                {
+                    error = "check_error",
                     message = "Đã xảy ra lỗi khi kiểm tra câu trả lời",
-                    details = ex.Message 
+                    details = ex.Message
                 });
             }
         }
@@ -139,9 +146,10 @@ namespace VocabMaster.API.Controllers
             {
                 if (quizAnswerDto == null)
                 {
-                    return BadRequest(new { 
-                        error = "invalid_input", 
-                        message = "Dữ liệu câu trả lời không hợp lệ" 
+                    return BadRequest(new
+                    {
+                        error = "invalid_input",
+                        message = "Dữ liệu câu trả lời không hợp lệ"
                     });
                 }
 
@@ -163,10 +171,11 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error checking and marking quiz answer");
-                return StatusCode(500, new { 
-                    error = "check_error", 
+                return StatusCode(500, new
+                {
+                    error = "check_error",
                     message = "Đã xảy ra lỗi khi kiểm tra câu trả lời",
-                    details = ex.Message 
+                    details = ex.Message
                 });
             }
         }
@@ -189,10 +198,11 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting completed quizzes");
-                return StatusCode(500, new { 
-                    error = "completed_error", 
+                return StatusCode(500, new
+                {
+                    error = "completed_error",
                     message = "Đã xảy ra lỗi khi tải danh sách câu hỏi đã hoàn thành",
-                    details = ex.Message 
+                    details = ex.Message
                 });
             }
         }
@@ -222,10 +232,11 @@ namespace VocabMaster.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting quiz statistics");
-                return StatusCode(500, new { 
-                    error = "stats_error", 
+                return StatusCode(500, new
+                {
+                    error = "stats_error",
                     message = "Đã xảy ra lỗi khi tải thống kê trắc nghiệm",
-                    details = ex.Message 
+                    details = ex.Message
                 });
             }
         }

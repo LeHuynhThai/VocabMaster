@@ -5,19 +5,17 @@ using System.Text;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Core.Interfaces.Services.Dictionary;
-using VocabMaster.Core.Interfaces.Services.Vocabulary;
+using VocabMaster.Core.Interfaces.Services.Quiz;
 using VocabMaster.Core.Interfaces.Services.Translation;
+using VocabMaster.Core.Interfaces.Services.Vocabulary;
 using VocabMaster.Data;
 using VocabMaster.Data.Repositories;
 using VocabMaster.Data.Seed;
-using VocabMaster.Services;
 using VocabMaster.Services.Authentication;
 using VocabMaster.Services.Dictionary;
-using VocabMaster.Services.Vocabulary;
-using VocabMaster.Core.DTOs;
-using VocabMaster.Core.Interfaces.Services.Quiz;
 using VocabMaster.Services.Quiz;
 using VocabMaster.Services.Translation;
+using VocabMaster.Services.Vocabulary;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -165,6 +163,9 @@ builder.Services.AddScoped<ITranslationApiService, TranslationApiService>();
 builder.Services.AddScoped<IFallbackTranslationService, FallbackTranslationService>();
 builder.Services.AddScoped<ITranslationService, TranslationService>();
 builder.Services.AddScoped<IVocabularyTranslationService, VocabularyTranslationService>();
+
+// Add IDictionaryApiService
+builder.Services.AddScoped<IDictionaryApiService, DictionaryApiService>();
 
 var app = builder.Build();
 

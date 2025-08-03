@@ -1,4 +1,4 @@
-using VocabMaster.Core.DTOs;
+﻿using VocabMaster.Core.DTOs;
 
 namespace VocabMaster.Core.Interfaces.Services.Quiz
 {
@@ -7,4 +7,4 @@ namespace VocabMaster.Core.Interfaces.Services.Quiz
         Task<QuizResultDto> CheckAnswer(int questionId, string answer);
         Task<QuizResultDto> CheckAnswerAndMarkCompleted(int questionId, string answer, int userId);
     }
-} 
+}

@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Text.Json;
-using System.Threading.Tasks;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
@@ -13,20 +10,102 @@ namespace VocabMaster.Services.Dictionary
     public class DictionaryCacheService : IDictionaryCacheService
     {
         private readonly ILogger<DictionaryCacheService> _logger;
-        private readonly IVocabularyRepo _vocabularyRepository;
         private readonly IDictionaryDetailsRepo _dictionaryDetailsRepository;
+        private readonly IVocabularyRepo _vocabularyRepository;
+        private readonly IDictionaryApiService _dictionaryApiService;
 
         public DictionaryCacheService(
             ILogger<DictionaryCacheService> logger,
+            IDictionaryDetailsRepo dictionaryDetailsRepository,
             IVocabularyRepo vocabularyRepository,
-            IDictionaryDetailsRepo dictionaryDetailsRepository)
+            IDictionaryApiService dictionaryApiService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _vocabularyRepository = vocabularyRepository ?? throw new ArgumentNullException(nameof(vocabularyRepository));
             _dictionaryDetailsRepository = dictionaryDetailsRepository ?? throw new ArgumentNullException(nameof(dictionaryDetailsRepository));
+            _vocabularyRepository = vocabularyRepository ?? throw new ArgumentNullException(nameof(vocabularyRepository));
+            _dictionaryApiService = dictionaryApiService ?? throw new ArgumentNullException(nameof(dictionaryApiService));
         }
 
-        public async Task<DictionaryDetails> CacheDefinition(DictionaryResponseDto definition)
+        // Cache all vocabulary definitions
+        public async Task<int> CacheAllVocabularyDefinitions()
+        {
+            try
+            {
+                _logger.LogInformation("Starting to cache all vocabulary definitions");
+
+                // Get all vocabularies
+                var vocabularies = await _vocabularyRepository.GetAll();
+                if (vocabularies == null || !vocabularies.Any())
+                {
+                    _logger.LogWarning("No vocabularies found to cache");
+                    return 0;
+                }
+
+                _logger.LogInformation("Found {Count} vocabularies to cache", vocabularies.Count);
+
+                int successCount = 0;
+                int failCount = 0;
+
+                // Process each vocabulary
+                foreach (var vocabulary in vocabularies)
+                {
+                    try
+                    {
+                        // Check if the word is already cached
+                        var exists = await _dictionaryDetailsRepository.Exists(vocabulary.Word);
+                        if (exists)
+                        {
+                            _logger.LogInformation("Word {Word} is already cached", vocabulary.Word);
+                            continue;
+                        }
+
+                        // Get the definition from the API
+                        var definition = await _dictionaryApiService.GetWordDefinitionFromApi(vocabulary.Word);
+                        if (definition == null)
+                        {
+                            _logger.LogWarning("No definition found from API for word: {Word}", vocabulary.Word);
+                            failCount++;
+                            continue;
+                        }
+
+                        // Cache the definition
+                        var dictionaryDetails = await CacheDefinitionInternal(definition);
+                        
+                        if (dictionaryDetails != null)
+                        {
+                            successCount++;
+                            _logger.LogInformation("Successfully cached definition for word: {Word}", vocabulary.Word);
+                        }
+                        else
+                        {
+                            failCount++;
+                            _logger.LogWarning("Failed to cache definition for word: {Word}", vocabulary.Word);
+                        }
+
+                        // Add a delay to avoid overloading the API
+                        await Task.Delay(1000);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error processing word: {Word}", vocabulary.Word);
+                        failCount++;
+                    }
+                }
+
+                _logger.LogInformation("Finished caching vocabulary definitions. Success: {SuccessCount}, Failed: {FailCount}",
+                    successCount, failCount);
+
+                return successCount;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error caching all vocabulary definitions");
+                return 0;
+            }
+        }
+
+        // Private helper method for caching a single definition
+        private async Task<DictionaryDetails> CacheDefinitionInternal(DictionaryResponseDto definition)
         {
             if (definition == null)
             {
@@ -66,62 +145,6 @@ namespace VocabMaster.Services.Dictionary
             {
                 _logger.LogError(ex, "Error caching definition for word: {Word}", definition.Word);
                 return null;
-            }
-        }
-
-        public async Task<bool> CacheWordDefinition(string word)
-        {
-            if (string.IsNullOrWhiteSpace(word))
-            {
-                _logger.LogWarning("Word parameter is null or empty");
-                return false;
-            }
-
-            try
-            {
-                _logger.LogInformation("Caching definition for word: {Word}", word);
-
-                // check if already cached
-                var exists = await _dictionaryDetailsRepository.Exists(word);
-                if (exists)
-                {
-                    _logger.LogInformation("Word {Word} is already cached", word);
-                    return true;
-                }
-
-                _logger.LogWarning("Cannot cache word definition due to service architecture constraints");
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error caching definition for word: {Word}", word);
-                return false;
-            }
-        }
-
-        public async Task<int> CacheAllVocabularyDefinitions()
-        {
-            try
-            {
-                _logger.LogInformation("Starting to cache all vocabulary definitions");
-
-                // Get all vocabularies
-                var vocabularies = await _vocabularyRepository.GetAll();
-                if (vocabularies == null || !vocabularies.Any())
-                {
-                    _logger.LogWarning("No vocabularies found to cache");
-                    return 0;
-                }
-
-                _logger.LogInformation("Found {Count} vocabularies to cache", vocabularies.Count);
-
-                _logger.LogWarning("Cannot cache all vocabulary definitions due to service architecture constraints");
-                return 0;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error caching all vocabulary definitions");
-                return 0;
             }
         }
     }

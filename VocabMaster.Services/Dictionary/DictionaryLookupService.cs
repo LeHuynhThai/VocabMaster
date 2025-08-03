@@ -1,105 +1,39 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿// VocabMaster.Services/Dictionary/DictionaryLookupService.cs
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
 using VocabMaster.Core.DTOs;
-using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services.Dictionary;
+using VocabMaster.Core.Entities;
 
 namespace VocabMaster.Services.Dictionary
 {
     public class DictionaryLookupService : IDictionaryLookupService
     {
-        private readonly HttpClient _httpClient;
         private readonly ILogger<DictionaryLookupService> _logger;
         private readonly IVocabularyRepo _vocabularyRepository;
         private readonly IDictionaryDetailsRepo _dictionaryDetailsRepository;
-        private readonly IDictionaryCacheService _dictionaryCacheService;
-        private readonly string _dictionaryApiUrl;
+        private readonly IDictionaryApiService _dictionaryApiService;
 
         public DictionaryLookupService(
             ILogger<DictionaryLookupService> logger,
             IVocabularyRepo vocabularyRepository,
             IDictionaryDetailsRepo dictionaryDetailsRepository,
-            IDictionaryCacheService dictionaryCacheService,
-            IConfiguration configuration = null,
-            IHttpClientFactory httpClientFactory = null)
+            IDictionaryApiService dictionaryApiService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _vocabularyRepository = vocabularyRepository ?? throw new ArgumentNullException(nameof(vocabularyRepository));
             _dictionaryDetailsRepository = dictionaryDetailsRepository ?? throw new ArgumentNullException(nameof(dictionaryDetailsRepository));
-            _dictionaryCacheService = dictionaryCacheService ?? throw new ArgumentNullException(nameof(dictionaryCacheService));
-
-            // Use IHttpClientFactory if provided, otherwise create a new HttpClient
-            _httpClient = httpClientFactory != null ? httpClientFactory.CreateClient("DictionaryApi") : new HttpClient();
-
-            // Get API URL from configuration if provided, otherwise use default
-            _dictionaryApiUrl = configuration?.GetValue<string>("DictionaryApiUrl") ?? "https://api.dictionaryapi.dev/api/v2/entries/en/";
+            _dictionaryApiService = dictionaryApiService ?? throw new ArgumentNullException(nameof(dictionaryApiService));
         }
 
+        // Get word definition directly from API
         public async Task<DictionaryResponseDto> GetWordDefinition(string word)
         {
-            if (string.IsNullOrWhiteSpace(word))
-            {
-                _logger.LogWarning("Word parameter is null or empty");
-                return null;
-            }
-
-            try
-            {
-                _logger.LogInformation("Looking up definition for word: {Word}", word);
-                var requestUri = $"{_dictionaryApiUrl}{Uri.EscapeDataString(word)}";
-
-                var response = await _httpClient.GetAsync(requestUri);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogWarning("API returned non-success status code {StatusCode} for word {Word}",
-                        response.StatusCode, word);
-                    return null;
-                }
-
-                var content = await response.Content.ReadAsStringAsync();
-
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
-
-                var dictionaryResponse = JsonSerializer.Deserialize<List<DictionaryResponseDto>>(content, options);
-
-                var result = dictionaryResponse?.FirstOrDefault();
-
-                if (result == null)
-                {
-                    _logger.LogWarning("No definition found for word: {Word}", word);
-                    return null;
-                }
-
-                _logger.LogInformation("Successfully retrieved definition for word: {Word}", word);
-                return result;
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "HTTP request error while getting definition for word: {Word}", word);
-                return null;
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogError(ex, "JSON deserialization error for word: {Word}", word);
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error getting definition for word: {Word}", word);
-                return null;
-            }
+            return await _dictionaryApiService.GetWordDefinitionFromApi(word);
         }
 
+        // Get word definition from cache or API if not cached
         public async Task<DictionaryResponseDto> GetWordDefinitionFromCache(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
@@ -125,13 +59,35 @@ namespace VocabMaster.Services.Dictionary
                     _logger.LogInformation("No cached details found for word: {Word}, getting from API", word);
 
                     // Get from API if not in cache
-                    var definition = await GetWordDefinition(word);
+                    var definition = await _dictionaryApiService.GetWordDefinitionFromApi(word);
 
                     // Cache the definition if found
                     if (definition != null)
                     {
                         _logger.LogInformation("Caching definition for word: {Word}", word);
-                        await _dictionaryCacheService.CacheDefinition(definition);
+                        var options = new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true,
+                        };
+
+                        // Serialize the phonetics and meanings
+                        var phoneticsJson = definition.Phonetics != null && definition.Phonetics.Any()
+                            ? JsonSerializer.Serialize(definition.Phonetics, options)
+                            : "[]";
+
+                        var meaningsJson = JsonSerializer.Serialize(definition.Meanings ?? new List<Meaning>(), options);
+
+                        // Create the dictionary details entity
+                        var dictionaryDetailsEntity = new DictionaryDetails
+                        {
+                            Word = definition.Word,
+                            PhoneticsJson = phoneticsJson,
+                            MeaningsJson = meaningsJson,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        // Save to the repository
+                        await _dictionaryDetailsRepository.AddOrUpdate(dictionaryDetailsEntity);
 
                         // Add Vietnamese translation if available
                         if (!string.IsNullOrEmpty(vietnameseTranslation))
@@ -191,113 +147,6 @@ namespace VocabMaster.Services.Dictionary
             {
                 _logger.LogError(ex, "Unexpected error getting cached definition for word: {Word}", word);
                 return null;
-            }
-        }
-
-        public async Task<bool> CacheWordDefinition(string word)
-        {
-            if (string.IsNullOrWhiteSpace(word))
-            {
-                _logger.LogWarning("Word parameter is null or empty");
-                return false;
-            }
-
-            try
-            {
-                _logger.LogInformation("Caching definition for word: {Word}", word);
-
-                // check if already cached
-                var exists = await _dictionaryDetailsRepository.Exists(word);
-                if (exists)
-                {
-                    _logger.LogInformation("Word {Word} is already cached", word);
-                    return true;
-                }
-
-                // get definition from API
-                var definition = await GetWordDefinition(word);
-                if (definition == null)
-                {
-                    _logger.LogWarning("No definition found from API for word: {Word}", word);
-                    return false;
-                }
-
-                // cache definition
-                var result = await _dictionaryCacheService.CacheDefinition(definition);
-                
-                return result != null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error caching definition for word: {Word}", word);
-                return false;
-            }
-        }
-
-        public async Task<int> CacheAllVocabularyDefinitions()
-        {
-            try
-            {
-                _logger.LogInformation("Starting to cache all vocabulary definitions");
-
-                // get all vocabularies
-                var vocabularies = await _vocabularyRepository.GetAll();
-                if (vocabularies == null || !vocabularies.Any())
-                {
-                    _logger.LogWarning("No vocabularies found to cache");
-                    return 0;
-                }
-
-                _logger.LogInformation("Found {Count} vocabularies to cache", vocabularies.Count);
-
-                int successCount = 0;
-                int failCount = 0;
-
-                // process each vocabulary
-                foreach (var vocabulary in vocabularies)
-                {
-                    try
-                    {
-                        // check if already cached
-                        var exists = await _dictionaryDetailsRepository.Exists(vocabulary.Word);
-                        if (exists)
-                        {
-                            _logger.LogInformation("Word {Word} is already cached", vocabulary.Word);
-                            continue;
-                        }
-
-                        // cache new word
-                        var success = await CacheWordDefinition(vocabulary.Word);
-                        if (success)
-                        {
-                            successCount++;
-                            _logger.LogInformation("Successfully cached definition for word: {Word}", vocabulary.Word);
-                        }
-                        else
-                        {
-                            failCount++;
-                            _logger.LogWarning("Failed to cache definition for word: {Word}", vocabulary.Word);
-                        }
-
-                        // add delay to avoid API overload
-                        await Task.Delay(1000);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error processing word: {Word}", vocabulary.Word);
-                        failCount++;
-                    }
-                }
-
-                _logger.LogInformation("Finished caching vocabulary definitions. Success: {SuccessCount}, Failed: {FailCount}",
-                    successCount, failCount);
-
-                return successCount;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error caching all vocabulary definitions");
-                return 0;
             }
         }
     }

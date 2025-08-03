@@ -1,9 +1,6 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
 using VocabMaster.Core.Interfaces.Services.Translation;
 
 namespace VocabMaster.Services.Translation
@@ -97,4 +94,4 @@ namespace VocabMaster.Services.Translation
             }
         }
     }
-} 
+}

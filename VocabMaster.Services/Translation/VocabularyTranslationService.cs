@@ -1,10 +1,5 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services.Translation;
 
@@ -96,4 +91,4 @@ namespace VocabMaster.Services.Translation
             }
         }
     }
-} 
+}

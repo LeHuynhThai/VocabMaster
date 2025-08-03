@@ -22,12 +22,12 @@ namespace VocabMaster.Data.Repositories
             try
             {
                 int count = await _context.QuizQuestions.CountAsync();
-                
+
                 if (count == 0)
                     return null;
-                    
+
                 int randomIndex = new Random().Next(0, count);
-                
+
                 return await _context.QuizQuestions
                     .OrderBy(q => q.Id)
                     .Skip(randomIndex)
@@ -39,7 +39,7 @@ namespace VocabMaster.Data.Repositories
                 throw;
             }
         }
-        
+
         public async Task<QuizQuestion> GetRandomUnansweredQuizQuestion(List<int> completedQuestionIds)
         {
             try

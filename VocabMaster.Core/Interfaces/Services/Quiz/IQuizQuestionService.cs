@@ -1,4 +1,4 @@
-using VocabMaster.Core.DTOs;
+﻿using VocabMaster.Core.DTOs;
 
 namespace VocabMaster.Core.Interfaces.Services.Quiz
 {
@@ -8,4 +8,4 @@ namespace VocabMaster.Core.Interfaces.Services.Quiz
         Task<QuizQuestionDto> GetRandomUncompletedQuestion(int userId);
         Task<int> CountTotalQuestions();
     }
-} 
+}

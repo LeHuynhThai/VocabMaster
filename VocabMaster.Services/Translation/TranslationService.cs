@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Threading.Tasks;
 using VocabMaster.Core.Interfaces.Services.Translation;
 
 namespace VocabMaster.Services.Translation
@@ -47,7 +45,7 @@ namespace VocabMaster.Services.Translation
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error translating word: {Word}", word);
-                
+
                 // Try fallback as last resort
                 try
                 {
@@ -60,4 +58,4 @@ namespace VocabMaster.Services.Translation
             }
         }
     }
-} 
+}

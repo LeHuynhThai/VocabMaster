@@ -1,4 +1,5 @@
 ﻿using VocabMaster.Core.DTOs;
+using VocabMaster.Core.Interfaces.Services.Dictionary;
 
 namespace VocabMaster.Core.Interfaces.Services.Dictionary
 {
@@ -6,7 +7,5 @@ namespace VocabMaster.Core.Interfaces.Services.Dictionary
     {
         Task<DictionaryResponseDto> GetWordDefinition(string word);
         Task<DictionaryResponseDto> GetWordDefinitionFromCache(string word);
-        Task<bool> CacheWordDefinition(string word);
-        Task<int> CacheAllVocabularyDefinitions();
     }
 }

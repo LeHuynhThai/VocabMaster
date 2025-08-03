@@ -10,4 +10,4 @@ namespace VocabMaster.Core.Interfaces.Services.Vocabulary
         Task<bool> RemoveLearnedWordById(int userId, int wordId);
         Task<LearnedWord> GetLearnedWordById(int userId, int wordId);
     }
-} 
+}
