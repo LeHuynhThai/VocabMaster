@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AutoMapper;
+using Microsoft.Extensions.Logging;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
@@ -10,15 +11,18 @@ namespace VocabMaster.Services.Vocabulary
     {
         private readonly ILearnedWordRepo _learnedWordRepository;
         private readonly IWordStatusService _wordStatusService;
+        private readonly IMapper _mapper;
         private readonly ILogger<LearnedWordService> _logger;
 
         public LearnedWordService(
             ILearnedWordRepo learnedWordRepository,
             IWordStatusService wordStatusService,
+            IMapper mapper,
             ILogger<LearnedWordService> logger)
         {
             _learnedWordRepository = learnedWordRepository ?? throw new ArgumentNullException(nameof(learnedWordRepository));
             _wordStatusService = wordStatusService ?? throw new ArgumentNullException(nameof(wordStatusService));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -133,6 +137,30 @@ namespace VocabMaster.Services.Vocabulary
             {
                 _logger.LogError(ex, "Error getting learned word with ID {WordId} for user {UserId}", wordId, userId);
                 return null;
+            }
+        }
+
+        // Gets paginated learned words for a user
+        public async Task<(List<LearnedWordDto> Items, int TotalCount, int TotalPages)> GetPaginatedLearnedWords(int userId, int pageNumber, int pageSize)
+        {
+            try
+            {
+                _logger.LogInformation("Getting paginated learned words for user {UserId}, page {PageNumber}, size {PageSize}", 
+                    userId, pageNumber, pageSize);
+                
+                var (items, totalCount) = await _learnedWordRepository.GetPaginatedByUserId(userId, pageNumber, pageSize);
+                var dtos = _mapper.Map<List<LearnedWordDto>>(items);
+                int totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+                
+                _logger.LogInformation("Retrieved {Count} learned words for user {UserId}, total {Total} items, {Pages} pages", 
+                    items.Count, userId, totalCount, totalPages);
+                
+                return (dtos, totalCount, totalPages);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting paginated learned words for user {UserId}", userId);
+                throw;
             }
         }
     }

@@ -142,7 +142,9 @@ const QuizPage: React.FC = () => {
       ) : question ? (
         <>
           <div className="quiz-question">
-            <div className="quiz-word">{question.word}</div>
+            <div className="quiz-word-container">
+              <span className="quiz-word">{question.word}</span>
+            </div>
 
             <div className="quiz-options">
               {shuffledOptions.map((option, index) => (

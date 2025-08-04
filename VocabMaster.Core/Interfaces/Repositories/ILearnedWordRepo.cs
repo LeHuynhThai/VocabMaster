@@ -7,6 +7,8 @@ namespace VocabMaster.Core.Interfaces.Repositories
         Task<LearnedWord> GetById(int id);
 
         Task<List<LearnedWord>> GetByUserId(int userId);
+        
+        Task<(List<LearnedWord> Items, int TotalCount)> GetPaginatedByUserId(int userId, int pageNumber, int pageSize);
 
         Task<bool> Add(LearnedWord learnedWord);
 

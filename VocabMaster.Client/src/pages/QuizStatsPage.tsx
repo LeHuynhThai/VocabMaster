@@ -177,7 +177,7 @@ const QuizStatsPage: React.FC = () => {
                   <tr key={quiz.id}>
                     <td>{index + 1}</td>
                     <td>{quiz.quizQuestionId}</td>
-                    <td className="quiz-word">{quiz.word || 'N/A'}</td>
+                    <td className="stats-quiz-word">{quiz.word || 'N/A'}</td>
                     <td>{formatDate(quiz.completedAt)}</td>
                   </tr>
                 ))}

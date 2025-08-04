@@ -150,6 +150,60 @@ namespace VocabMaster.API.Controllers
             }
         }
 
+        [HttpGet("paginated")]
+        [ProducesResponseType(typeof(PaginatedResponseDto<LearnedWordDto>), 200)]
+        [ProducesResponseType(typeof(object), 401)]
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> GetPaginatedLearnedWords([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                // Validate parameters
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+                if (pageSize > 50) pageSize = 50; // Limit page size
+                
+                var userId = GetUserIdFromClaims();
+                if (userId <= 0)
+                {
+                    return Unauthorized(new
+                    {
+                        error = "auth_error",
+                        message = "Không thể xác thực người dùng"
+                    });
+                }
+                
+                _logger.LogInformation("Getting paginated learned words for user {UserId}, page {Page}, size {Size}", 
+                    userId, pageNumber, pageSize);
+                
+                var (items, totalCount, totalPages) = await _learnedWordService.GetPaginatedLearnedWords(userId, pageNumber, pageSize);
+                
+                var response = new PaginatedResponseDto<LearnedWordDto>
+                {
+                    Items = items,
+                    PageInfo = new PageInfoDto
+                    {
+                        CurrentPage = pageNumber,
+                        PageSize = pageSize,
+                        TotalItems = totalCount,
+                        TotalPages = totalPages
+                    }
+                };
+                
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting paginated learned words");
+                return StatusCode(500, new
+                {
+                    error = "pagination_error",
+                    message = "Đã xảy ra lỗi khi tải danh sách từ đã học theo trang",
+                    details = ex.Message
+                });
+            }
+        }
+
         [HttpPost]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]

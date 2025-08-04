@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
   LOOKUP_WORD: '/api/wordgenerator/lookup',
   IS_LEARNED: '/api/wordgenerator/islearned',
   LEARNED_WORDS: '/api/learnedword',
+  LEARNED_WORDS_PAGINATED: '/api/learnedword/paginated',
   TRANSLATE_EN_VI: '/api/translation/en-to-vi',
   TRANSLATE: '/api/translation/translate',
   // Quiz endpoints

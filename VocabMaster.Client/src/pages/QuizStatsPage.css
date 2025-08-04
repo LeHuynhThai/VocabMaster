@@ -134,7 +134,7 @@
   background-color: var(--gray-100);
 }
 
-.quiz-word {
+.stats-quiz-word {
   font-weight: 500;
   color: var(--primary);
   font-size: 0.95rem;
