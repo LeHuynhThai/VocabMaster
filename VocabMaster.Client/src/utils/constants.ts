@@ -9,6 +9,7 @@ export const ROUTES = {
   LEARNED_WORDS: '/learned-words',
   TRANSLATION: '/translation',
   QUIZ: '/quiz',
+  QUIZ_STATS: '/quiz-stats',
   NOT_FOUND: '/not-found'
 };
 
@@ -25,6 +26,7 @@ export const API_ENDPOINTS = {
   LOOKUP_WORD: '/api/wordgenerator/lookup',
   IS_LEARNED: '/api/wordgenerator/islearned',
   LEARNED_WORDS: '/api/learnedword',
+  LEARNED_WORDS_PAGINATED: '/api/learnedword/paginated',
   TRANSLATE_EN_VI: '/api/translation/en-to-vi',
   TRANSLATE: '/api/translation/translate',
   // Quiz endpoints
@@ -33,6 +35,7 @@ export const API_ENDPOINTS = {
   QUIZ_CHECK_ANSWER: '/api/quiz/check',
   QUIZ_CHECK_ANSWER_COMPLETE: '/api/quiz/check-complete',
   QUIZ_COMPLETED: '/api/quiz/completed',
+  QUIZ_CORRECT: '/api/quiz/correct',
   QUIZ_STATS: '/api/quiz/stats'
 };
 

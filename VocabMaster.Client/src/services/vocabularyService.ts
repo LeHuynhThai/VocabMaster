@@ -1,5 +1,27 @@
 import api from './api';
-import { Vocabulary, LearnedWord } from '../types';
+import { Vocabulary } from '../types';
+import { API_ENDPOINTS } from '../utils/constants';
+
+// Interface for learned word
+export interface LearnedWord {
+  id: number;
+  word: string;
+  learnedAt?: string;
+}
+
+// Interface for pagination info
+export interface PageInfo {
+  currentPage: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+// Interface for paginated response
+export interface PaginatedResponse<T> {
+  items: T[];
+  pageInfo: PageInfo;
+}
 
 /**
  * Service for vocabulary operations
@@ -10,7 +32,7 @@ const vocabularyService = {
    * @returns Random word data
    */
   getRandomWord: async (): Promise<Vocabulary> => {
-    const response = await api.get('/api/wordgenerator/getrandomword');
+    const response = await api.get(API_ENDPOINTS.RANDOM_WORD);
     return response.data;
   },
 
@@ -19,7 +41,7 @@ const vocabularyService = {
    * @returns Random word data
    */
   getNewRandomWord: async (): Promise<Vocabulary> => {
-    const response = await api.get('/api/wordgenerator/newrandomword');
+    const response = await api.get(API_ENDPOINTS.NEW_RANDOM_WORD);
     return response.data;
   },
 
@@ -29,7 +51,7 @@ const vocabularyService = {
    * @returns Word definition
    */
   lookup: async (word: string): Promise<Vocabulary> => {
-    const response = await api.get(`/api/wordgenerator/lookup/${encodeURIComponent(word)}`);
+    const response = await api.get(`${API_ENDPOINTS.LOOKUP_WORD}/${encodeURIComponent(word)}`);
     return response.data;
   },
 
@@ -39,7 +61,7 @@ const vocabularyService = {
    * @returns Whether the word is learned
    */
   isLearned: async (word: string): Promise<boolean> => {
-    const response = await api.get(`/api/wordgenerator/islearned/${encodeURIComponent(word)}`);
+    const response = await api.get(`${API_ENDPOINTS.IS_LEARNED}/${encodeURIComponent(word)}`);
     return response.data.isLearned;
   },
 
@@ -50,13 +72,40 @@ const vocabularyService = {
    */
   getLearnedWords: async (cacheBuster?: string): Promise<LearnedWord[]> => {
     try {
-      const url = cacheBuster ? `/api/learnedword${cacheBuster}` : '/api/learnedword';
+      const url = cacheBuster ? `${API_ENDPOINTS.LEARNED_WORDS}?t=${cacheBuster}` : API_ENDPOINTS.LEARNED_WORDS;
       const response = await api.get(url);
       return response.data || [];
     } catch (error: any) {
       console.error('Error fetching learned words:', error);
       // return empty array if error
       return [];
+    }
+  },
+  
+  /**
+   * Gets paginated learned words
+   * @param pageNumber - Page number (1-based)
+   * @param pageSize - Number of items per page
+   * @returns Paginated response with learned words
+   */
+  getPaginatedLearnedWords: async (pageNumber: number = 1, pageSize: number = 10): Promise<PaginatedResponse<LearnedWord>> => {
+    try {
+      const response = await api.get(API_ENDPOINTS.LEARNED_WORDS_PAGINATED, {
+        params: { pageNumber, pageSize }
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching paginated learned words:', error);
+      // Return empty paginated response if error
+      return {
+        items: [],
+        pageInfo: {
+          currentPage: pageNumber,
+          pageSize: pageSize,
+          totalItems: 0,
+          totalPages: 0
+        }
+      };
     }
   },
 
@@ -67,8 +116,8 @@ const vocabularyService = {
    */
   markAsLearned: async (word: string): Promise<boolean> => {
     try {
-      const response = await api.post(`/api/wordgenerator/learned/${encodeURIComponent(word)}`);
-      return response.data.success;
+      const response = await api.post('/api/learnedword', { word });
+      return response.data && response.data.id > 0;
     } catch (error: any) {
       console.error('Error marking word as learned:', error);
       return false;
@@ -82,7 +131,7 @@ const vocabularyService = {
    */
   removeLearnedWord: async (id: number): Promise<boolean> => {
     try {
-      const response = await api.delete(`/api/learnedword/${id}`);
+      await api.delete(`${API_ENDPOINTS.LEARNED_WORDS}/${id}`);
       return true;
     } catch (error: any) {
       console.error('Error removing learned word:', error);

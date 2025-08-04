@@ -39,6 +39,24 @@ namespace VocabMaster.Services.Quiz
             }
         }
 
+        // Get only correct quizzes for a user
+        public async Task<List<CompletedQuizDto>> GetCompleteQuizz(int userId)
+        {
+            try
+            {
+                _logger.LogInformation("Getting correct quizzes for user {UserId}", userId);
+                var completedQuizzes = await _completedQuizRepo.GetByUserId(userId);
+                var correctQuizzes = completedQuizzes.Where(cq => cq.WasCorrect).ToList();
+                return _mapper.Map<List<CompletedQuizDto>>(correctQuizzes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting correct quizzes for user {UserId}", userId);
+                throw;
+            }
+        }
+
+        // Get quiz statistics for a user
         public async Task<QuizStatsDto> GetQuizStatistics(int userId)
         {
             try

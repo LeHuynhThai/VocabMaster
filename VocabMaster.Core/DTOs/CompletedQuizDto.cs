@@ -4,6 +4,7 @@
     {
         public int Id { get; set; }
         public int QuizQuestionId { get; set; }
+        public string Word { get; set; }
         public DateTime CompletedAt { get; set; }
         public bool WasCorrect { get; set; }
     }

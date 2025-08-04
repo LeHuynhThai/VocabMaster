@@ -5,19 +5,13 @@ using VocabMaster.Core.Interfaces.Repositories;
 
 namespace VocabMaster.Data.Repositories
 {
-    /// <summary>
-    /// Repository for learned word operations
-    /// </summary>
+    // Repository for learned word operations
     public class LearnedWordRepo : ILearnedWordRepo
     {
         private readonly AppDbContext _context;
         private readonly ILogger<LearnedWordRepo> _logger;
 
-        /// <summary>
-        /// Initializes a new instance of the LearnedWordRepo
-        /// </summary>
-        /// <param name="context">Database context</param>
-        /// <param name="logger">Logger for the repository</param>
+        // Initializes a new instance of the LearnedWordRepo
         public LearnedWordRepo(
             AppDbContext context,
             ILogger<LearnedWordRepo> logger = null)
@@ -26,11 +20,7 @@ namespace VocabMaster.Data.Repositories
             _logger = logger;
         }
 
-        /// <summary>
-        /// Gets a learned word by its ID
-        /// </summary>
-        /// <param name="id">ID of the learned word</param>
-        /// <returns>Learned word or null if not found</returns>
+        // Gets a learned word by its ID
         public async Task<LearnedWord> GetById(int id)
         {
             try
@@ -45,11 +35,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        /// <summary>
-        /// Gets all learned words for a specific user
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <returns>List of learned words</returns>
+        // Gets all learned words for a specific user
         public async Task<List<LearnedWord>> GetByUserId(int userId)
         {
             try
@@ -68,11 +54,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        /// <summary>
-        /// Adds a new learned word
-        /// </summary>
-        /// <param name="learnedWord">Learned word to add</param>
-        /// <returns>True if successful, false otherwise</returns>
+        // Adds a new learned word
         public async Task<bool> Add(LearnedWord learnedWord)
         {
             try
@@ -100,11 +82,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        /// <summary>
-        /// Deletes a learned word by its ID
-        /// </summary>
-        /// <param name="id">ID of the learned word to delete</param>
-        /// <returns>True if successful, false otherwise</returns>
+        // Deletes a learned word by its ID
         public async Task<bool> Delete(int id)
         {
             try
@@ -131,12 +109,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        /// <summary>
-        /// Removes a learned word for a specific user by word text
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <param name="word">Word to remove</param>
-        /// <returns>True if successful, false otherwise</returns>
+        // Removes a learned word for a specific user by word text
         public async Task<bool> RemoveByWord(int userId, string word)
         {
             try
@@ -172,6 +145,34 @@ namespace VocabMaster.Data.Repositories
             {
                 _logger?.LogError(ex, "Error removing learned word: {Word} for user: {UserId}", word, userId);
                 return false;
+            }
+        }
+
+        // Gets paginated learned words for a specific user
+        public async Task<(List<LearnedWord> Items, int TotalCount)> GetPaginatedByUserId(int userId, int pageNumber, int pageSize)
+        {
+            try
+            {
+                _logger?.LogInformation("Getting paginated learned words for user {UserId}, page {Page}, size {Size}", 
+                    userId, pageNumber, pageSize);
+                
+                var query = _context.LearnedVocabularies
+                    .Where(lw => lw.UserId == userId)
+                    .OrderByDescending(lw => lw.LearnedAt);
+                    
+                int totalCount = await query.CountAsync();
+                
+                var items = await query
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+                    
+                return (items, totalCount);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error getting paginated learned words for user {UserId}", userId);
+                throw;
             }
         }
     }

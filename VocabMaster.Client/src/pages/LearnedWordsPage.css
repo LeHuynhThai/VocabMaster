@@ -1,0 +1,29 @@
+.learned-words-info {
+  margin: 1rem 0;
+  color: var(--gray-600);
+  font-size: 0.9rem;
+}
+
+
+.table {
+  margin-bottom: 1rem;
+}
+
+.table th {
+  font-weight: 600;
+  color: var(--gray-700);
+  border-bottom-width: 1px;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.table td:nth-child(2) {
+  font-weight: 500;
+}
+
+
+.table .btn {
+  padding: 0.25rem 0.5rem;
+} 

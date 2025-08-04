@@ -6,6 +6,5 @@ namespace VocabMaster.Core.Interfaces.Services.Quiz
     {
         Task<QuizQuestionDto> GetRandomQuestion();
         Task<QuizQuestionDto> GetRandomUncompletedQuestion(int userId);
-        Task<int> CountTotalQuestions();
     }
 }

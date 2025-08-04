@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Table, Button, Alert, Spinner, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import vocabularyService from '../services/vocabularyService';
-import { LearnedWord } from '../types';
+import vocabularyService, { LearnedWord, PaginatedResponse } from '../services/vocabularyService';
 import { useAuth } from '../contexts/AuthContext';
 import { ROUTES } from '../utils/constants';
-  
+import Pagination from '../components/ui/Pagination';
+import useToast from '../hooks/useToast';
+import './LearnedWordsPage.css';
+
 /**
- * format date
+ * Format date to local format
  */
 const formatDate = (dateString?: string): string => {
   if (!dateString) return '';
@@ -26,7 +28,7 @@ const formatDate = (dateString?: string): string => {
 
 /**
  * LearnedWords page component
- * Displays all words that the user has saved
+ * Displays all words that the user has saved with pagination
  */
 const LearnedWordsPage: React.FC = () => {
   const [words, setWords] = useState<LearnedWord[]>([]);
@@ -34,14 +36,18 @@ const LearnedWordsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10); // Fixed page size of 10
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   /**
-   * Fetch all learned words for the current user
-   * Always fetch fresh data from the API, bypassing cache
+   * Fetch paginated learned words for the current user
    */
-  const fetchLearnedWords = async () => {
+  const fetchLearnedWords = async (page: number = currentPage) => {
     if (!isAuthenticated) {
       return; // do not call API if not authenticated
     }
@@ -50,12 +56,12 @@ const LearnedWordsPage: React.FC = () => {
     setError(null);
     
     try {
-      // add timestamp to the request to bypass cache
-      const timestamp = new Date().getTime();
-      const cacheBuster = `?t=${timestamp}`;
-      const learnedWords = await vocabularyService.getLearnedWords(cacheBuster);
-      setWords(learnedWords);
-      setFilteredWords(learnedWords);
+      const response: PaginatedResponse<LearnedWord> = await vocabularyService.getPaginatedLearnedWords(page, pageSize);
+      setWords(response.items);
+      setFilteredWords(response.items);
+      setTotalItems(response.pageInfo.totalItems);
+      setTotalPages(response.pageInfo.totalPages);
+      setCurrentPage(response.pageInfo.currentPage);
     } catch (err) {
       setError('Không thể tải danh sách các từ đã học. Vui lòng thử lại sau.');
       console.error('Error fetching learned words:', err);
@@ -73,12 +79,9 @@ const LearnedWordsPage: React.FC = () => {
     try {
       const success = await vocabularyService.removeLearnedWord(id);
       if (success) {
-        // update the state by removing the word
-        const updatedWords = words.filter(word => word.id !== id);
-        setWords(updatedWords);
-        setFilteredWords(updatedWords.filter(word => 
-          word.word.toLowerCase().includes(searchQuery.toLowerCase())
-        ));
+        showToast('Đã xóa từ vựng thành công', 'success');
+        // Reload the current page to reflect changes
+        fetchLearnedWords(currentPage);
       } else {
         setError('Không thể xóa từ này. Vui lòng thử lại sau.');
       }
@@ -114,33 +117,41 @@ const LearnedWordsPage: React.FC = () => {
     }
   };
 
+  /**
+   * Handle page change
+   */
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchLearnedWords(page);
+    // Scroll to top when changing page
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // load learned words when component mounts or authentication changes
   useEffect(() => {
     if (isAuthenticated) {
-      fetchLearnedWords();
+      fetchLearnedWords(1);
     }
   }, [isAuthenticated]);
 
-  // Thêm effect để tải lại dữ liệu mỗi khi component được hiển thị
+  // Reload data when page becomes visible
   useEffect(() => {
-    // Thêm event listener cho visibility change
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && isAuthenticated) {
-        fetchLearnedWords();
+        fetchLearnedWords(currentPage);
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Cleanup function
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, currentPage]);
 
   // retry loading if there was an error
   const handleRetry = () => {
-    fetchLearnedWords();
+    fetchLearnedWords(currentPage);
   };
 
   return (
@@ -155,14 +166,14 @@ const LearnedWordsPage: React.FC = () => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <Button 
           variant="outline-primary" 
-          onClick={fetchLearnedWords} 
+          onClick={() => fetchLearnedWords(currentPage)} 
           disabled={isLoading}
         >
           <i className="bi bi-arrow-clockwise me-2"></i>
-          Làm mới danh sách
+          Làm mới
         </Button>
         
-        <div className="search-container" style={{ width: '50%' }}>
+        <div className="search-container" style={{ width: '40%' }}>
           <InputGroup>
             <Form.Control
               type="text"
@@ -187,7 +198,7 @@ const LearnedWordsPage: React.FC = () => {
         </Alert>
       )}
       
-      <Card className="word-card">
+      <Card>
         <Card.Body>
           {isLoading ? (
             <div className="text-center py-5">
@@ -210,50 +221,56 @@ const LearnedWordsPage: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="table-responsive">
-              <Table hover>
-                <thead className="table-light">
-                  <tr>
-                    <th>#</th>
-                    <th>Từ vựng</th>
-                    <th className="text-end">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredWords.map((word, index) => (
-                    <tr key={word.id || index}>
-                      <td>{index + 1}</td>
-                      <td>{word.word}</td>
-                      <td className="text-end">
-                        <Button 
-                          variant="outline-primary" 
-                          size="sm"
-                          className="me-2"
-                          onClick={() => viewWordDetails(word.word)}
-                          title="Xem chi tiết từ vựng"
-                        >
-                          <i className="bi bi-search"></i>
-                        </Button>
-                        <Button 
-                          variant="outline-danger" 
-                          size="sm"
-                          onClick={() => removeWord(word.id)}
-                          disabled={isLoading}
-                          title="Xóa từ vựng"
-                        >
-                          <i className="bi bi-trash"></i>
-                        </Button>
-                      </td>
+            <>
+              <div className="table-responsive">
+                <Table hover>
+                  <thead className="table-light">
+                    <tr>
+                      <th>#</th>
+                      <th>Từ vựng</th>
+                      <th>Ngày học</th>
+                      <th className="text-end">Thao tác</th>
                     </tr>
-                  ))}
-                </tbody>
-              </Table>
-              {searchQuery.trim() && filteredWords.length > 0 && (
-                <div className="text-center mt-3">
-                  <p className="text-muted">Đang hiển thị {filteredWords.length} kết quả cho "{searchQuery}"</p>
-                </div>
-              )}
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredWords.map((word, index) => (
+                      <tr key={word.id || index}>
+                        <td>{((currentPage - 1) * pageSize) + index + 1}</td>
+                        <td>{word.word}</td>
+                        <td>{word.learnedAt ? formatDate(word.learnedAt) : '-'}</td>
+                        <td className="text-end">
+                          <Button 
+                            variant="outline-primary" 
+                            size="sm"
+                            className="me-2"
+                            onClick={() => viewWordDetails(word.word)}
+                            title="Xem chi tiết từ vựng"
+                          >
+                            <i className="bi bi-search"></i>
+                          </Button>
+                          <Button 
+                            variant="outline-danger" 
+                            size="sm"
+                            onClick={() => removeWord(word.id)}
+                            disabled={isLoading}
+                            title="Xóa từ vựng"
+                          >
+                            <i className="bi bi-trash"></i>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+              
+              {/* Pagination */}
+              <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </>
           )}
         </Card.Body>
       </Card>

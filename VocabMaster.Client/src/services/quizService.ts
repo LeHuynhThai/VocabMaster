@@ -19,6 +19,7 @@ export interface QuizResult {
 export interface CompletedQuiz {
   id: number;
   quizQuestionId: number;
+  word: string;
   completedAt: string;
   wasCorrect: boolean;
 }
@@ -119,6 +120,20 @@ const quizService = {
       return response.data;
     } catch (error: any) {
       console.error('Error getting completed quizzes:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Gets all correctly answered quizzes
+   * @returns List of correctly answered quizzes
+   */
+  getCompleteQuizz: async (): Promise<CompletedQuiz[]> => {
+    try {
+      const response = await api.get(API_ENDPOINTS.QUIZ_CORRECT);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error getting correct quizzes:', error);
       throw error;
     }
   },

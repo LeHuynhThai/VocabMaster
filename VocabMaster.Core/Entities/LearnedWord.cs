@@ -15,6 +15,9 @@ namespace VocabMaster.Core.Entities
         [Required]
         public int UserId { get; set; }
 
+        [Required]
+        public DateTime LearnedAt { get; set; } = DateTime.UtcNow;
+
         [ForeignKey("UserId")]
         public virtual User User { get; set; } // navigation property to the user who learned the word
     }

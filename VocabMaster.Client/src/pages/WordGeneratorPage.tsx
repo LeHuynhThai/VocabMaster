@@ -117,22 +117,19 @@ const WordGeneratorPage: React.FC = () => {
 
   const handleSaveWord = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
-    if (!word || saving) return;
+    if (!word || word.isLearned || saving) return;
     
     setSaving(true);
-    
     try {
       const success = await vocabularyService.markAsLearned(word.word);
       
       if (success) {
-        // Cập nhật trạng thái từ hiện tại
         const updatedWord = { ...word, isLearned: true };
         setWord(updatedWord);
         
-        // Hiển thị thông báo thành công
         addToast({
           type: 'success',
-          message: `Đã lưu từ "${word.word}" vào danh sách từ đã học.`
+          message: `Đã lưu từ "${word.word}" vào danh sách từ vựng đã học.`
         });
       } else {
         addToast({
@@ -154,19 +151,19 @@ const WordGeneratorPage: React.FC = () => {
   const playAudio = (audioUrl: string) => {
     if (!audioUrl) return;
     
-    const audio = new Audio(audioUrl);
-    audio.play().catch(error => {
-      console.error('Error playing audio:', error);
-      addToast({
-        type: 'error',
-        message: 'Không thể phát âm thanh. Vui lòng thử lại sau.'
+    try {
+      const audio = new Audio(audioUrl);
+      audio.play().catch(error => {
+        console.error('Error playing audio:', error);
       });
-    });
+    } catch (error) {
+      console.error('Error creating audio element:', error);
+    }
   };
 
-  // Kiểm tra URL khi component được tải
   useEffect(() => {
     const wordFromUrl = getWordFromUrl();
+    
     if (wordFromUrl) {
       lookupWord(wordFromUrl);
     } else {
@@ -236,8 +233,7 @@ const WordGeneratorPage: React.FC = () => {
           </div>
             )}
 
-            {/* Chỉ hiển thị phát âm từ pronunciations, không hiển thị phonetic */}
-          {word.pronunciations && word.pronunciations.length > 0 && (
+            {word.pronunciations && word.pronunciations.length > 0 && (
               <div className="pronunciation-container">
                 {word.pronunciations.map((pronunciation: Pronunciation, index: number) => (
                   <div key={index} className="pronunciation-item">

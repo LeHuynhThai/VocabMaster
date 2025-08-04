@@ -4,6 +4,7 @@ using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services.Quiz;
 
+// This service is used to check the answer of a quiz question and mark the question as completed if the answer is correct
 namespace VocabMaster.Services.Quiz
 {
     public class QuizAnswerService : IQuizAnswerService
@@ -21,7 +22,7 @@ namespace VocabMaster.Services.Quiz
             _completedQuizRepo = completedQuizRepo ?? throw new ArgumentNullException(nameof(completedQuizRepo));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-
+        // Check the answer of a quiz question
         public async Task<QuizResultDto> CheckAnswer(int questionId, string answer)
         {
             try
@@ -56,7 +57,8 @@ namespace VocabMaster.Services.Quiz
                 throw;
             }
         }
-
+        
+        // Check the answer of a quiz question and mark the question as completed if the answer is correct
         public async Task<QuizResultDto> CheckAnswerAndMarkCompleted(int questionId, string answer, int userId)
         {
             try

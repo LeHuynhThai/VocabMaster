@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using VocabMaster.Core.DTOs;
+using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services.Quiz;
 
 namespace VocabMaster.API.Controllers
@@ -14,17 +15,20 @@ namespace VocabMaster.API.Controllers
         private readonly IQuizQuestionService _quizQuestionService;
         private readonly IQuizAnswerService _quizAnswerService;
         private readonly IQuizProgressService _quizProgressService;
+        private readonly IQuizQuestionRepo _quizQuestionRepo;
         private readonly ILogger<QuizController> _logger;
 
         public QuizController(
             IQuizQuestionService quizQuestionService,
             IQuizAnswerService quizAnswerService,
             IQuizProgressService quizProgressService,
+            IQuizQuestionRepo quizQuestionRepo,
             ILogger<QuizController> logger)
         {
             _quizQuestionService = quizQuestionService ?? throw new ArgumentNullException(nameof(quizQuestionService));
             _quizAnswerService = quizAnswerService ?? throw new ArgumentNullException(nameof(quizAnswerService));
             _quizProgressService = quizProgressService ?? throw new ArgumentNullException(nameof(quizProgressService));
+            _quizQuestionRepo = quizQuestionRepo ?? throw new ArgumentNullException(nameof(quizQuestionRepo));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -207,6 +211,33 @@ namespace VocabMaster.API.Controllers
             }
         }
 
+        [HttpGet("correct")]
+        public async Task<IActionResult> GetCompleteQuizz()
+        {
+            try
+            {
+                var userId = GetUserIdSafe();
+                if (userId == null)
+                {
+                    _logger.LogWarning("User ID not found, returning empty correct list");
+                    return Ok(new List<CompletedQuizDto>());
+                }
+
+                var correctQuizzes = await _quizProgressService.GetCompleteQuizz(userId.Value);
+                return Ok(correctQuizzes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting correct quizzes");
+                return StatusCode(500, new
+                {
+                    error = "correct_quizzes_error",
+                    message = "Đã xảy ra lỗi khi tải danh sách câu hỏi đã làm đúng",
+                    details = ex.Message
+                });
+            }
+        }
+
         [HttpGet("stats")]
         public async Task<IActionResult> GetQuizStatistics()
         {
@@ -216,9 +247,23 @@ namespace VocabMaster.API.Controllers
                 if (userId == null)
                 {
                     _logger.LogWarning("User ID not found, returning default stats");
+                    
+                    // Get total number of quiz questions
+                    int totalQuestions;
+                    try
+                    {
+                        // Use repository directly instead of calling service
+                        totalQuestions = await _quizQuestionRepo.CountQuizQuestions();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error counting quiz questions");
+                        totalQuestions = 0;
+                    }
+                    
                     return Ok(new QuizStatsDto
                     {
-                        TotalQuestions = await _quizQuestionService.CountTotalQuestions(),
+                        TotalQuestions = totalQuestions,
                         CompletedQuestions = 0,
                         CorrectAnswers = 0,
                         CompletionPercentage = 0,
