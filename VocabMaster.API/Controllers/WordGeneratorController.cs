@@ -173,6 +173,7 @@ namespace VocabMaster.API.Controllers
             }
         }
 
+        // Search word in database
         [HttpGet("lookup/{word}")]
         [Authorize]
         public async Task<IActionResult> Lookup(string word)
@@ -181,8 +182,15 @@ namespace VocabMaster.API.Controllers
             {
                 _logger.LogInformation("Looking up definition for word: {Word}", word);
 
-                // Get the definition from cache or API
-                var definition = await _dictionaryLookupService.GetWordDefinitionFromCache(word);
+                var userId = GetUserIdFromClaims();
+                if (userId <= 0)
+                {
+                    _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
+                    return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
+                }
+
+                // Get the definition from database
+                var definition = await _dictionaryLookupService.GetWordDefinitionFromDatabase(word);
 
                 if (definition == null)
                 {
@@ -190,16 +198,18 @@ namespace VocabMaster.API.Controllers
                     return NotFound(new
                     {
                         error = "word_not_found",
-                        message = $"Không tìm thấy định nghĩa cho từ: {word}"
+                        message = $"Không tìm thấy từ vựng trong cơ sở dữ liệu, vui lòng tìm kiếm từ khác"
                     });
                 }
 
-                // Debug Vietnamese translation
-                _logger.LogInformation("Lookup word {Word} has Vietnamese translation: {HasVietnamese}",
-                    definition.Word, !string.IsNullOrEmpty(definition.Vietnamese) ? "Yes" : "No");
+                // Check if the word is learned
+                bool isLearned = await _wordStatusService.IsWordLearned(userId, word);
+                
+                // Convert to simplified response format (same as random word)
+                var response = VocabularyResponseDto.FromDictionaryResponse(definition, 0, isLearned, definition.Vietnamese);
 
                 _logger.LogInformation("Successfully retrieved definition for word: {Word}", word);
-                return Ok(definition);
+                return Ok(response);
             }
             catch (Exception ex)
             {

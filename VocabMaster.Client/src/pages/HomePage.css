@@ -5,8 +5,7 @@
 /* Container styling */
 .home-container {
   min-height: 100vh;
-  margin: -1rem;
-  padding: 2rem;
+  padding: 0;
   position: relative;
   overflow: hidden;
 }

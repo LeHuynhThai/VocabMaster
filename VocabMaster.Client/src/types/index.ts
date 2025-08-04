@@ -45,6 +45,8 @@ export interface Vocabulary {
   meanings: Meaning[];
   isLearned: boolean;
   vietnamese?: string;
+  phoneticsJson?: string;
+  meaningsJson?: string;
 }
 
 /**

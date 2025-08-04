@@ -30,7 +30,7 @@ namespace VocabMaster.Services.Dictionary
         public async Task<DictionaryResponseDto> GetWordDefinition(string word)
         {
             // first try to get from database
-            var result = await GetWordDefinitionFromCache(word);
+            var result = await GetWordDefinitionFromDatabase(word);
             
             // if not found in database, get from API
             if (result == null)
@@ -51,7 +51,7 @@ namespace VocabMaster.Services.Dictionary
         }
 
         // get word definition from database
-        public async Task<DictionaryResponseDto> GetWordDefinitionFromCache(string word)
+        public async Task<DictionaryResponseDto> GetWordDefinitionFromDatabase(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
             {
@@ -102,6 +102,10 @@ namespace VocabMaster.Services.Dictionary
                     Vietnamese = vietnameseTranslation
                 };
 
+                // Include raw JSON fields
+                response.PhoneticsJson = vocabulary.PhoneticsJson;
+                response.MeaningsJson = vocabulary.MeaningsJson;
+
                 _logger.LogInformation("Successfully retrieved data for word: {Word}", word);
                 return response;
             }
@@ -116,7 +120,7 @@ namespace VocabMaster.Services.Dictionary
                 return null;
             }
         }
-
+        
         // call dictionary API directly
         private async Task<DictionaryResponseDto> GetWordDefinitionFromApi(string word)
         {

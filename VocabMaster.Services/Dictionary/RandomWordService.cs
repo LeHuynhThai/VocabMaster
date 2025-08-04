@@ -39,19 +39,21 @@ namespace VocabMaster.Services.Dictionary
                     return null;
                 }
 
-                // try to get word definition from cache
+                // try to get word definition from database
                 try 
                 {
-                    var response = await _dictionaryLookupService.GetWordDefinitionFromCache(vocabulary.Word);
+                    _logger.LogInformation("Getting definition for word: {Word}", vocabulary.Word);
+                    var response = await _dictionaryLookupService.GetWordDefinitionFromDatabase(vocabulary.Word);
+                    
                     if (response == null)
                     {
-                        _logger.LogWarning("GetWordDefinitionFromCache returned null for word: {Word}, trying from direct API...", vocabulary.Word);
+                        _logger.LogWarning("GetWordDefinitionFromDatabase returned null for word: {Word}, trying from direct API...", vocabulary.Word);
                         response = await _dictionaryLookupService.GetWordDefinition(vocabulary.Word);
                     }
                     
                     if (response == null)
                     {
-                        _logger.LogWarning("Both cache and direct API returned null for word: {Word}. Creating basic response...", vocabulary.Word);
+                        _logger.LogWarning("Both database and direct API returned null for word: {Word}. Creating basic response...", vocabulary.Word);
                         return null;
                     }
                     
@@ -134,30 +136,28 @@ namespace VocabMaster.Services.Dictionary
                             _logger.LogInformation("Found unlearned random word on attempt {Attempt}: {Word}", attempt + 1, randomVocab.Word);
                             try
                             {
-                                var response = await _dictionaryLookupService.GetWordDefinitionFromCache(randomVocab.Word);
+                                _logger.LogInformation("Getting definition for word: {Word}", randomVocab.Word);
+                                var response = await _dictionaryLookupService.GetWordDefinitionFromDatabase(randomVocab.Word);
+                                
+                                if (response == null)
+                                {
+                                    _logger.LogWarning("GetWordDefinitionFromDatabase returned null for word: {Word}, trying direct API...", randomVocab.Word);
+                                    response = await _dictionaryLookupService.GetWordDefinition(randomVocab.Word);
+                                }
+                                
                                 if (response != null)
                                 {
                                     return response;
                                 }
                                 else
                                 {
-                                    _logger.LogWarning("GetWordDefinitionFromCache returned null for word: {Word}, trying direct API...", randomVocab.Word);
-                                    response = await _dictionaryLookupService.GetWordDefinition(randomVocab.Word);
-                                    
-                                    if (response != null)
+                                    _logger.LogWarning("Both database and API failed for word: {Word}, creating basic response", randomVocab.Word);
+                                    // Create a minimal response if both database and API fail
+                                    return new DictionaryResponseDto
                                     {
-                                        return response;
-                                    }
-                                    else
-                                    {
-                                        _logger.LogWarning("Both cache and API failed for word: {Word}, creating basic response", randomVocab.Word);
-                                        // Create a minimal response if both cache and API fail
-                                        return new DictionaryResponseDto
-                                        {
-                                            Word = randomVocab.Word,
-                                            Vietnamese = randomVocab.Vietnamese
-                                        };
-                                    }
+                                        Word = randomVocab.Word,
+                                        Vietnamese = randomVocab.Vietnamese
+                                    };
                                 }
                             }
                             catch (Exception ex)
@@ -180,22 +180,24 @@ namespace VocabMaster.Services.Dictionary
                 _logger.LogInformation("Found random unlearned word: {Word}", vocabulary.Word);
                 try
                 {
-                    var response = await _dictionaryLookupService.GetWordDefinitionFromCache(vocabulary.Word);
+                    _logger.LogInformation("Getting definition for word: {Word}", vocabulary.Word);
+                    var response = await _dictionaryLookupService.GetWordDefinitionFromDatabase(vocabulary.Word);
+                    
                     if (response == null)
                     {
-                        _logger.LogWarning("GetWordDefinitionFromCache returned null for word: {Word}, trying direct API...", vocabulary.Word);
+                        _logger.LogWarning("GetWordDefinitionFromDatabase returned null for word: {Word}, trying direct API...", vocabulary.Word);
                         response = await _dictionaryLookupService.GetWordDefinition(vocabulary.Word);
-                        
-                        if (response == null)
+                    }
+                    
+                    if (response == null)
+                    {
+                        _logger.LogWarning("Both database and API failed for word: {Word}, creating basic response", vocabulary.Word);
+                        // Create a minimal response if both database and API fail
+                        return new DictionaryResponseDto 
                         {
-                            _logger.LogWarning("Both cache and API failed for word: {Word}, creating basic response", vocabulary.Word);
-                            // Create a minimal response if both cache and API fail
-                            return new DictionaryResponseDto 
-                            {
-                                Word = vocabulary.Word,
-                                Vietnamese = vocabulary.Vietnamese
-                            };
-                        }
+                            Word = vocabulary.Word,
+                            Vietnamese = vocabulary.Vietnamese
+                        };
                     }
                     return response;
                 }
