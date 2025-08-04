@@ -184,6 +184,13 @@
   100% { transform: rotate(360deg); }
 }
 
+/* Pagination styling */
+.quiz-stats-pagination {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .stats-summary {

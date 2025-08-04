@@ -4,6 +4,7 @@ import { useQuizStats } from '../contexts/QuizStatsContext';
 import useToast from '../hooks/useToast';
 import '../components/ui/QuizStats.css';
 import './QuizStatsPage.css';
+import Pagination from '../components/ui/Pagination';
 
 /**
  * Quiz Statistics Page
@@ -16,6 +17,10 @@ const QuizStatsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { lastRefresh } = useQuizStats();
   const { showToast } = useToast();
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const pageSize = 10;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,6 +56,9 @@ const QuizStatsPage: React.FC = () => {
         
         setStats(statsData);
         setCorrectQuizzes(correctData);
+        
+        // Reset to first page when data changes
+        setCurrentPage(1);
       } catch (err) {
         console.error('Error in fetchData:', err);
         setError('Không thể tải thống kê. Vui lòng thử lại sau.');
@@ -110,6 +118,17 @@ const QuizStatsPage: React.FC = () => {
     correctPercentage: 0
   };
 
+  // Calculate total pages and data for current page        
+  const totalPages = Math.ceil(correctQuizzes.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, correctQuizzes.length);
+  const currentPageData = correctQuizzes.slice(startIndex, endIndex);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="quiz-stats-page">
       <div className="quiz-stats-header">
@@ -162,28 +181,39 @@ const QuizStatsPage: React.FC = () => {
         {correctQuizzes.length === 0 ? (
           <p className="no-data-message">Bạn chưa trả lời đúng câu hỏi nào.</p>
         ) : (
-          <div className="completed-quizzes-table-container">
-            <table className="completed-quizzes-table">
-              <thead>
-                <tr>
-                  <th>STT</th>
-                  <th>ID câu hỏi</th>
-                  <th>Từ vựng</th>
-                  <th>Thời gian</th>
-                </tr>
-              </thead>
-              <tbody>
-                {correctQuizzes.map((quiz, index) => (
-                  <tr key={quiz.id}>
-                    <td>{index + 1}</td>
-                    <td>{quiz.quizQuestionId}</td>
-                    <td className="stats-quiz-word">{quiz.word || 'N/A'}</td>
-                    <td>{formatDate(quiz.completedAt)}</td>
+          <>
+            <div className="completed-quizzes-table-container">
+              <table className="completed-quizzes-table">
+                <thead>
+                  <tr>
+                    <th>STT</th>
+                    <th>ID câu hỏi</th>
+                    <th>Từ vựng</th>
+                    <th>Thời gian</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {currentPageData.map((quiz, index) => (
+                    <tr key={quiz.id}>
+                      <td>{startIndex + index + 1}</td>
+                      <td>{quiz.quizQuestionId}</td>
+                      <td className="stats-quiz-word">{quiz.word || 'N/A'}</td>
+                      <td>{formatDate(quiz.completedAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Pagination component */}
+            <div className="quiz-stats-pagination">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </>
         )}
       </div>
     </div>
