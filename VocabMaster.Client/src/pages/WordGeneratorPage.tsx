@@ -96,7 +96,7 @@ const WordGeneratorPage: React.FC = () => {
       console.error('Error searching for word:', error);
       addToast({
         type: 'error',
-        message: `Không tìm thấy từ "${wordToLookup}". Vui lòng kiểm tra lại.`
+        message: `Không tìm thấy từ "${wordToLookup}" trong cơ sở dữ liệu, vui lòng tìm kiếm từ khác`
       });
     } finally {
       setLoading(false);
@@ -175,22 +175,15 @@ const WordGeneratorPage: React.FC = () => {
     <Container className="py-4">
       <Row>
         <Col lg={8} className="mx-auto">
-          <div className="page-header">
-            <h1 className="page-title">Từ vựng</h1>
-            <p className="page-description">
-              Học từ vựng mới mỗi ngày để cải thiện vốn từ của bạn
-            </p>
-          </div>
-      
           <Form onSubmit={handleSearch} className="mb-4">
-        <InputGroup>
-          <Form.Control
-            type="text"
+            <InputGroup>
+              <Form.Control
+                type="text"
                 placeholder="Nhập từ bạn muốn tra cứu..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 disabled={searching || loading}
-          />
+              />
               <Button 
                 type="submit" 
                 variant="outline-primary"
@@ -201,9 +194,9 @@ const WordGeneratorPage: React.FC = () => {
                 ) : (
                   <i className="bi bi-search"></i>
                 )}
-          </Button>
-        </InputGroup>
-      </Form>
+              </Button>
+            </InputGroup>
+          </Form>
         </Col>
       </Row>
 

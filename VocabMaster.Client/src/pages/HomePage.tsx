@@ -2,7 +2,7 @@ import React from 'react';
 import { Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import '../styles/HomePage.css';
+import './HomePage.css';
 
 /**
  * Home page component

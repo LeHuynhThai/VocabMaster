@@ -18,6 +18,12 @@ namespace VocabMaster.Core.DTOs
 
         [JsonPropertyName("vietnamese")]
         public string Vietnamese { get; set; }
+        
+        [JsonPropertyName("phoneticsJson")]
+        public string PhoneticsJson { get; set; }
+        
+        [JsonPropertyName("meaningsJson")]
+        public string MeaningsJson { get; set; }
     }
 
     public class Phonetic

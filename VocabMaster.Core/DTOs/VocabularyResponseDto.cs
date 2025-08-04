@@ -25,6 +25,12 @@ namespace VocabMaster.Core.DTOs
         [JsonPropertyName("vietnamese")]
         public string Vietnamese { get; set; }
 
+        [JsonPropertyName("phoneticsJson")]
+        public string PhoneticsJson { get; set; }
+
+        [JsonPropertyName("meaningsJson")]
+        public string MeaningsJson { get; set; }
+
         public static VocabularyResponseDto FromDictionaryResponse(DictionaryResponseDto dictionaryResponse, int id = 0, bool isLearned = false, string vietnamese = null)
         {
             if (dictionaryResponse == null)
@@ -36,7 +42,9 @@ namespace VocabMaster.Core.DTOs
                 Word = dictionaryResponse.Word,
                 Phonetic = dictionaryResponse.Phonetic,
                 IsLearned = isLearned,
-                Vietnamese = vietnamese
+                Vietnamese = vietnamese,
+                PhoneticsJson = dictionaryResponse.PhoneticsJson,
+                MeaningsJson = dictionaryResponse.MeaningsJson
             };
 
             // Add pronunciations (up to 3)
