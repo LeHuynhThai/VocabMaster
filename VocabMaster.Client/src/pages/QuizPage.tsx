@@ -129,7 +129,6 @@ const QuizPage: React.FC = () => {
     <div className="quiz-container">
       <div className="quiz-header">
         <h1 className="quiz-title">Trắc nghiệm từ vựng</h1>
-        <p className="quiz-subtitle">Chọn nghĩa tiếng Việt chính xác của từ tiếng Anh</p>
       </div>
 
       {loading ? (
@@ -140,7 +139,7 @@ const QuizPage: React.FC = () => {
           <button className="btn btn-primary" onClick={loadQuestion}>Thử lại</button>
         </div>
       ) : question ? (
-        <>
+        <div className="quiz-content">
           <div className="quiz-question">
             <div className="quiz-word-container">
               <span className="quiz-word">{question.word}</span>
@@ -184,7 +183,7 @@ const QuizPage: React.FC = () => {
               )}
             </div>
           </div>
-        </>
+        </div>
       ) : (
         <div className="quiz-error">
           <p>Không có câu hỏi nào.</p>

@@ -156,13 +156,6 @@ const LearnedWordsPage: React.FC = () => {
 
   return (
     <Container className="py-4">
-      <div className="page-header">
-        <h1 className="page-title">Từ vựng đã học</h1>
-        <p className="page-description">
-          Danh sách các từ vựng bạn đã lưu
-        </p>
-      </div>
-
       <div className="d-flex justify-content-between align-items-center mb-3">
         <Button 
           variant="outline-primary" 

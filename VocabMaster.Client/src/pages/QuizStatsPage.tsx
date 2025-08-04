@@ -131,11 +131,6 @@ const QuizStatsPage: React.FC = () => {
 
   return (
     <div className="quiz-stats-page">
-      <div className="quiz-stats-header">
-        <h1>Thống kê trắc nghiệm</h1>
-        <p>Chi tiết về tiến độ và kết quả trắc nghiệm của bạn</p>
-      </div>
-
       {/* Summary cards */}
       <div className="stats-summary">
         <div className="stats-card">
