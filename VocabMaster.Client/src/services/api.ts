@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
 // URL API backend
-const API_URL = 'https://localhost:64732';
+const API_URL = window.location.hostname === 'localhost' ? 'https://localhost:64732' : '';
 const TOKEN_KEY = 'vocabmaster_token';
 
 // Create axios instance with default config
@@ -10,21 +10,21 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 seconds timeout
-  withCredentials: true, // Cho phép gửi cookies khi cross-domain request
+  timeout: 15000, // 15 seconds timeout
+  withCredentials: true, // Allow sending cookies when cross-domain request
 });
 
-// Hàm lấy token từ localStorage
+// Function to get token from localStorage
 const getToken = (): string | null => {
   return localStorage.getItem(TOKEN_KEY);
 };
 
-// Hàm lưu token vào localStorage
+// Function to save token to localStorage
 export const setToken = (token: string): void => {
   localStorage.setItem(TOKEN_KEY, token);
 };
 
-// Hàm xóa token khỏi localStorage
+// Function to remove token from localStorage
 export const removeToken = (): void => {
   localStorage.removeItem(TOKEN_KEY);
 };
@@ -35,13 +35,13 @@ api.interceptors.request.use(
     // Debug request
     console.log('Starting Request', JSON.stringify(config, null, 2));
     
-    // Thêm token vào header nếu có
+    // Add token to header if exists
     const token = getToken();
     if (token && config.headers) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
     
-    // Ngăn chặn các sự kiện mặc định có thể gây reload trang
+    // Prevent default events that can cause page reload
     if (config.method?.toLowerCase() === 'post' || config.method?.toLowerCase() === 'put') {
       if (config.headers) {
         config.headers['X-Requested-With'] = 'XMLHttpRequest';
@@ -61,7 +61,7 @@ api.interceptors.response.use(
     // Debug response
     console.log('Response:', JSON.stringify(response.data, null, 2));
     
-    // Lưu token nếu response chứa token (đăng nhập thành công)
+    // Save token if response contains token (login successful)
     if (response.data && response.data.accessToken) {
       setToken(response.data.accessToken);
     }
@@ -72,15 +72,15 @@ api.interceptors.response.use(
     // Debug error
     console.log('Response Error:', error);
     
-    // Ngăn chặn các hành vi mặc định có thể gây reload trang
+    // Prevent default events that can cause page reload
     if (error.config && error.response) {
-      // Ghi log lỗi nhưng không làm gián đoạn luồng ứng dụng
+      // Log error but don't interrupt application flow
       console.log(`API Error: ${error.response.status} - ${error.response.statusText}`);
       
-      // Xử lý lỗi 401 Unauthorized mà không reload trang
+      // Handle 401 Unauthorized error without page reload
       if (error.response.status === 401) {
         console.log('Authentication error - not redirecting automatically');
-        // Kiểm tra nếu token hết hạn
+        // Check if token is expired
         const isTokenExpired = error.response.headers['token-expired'] === 'true';
         if (isTokenExpired) {
           console.log('Token expired, removing from storage');
@@ -93,7 +93,7 @@ api.interceptors.response.use(
       console.log('API Error:', error.message);
     }
     
-    // Trả về lỗi để component có thể xử lý
+    // Return error to allow component to handle
     return Promise.reject(error);
   }
 );

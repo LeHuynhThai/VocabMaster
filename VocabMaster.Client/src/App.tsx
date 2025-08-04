@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { QuizStatsProvider } from './contexts/QuizStatsContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { useToast } from './contexts/ToastContext';
 
@@ -18,6 +19,7 @@ import RegisterPage from './pages/RegisterPage';
 import WordGeneratorPage from './pages/WordGeneratorPage';
 import LearnedWordsPage from './pages/LearnedWordsPage';
 import QuizPage from './pages/QuizPage';
+import QuizStatsPage from './pages/QuizStatsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { ROUTES } from './utils/constants';
 
@@ -35,42 +37,50 @@ function App() {
     <Router>
       <AuthProvider>
         <ToastProvider>
-          <div className="app-container">
-            <Header />
-            <div className="content-wrapper">
-              <Sidebar />
-              <main className="main-content">
-                <Routes>
-                  <Route path="/" element={<Navigate to={ROUTES.HOME} />} />
-                  <Route path={ROUTES.HOME} element={<HomePage />} />
-                  <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-                  <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
-                  <Route 
-                    path={ROUTES.WORD_GENERATOR} 
-                    element={
-                      <ProtectedRoute element={<WordGeneratorPage />} />
-                    } 
-                  />
-                  <Route 
-                    path={ROUTES.LEARNED_WORDS} 
-                    element={
-                      <ProtectedRoute element={<LearnedWordsPage />} />
-                    } 
-                  />
-                  <Route 
-                    path={ROUTES.QUIZ} 
-                    element={
-                      <ProtectedRoute element={<QuizPage />} />
-                    } 
-                  />
-                  <Route path={ROUTES.NOT_FOUND} element={<NotFoundPage />} />
-                  <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} />} />
-                </Routes>
-              </main>
+          <QuizStatsProvider>
+            <div className="app-container">
+              <Header />
+              <div className="content-wrapper">
+                <Sidebar />
+                <main className="main-content">
+                  <Routes>
+                    <Route path="/" element={<Navigate to={ROUTES.HOME} />} />
+                    <Route path={ROUTES.HOME} element={<HomePage />} />
+                    <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+                    <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+                    <Route 
+                      path={ROUTES.WORD_GENERATOR} 
+                      element={
+                        <ProtectedRoute element={<WordGeneratorPage />} />
+                      } 
+                    />
+                    <Route 
+                      path={ROUTES.LEARNED_WORDS} 
+                      element={
+                        <ProtectedRoute element={<LearnedWordsPage />} />
+                      } 
+                    />
+                    <Route 
+                      path={ROUTES.QUIZ} 
+                      element={
+                        <ProtectedRoute element={<QuizPage />} />
+                      } 
+                    />
+                    <Route 
+                      path={ROUTES.QUIZ_STATS} 
+                      element={
+                        <ProtectedRoute element={<QuizStatsPage />} />
+                      } 
+                    />
+                    <Route path={ROUTES.NOT_FOUND} element={<NotFoundPage />} />
+                    <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} />} />
+                  </Routes>
+                </main>
+              </div>
+              <Footer />
+              <ToastContainerWithContext />
             </div>
-            <Footer />
-            <ToastContainerWithContext />
-          </div>
+          </QuizStatsProvider>
         </ToastProvider>
       </AuthProvider>
     </Router>

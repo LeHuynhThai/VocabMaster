@@ -98,18 +98,5 @@ namespace VocabMaster.Services.Quiz
                 throw;
             }
         }
-
-        public async Task<int> CountTotalQuestions()
-        {
-            try
-            {
-                return await _quizQuestionRepo.CountQuizQuestions();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error counting total quiz questions");
-                return 0;
-            }
-        }
     }
 }

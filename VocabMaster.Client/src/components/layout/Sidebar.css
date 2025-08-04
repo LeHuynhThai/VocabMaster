@@ -157,6 +157,29 @@
   height: var(--footer-height, 60px);
 }
 
+/* Quiz Stats Section in Sidebar */
+.sidebar-stats-section {
+  margin-top: var(--spacing-lg, 20px);
+  padding-top: 0;
+  border-top: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sidebar-stats-section .quiz-stats-link {
+  display: block;
+  padding: var(--spacing-md, 16px) var(--spacing-lg, 20px);
+  color: inherit;
+  text-decoration: none;
+  transition: all var(--transition-normal, 0.3s ease);
+  border-left: 3px solid transparent;
+}
+
+.sidebar-stats-section .quiz-stats-link:hover {
+  background-color: rgba(106, 17, 203, 0.08);
+  border-left-color: var(--primary, #6a11cb);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .sidebar {

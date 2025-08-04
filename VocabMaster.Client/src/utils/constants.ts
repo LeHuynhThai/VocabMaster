@@ -9,6 +9,7 @@ export const ROUTES = {
   LEARNED_WORDS: '/learned-words',
   TRANSLATION: '/translation',
   QUIZ: '/quiz',
+  QUIZ_STATS: '/quiz-stats',
   NOT_FOUND: '/not-found'
 };
 

@@ -216,9 +216,23 @@ namespace VocabMaster.API.Controllers
                 if (userId == null)
                 {
                     _logger.LogWarning("User ID not found, returning default stats");
+                    
+                    // Get total number of quiz questions
+                    int totalQuestions;
+                    try
+                    {
+                        // Use repository directly instead of calling service
+                        totalQuestions = await _quizQuestionRepo.CountQuizQuestions();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error counting quiz questions");
+                        totalQuestions = 0;
+                    }
+                    
                     return Ok(new QuizStatsDto
                     {
-                        TotalQuestions = await _quizQuestionService.CountTotalQuestions(),
+                        TotalQuestions = totalQuestions,
                         CompletedQuestions = 0,
                         CorrectAnswers = 0,
                         CompletionPercentage = 0,

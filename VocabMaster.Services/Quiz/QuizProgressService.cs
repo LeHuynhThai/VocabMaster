@@ -39,6 +39,7 @@ namespace VocabMaster.Services.Quiz
             }
         }
 
+        // Get quiz statistics for a user
         public async Task<QuizStatsDto> GetQuizStatistics(int userId)
         {
             try

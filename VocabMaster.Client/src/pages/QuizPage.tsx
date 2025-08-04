@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import useToast from '../hooks/useToast';
 import quizService, { QuizQuestion, QuizResult, QuizStats } from '../services/quizService';
 import { MESSAGES } from '../utils/constants';
+import { useQuizStats } from '../contexts/QuizStatsContext';
 import './QuizPage.css';
 
 const QuizPage: React.FC = () => {
   const { showToast } = useToast();
+  const { refreshStats } = useQuizStats(); // Use the quiz stats context
   const [question, setQuestion] = useState<QuizQuestion | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -86,9 +88,10 @@ const QuizPage: React.FC = () => {
       const resultData = await quizService.checkAnswerAndComplete(question.id, selectedAnswer);
       setResult(resultData);
       
-      // If the answer is correct, update stats
+      // If the answer is correct, update stats and refresh the stats in sidebar
       if (resultData.isCorrect) {
-        await loadStats(); // Update stats
+        await loadStats(); // Update local stats
+        refreshStats(); // Trigger refresh in the sidebar component
       }
     } catch (error) {
       console.error('Error checking answer:', error);
