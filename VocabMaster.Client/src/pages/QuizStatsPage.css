@@ -134,6 +134,15 @@
   background-color: var(--gray-100);
 }
 
+.quiz-word {
+  font-weight: 500;
+  color: var(--primary);
+  font-size: 0.95rem;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+  font-style: italic;
+}
+
 .correct-answer {
   color: var(--success);
   font-weight: 600;

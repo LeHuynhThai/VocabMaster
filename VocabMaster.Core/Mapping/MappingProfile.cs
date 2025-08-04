@@ -29,7 +29,9 @@ namespace VocabMaster.Core.Mapping
             CreateMap<QuizQuestion, QuizQuestionDto>();
 
             // CompletedQuiz mappings
-            CreateMap<CompletedQuiz, CompletedQuizDto>();
+            CreateMap<CompletedQuiz, CompletedQuizDto>()
+                .ForMember(dest => dest.Word, opt => opt.MapFrom(src => src.QuizQuestion != null ? src.QuizQuestion.Word : null));
+                
             CreateMap<MarkQuizCompletedDto, CompletedQuiz>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.UserId, opt => opt.Ignore())

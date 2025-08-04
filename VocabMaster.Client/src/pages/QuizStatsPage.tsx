@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import quizService, { QuizStats, CompletedQuiz } from '../services/quizService';
 import { useQuizStats } from '../contexts/QuizStatsContext';
+import useToast from '../hooks/useToast';
 import '../components/ui/QuizStats.css';
 import './QuizStatsPage.css';
 
@@ -10,10 +11,11 @@ import './QuizStatsPage.css';
  */
 const QuizStatsPage: React.FC = () => {
   const [stats, setStats] = useState<QuizStats | null>(null);
-  const [completedQuizzes, setCompletedQuizzes] = useState<CompletedQuiz[]>([]);
+  const [correctQuizzes, setCorrectQuizzes] = useState<CompletedQuiz[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { lastRefresh } = useQuizStats();
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,7 +33,7 @@ const QuizStatsPage: React.FC = () => {
         };
 
         let statsData: QuizStats = defaultStats;
-        let completedData: CompletedQuiz[] = [];
+        let correctData: CompletedQuiz[] = [];
 
         try {
           // Try to get stats
@@ -39,16 +41,16 @@ const QuizStatsPage: React.FC = () => {
         } catch (err) {
           console.error('Error fetching quiz statistics:', err);
         }
-
+        
         try {
-          // Try to get completed quizzes
-          completedData = await quizService.getCompletedQuizzes();
+          // Try to get correct quizzes
+          correctData = await quizService.getCompleteQuizz();
         } catch (err) {
-          console.error('Error fetching completed quizzes:', err);
+          console.error('Error fetching correct quizzes:', err);
         }
         
         setStats(statsData);
-        setCompletedQuizzes(completedData);
+        setCorrectQuizzes(correctData);
       } catch (err) {
         console.error('Error in fetchData:', err);
         setError('Không thể tải thống kê. Vui lòng thử lại sau.');
@@ -154,31 +156,29 @@ const QuizStatsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Recent completed quizzes */}
+      {/* Correct quizzes section */}
       <div className="completed-quizzes-section">
-        <h2>Lịch sử làm bài gần đây</h2>
-        {completedQuizzes.length === 0 ? (
-          <p className="no-data-message">Bạn chưa hoàn thành câu hỏi nào.</p>
+        <h2>Danh sách các câu trả lời đúng</h2>
+        {correctQuizzes.length === 0 ? (
+          <p className="no-data-message">Bạn chưa trả lời đúng câu hỏi nào.</p>
         ) : (
           <div className="completed-quizzes-table-container">
             <table className="completed-quizzes-table">
               <thead>
                 <tr>
+                  <th>STT</th>
                   <th>ID câu hỏi</th>
+                  <th>Từ vựng</th>
                   <th>Thời gian</th>
-                  <th>Kết quả</th>
                 </tr>
               </thead>
               <tbody>
-                {completedQuizzes.slice(0, 10).map((quiz) => (
+                {correctQuizzes.map((quiz, index) => (
                   <tr key={quiz.id}>
+                    <td>{index + 1}</td>
                     <td>{quiz.quizQuestionId}</td>
+                    <td className="quiz-word">{quiz.word || 'N/A'}</td>
                     <td>{formatDate(quiz.completedAt)}</td>
-                    <td>
-                      <span className={quiz.wasCorrect ? 'correct-answer' : 'wrong-answer'}>
-                        {quiz.wasCorrect ? 'Đúng' : 'Sai'}
-                      </span>
-                    </td>
                   </tr>
                 ))}
               </tbody>
