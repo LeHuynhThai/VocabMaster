@@ -63,13 +63,6 @@ build/
 dist/
 coverage/
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
 # Visual Studio files
 .vs/
 .vscode/
@@ -96,11 +89,9 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
-# Configs with secrets
+# secrets files
 VocabMaster.API/appsettings.json
-VocabMaster.API/appsettings.Development.json
 VocabMaster.Client/src/index.tsx
-VocabMaster.Client/src/utils/constants.ts
 
 # Temporary files
 *.swp
@@ -151,14 +142,4 @@ build/
 dist/
 coverage/
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
 
-# Do not ignore example files
-!VocabMaster.API/appsettings.example.json
-!VocabMaster.Client/src/index.example.tsx
-!VocabMaster.Client/src/utils/constants.example.ts
