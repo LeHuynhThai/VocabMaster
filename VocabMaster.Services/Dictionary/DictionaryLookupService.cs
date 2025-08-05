@@ -120,7 +120,7 @@ namespace VocabMaster.Services.Dictionary
                 return null;
             }
         }
-        
+
         // call dictionary API directly
         private async Task<DictionaryResponseDto> GetWordDefinitionFromApi(string word)
         {

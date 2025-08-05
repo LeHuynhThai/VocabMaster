@@ -243,7 +243,7 @@ namespace VocabMaster.API.Controllers
         {
             try
             {
-                // validate page number
+                // Validate parameters
                 if (pageNumber < 1) pageNumber = 1;
                 // use default page size 10
                 const int pageSize = 10;
@@ -270,9 +270,12 @@ namespace VocabMaster.API.Controllers
                 
                 var (items, totalCount, totalPages) = await _quizProgressService.GetPaginatedCorrectQuizzes(userId.Value, pageNumber, pageSize);
                 
+                _logger.LogInformation("Retrieved {Count} items, total {Total}, pages {Pages}", 
+                    items.Count, totalCount, totalPages);
+                
                 var response = new PaginatedResponseDto<CompletedQuizDto>
                 {
-                    Items = items,
+                    Items = items ?? new List<CompletedQuizDto>(),
                     PageInfo = new PageInfoDto
                     {
                         CurrentPage = pageNumber,
@@ -286,7 +289,7 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting paginated correct quizzes");
+                _logger.LogError(ex, "Error getting paginated correct quizzes: {Message}", ex.Message);
                 return StatusCode(500, new
                 {
                     error = "paginated_correct_error",

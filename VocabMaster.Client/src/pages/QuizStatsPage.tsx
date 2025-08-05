@@ -38,14 +38,38 @@ const QuizStatsPage: React.FC = () => {
   // Fetch paginated correct quizzes
   const fetchPaginatedCorrectQuizzes = async (page: number = currentPage) => {
     try {
-      // Luôn sử dụng pageSize = 10
+      // always use pageSize = 10
+      console.log(`Fetching page ${page} of correct quizzes`);
       const response: PaginatedResponse<CompletedQuiz> = await quizService.getPaginatedCorrectQuizzes(page);
-      setCorrectQuizzes(response.items);
-      setTotalPages(response.pageInfo.totalPages);
-      setCurrentPage(response.pageInfo.currentPage);
+      console.log('API response:', response);
+      
+      // Check if response.items is null or undefined
+      if (!response?.items) {
+        console.error('API returned invalid response: items is null or undefined');
+        setCorrectQuizzes([]);
+        setTotalPages(0);
+        setCurrentPage(1);
+        return false;
+      }
+      
+      // Ensure each item has a valid value
+      const validItems = response.items.map(item => ({
+        ...item,
+        word: item.word || 'N/A',
+        completedAt: item.completedAt || new Date().toISOString()
+      }));
+      
+      setCorrectQuizzes(validItems);
+      setTotalPages(response.pageInfo?.totalPages || 0);
+      setCurrentPage(response.pageInfo?.currentPage || 1);
+      console.log(`Set correctQuizzes:`, validItems);
+      console.log(`Total pages: ${response.pageInfo?.totalPages || 0}, Current page: ${response.pageInfo?.currentPage || 1}`);
       return true;
     } catch (err) {
       console.error('Error fetching paginated correct quizzes:', err);
+      // Show error message
+      showToast('Không thể tải danh sách câu hỏi đã hoàn thành. Vui lòng thử lại sau.', 'danger');
+      setCorrectQuizzes([]);
       return false;
     }
   };

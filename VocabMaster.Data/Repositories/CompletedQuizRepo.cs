@@ -5,9 +5,7 @@ using VocabMaster.Core.Interfaces.Repositories;
 
 namespace VocabMaster.Data.Repositories
 {
-    /// <summary>
-    /// Repository implementation for completed quiz operations
-    /// </summary>
+    // Repository implementation for completed quiz operations
     public class CompletedQuizRepo : ICompletedQuizRepo
     {
         private readonly AppDbContext _context;
@@ -21,11 +19,7 @@ namespace VocabMaster.Data.Repositories
             _logger = logger;
         }
 
-        /// <summary>
-        /// Gets all completed quiz questions for a specific user
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <returns>List of completed quiz questions</returns>
+        // Gets all completed quiz questions for a specific user
         public async Task<List<CompletedQuiz>> GetByUserId(int userId)
         {
             try
@@ -43,11 +37,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        /// <summary>
-        /// Gets IDs of all completed quiz questions for a specific user
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <returns>List of completed quiz question IDs</returns>
+        // Gets IDs of all completed quiz questions for a specific user
         public async Task<List<int>> GetCompletedQuizQuestionIdsByUserId(int userId)
         {
             try
@@ -65,12 +55,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        /// <summary>
-        /// Checks if a quiz question has been completed by a user
-        /// </summary>
-        /// <param name="userId">ID of the user</param>
-        /// <param name="quizQuestionId">ID of the quiz question</param>
-        /// <returns>True if completed, false otherwise</returns>
+        // Checks if a quiz question has been completed by a user
         public async Task<bool> IsQuizQuestionCompletedByUser(int userId, int quizQuestionId)
         {
             try
@@ -86,11 +71,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        /// <summary>
-        /// Marks a quiz question as completed by a user
-        /// </summary>
-        /// <param name="completedQuiz">Completed quiz information</param>
-        /// <returns>The created completed quiz record</returns>
+        // Marks a quiz question as completed by a user
         public async Task<CompletedQuiz> MarkAsCompleted(CompletedQuiz completedQuiz)
         {
             try
@@ -158,6 +139,13 @@ namespace VocabMaster.Data.Repositories
                 
                 // Get total count
                 int totalCount = await query.CountAsync();
+                _logger?.LogInformation("Total count of correct quizzes for user {UserId}: {Count}", userId, totalCount);
+                
+                if (totalCount == 0)
+                {
+                    _logger?.LogInformation("No correct quizzes found for user {UserId}", userId);
+                    return (new List<CompletedQuiz>(), 0);
+                }
                 
                 // Apply pagination
                 var items = await query
@@ -168,11 +156,30 @@ namespace VocabMaster.Data.Repositories
                 _logger?.LogInformation("Retrieved {Count} correct quizzes for user {UserId} (total: {Total})",
                     items.Count, userId, totalCount);
                 
+                // Ensure QuizQuestion is loaded
+                foreach (var item in items)
+                {
+                    if (item.QuizQuestion == null)
+                    {
+                        _logger?.LogWarning("QuizQuestion is null for CompletedQuiz {Id}, QuizQuestionId: {QuizId}", 
+                            item.Id, item.QuizQuestionId);
+                        
+                        // Try to load the quiz question explicitly
+                        item.QuizQuestion = await _context.QuizQuestions.FindAsync(item.QuizQuestionId);
+                        if (item.QuizQuestion == null)
+                        {
+                            _logger?.LogError("Failed to load QuizQuestion {Id} for CompletedQuiz {CompletedId}", 
+                                item.QuizQuestionId, item.Id);
+                        }
+                    }
+                }
+                
                 return (items, totalCount);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error getting paginated correct quizzes for user {UserId}", userId);
+                _logger?.LogError(ex, "Error getting paginated correct quizzes for user {UserId}: {Message}", 
+                    userId, ex.Message);
                 throw;
             }
         }
