@@ -141,5 +141,40 @@ namespace VocabMaster.Data.Repositories
                 throw;
             }
         }
+        
+        // Gets paginated correctly answered quizzes for a user
+        public async Task<(List<CompletedQuiz> Items, int TotalCount)> GetPaginatedCorrectQuizzes(int userId, int pageNumber, int pageSize)
+        {
+            try
+            {
+                _logger?.LogInformation("Getting paginated correct quizzes for user {UserId}, page {PageNumber}, size {PageSize}", 
+                    userId, pageNumber, pageSize);
+                
+                // Get only correct answers
+                var query = _context.CompletedQuizzes
+                    .Where(cq => cq.UserId == userId && cq.WasCorrect)
+                    .Include(cq => cq.QuizQuestion)
+                    .OrderByDescending(cq => cq.CompletedAt);
+                
+                // Get total count
+                int totalCount = await query.CountAsync();
+                
+                // Apply pagination
+                var items = await query
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+                
+                _logger?.LogInformation("Retrieved {Count} correct quizzes for user {UserId} (total: {Total})",
+                    items.Count, userId, totalCount);
+                
+                return (items, totalCount);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error getting paginated correct quizzes for user {UserId}", userId);
+                throw;
+            }
+        }
     }
 }

@@ -237,6 +237,64 @@ namespace VocabMaster.API.Controllers
                 });
             }
         }
+        
+        [HttpGet("correct/paginated")]
+        public async Task<IActionResult> GetPaginatedCorrectQuizzes([FromQuery] int pageNumber = 1)
+        {
+            try
+            {
+                // validate page number
+                if (pageNumber < 1) pageNumber = 1;
+                // use default page size 10
+                const int pageSize = 10;
+                
+                var userId = GetUserIdSafe();
+                if (userId == null)
+                {
+                    _logger.LogWarning("User ID not found, returning empty paginated correct list");
+                    return Ok(new PaginatedResponseDto<CompletedQuizDto>
+                    {
+                        Items = new List<CompletedQuizDto>(),
+                        PageInfo = new PageInfoDto
+                        {
+                            CurrentPage = pageNumber,
+                            PageSize = pageSize,
+                            TotalItems = 0,
+                            TotalPages = 0
+                        }
+                    });
+                }
+                
+                _logger.LogInformation("Getting paginated correct quizzes for user {UserId}, page {Page}", 
+                    userId, pageNumber);
+                
+                var (items, totalCount, totalPages) = await _quizProgressService.GetPaginatedCorrectQuizzes(userId.Value, pageNumber, pageSize);
+                
+                var response = new PaginatedResponseDto<CompletedQuizDto>
+                {
+                    Items = items,
+                    PageInfo = new PageInfoDto
+                    {
+                        CurrentPage = pageNumber,
+                        PageSize = pageSize,
+                        TotalItems = totalCount,
+                        TotalPages = totalPages
+                    }
+                };
+                
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting paginated correct quizzes");
+                return StatusCode(500, new
+                {
+                    error = "paginated_correct_error",
+                    message = "Đã xảy ra lỗi khi tải danh sách câu hỏi đã làm đúng theo trang",
+                    details = ex.Message
+                });
+            }
+        }
 
         [HttpGet("stats")]
         public async Task<IActionResult> GetQuizStatistics()
