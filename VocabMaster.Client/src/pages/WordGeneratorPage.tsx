@@ -32,6 +32,8 @@ const WordGeneratorPage: React.FC = () => {
   const { addToast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
+  const [allLearned, setAllLearned] = useState(false);
+  const [allLearnedMessage, setAllLearnedMessage] = useState('');
 
   // Lấy từ vựng từ URL query parameter
   const getWordFromUrl = useCallback(() => {
@@ -45,8 +47,19 @@ const WordGeneratorPage: React.FC = () => {
     try {
       const data = await vocabularyService.getRandomWord();
       console.log('Random Word Data:', data);
-      console.log('Vietnamese translation:', data.vietnamese);
-      setWord(data);
+      
+      // Kiểm tra nếu tất cả từ vựng đã được học hết
+      if (data.allLearned) {
+        setAllLearned(true);
+        setAllLearnedMessage(data.message || 'Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống.');
+        setWord(null);
+      } else {
+        console.log('Vietnamese translation:', data.vietnamese);
+        setWord(data);
+        setAllLearned(false);
+        setAllLearnedMessage('');
+      }
+      
       // Xóa tham số từ URL khi hiển thị từ ngẫu nhiên
       navigate(ROUTES.WORD_GENERATOR, { replace: true });
     } catch (error) {
@@ -65,8 +78,19 @@ const WordGeneratorPage: React.FC = () => {
     try {
       const data = await vocabularyService.getNewRandomWord();
       console.log('New Random Word Data:', data);
-      console.log('Vietnamese translation:', data.vietnamese);
-      setWord(data);
+      
+      // Kiểm tra nếu tất cả từ vựng đã được học hết
+      if (data.allLearned) {
+        setAllLearned(true);
+        setAllLearnedMessage(data.message || 'Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống.');
+        setWord(null);
+      } else {
+        console.log('Vietnamese translation:', data.vietnamese);
+        setWord(data);
+        setAllLearned(false);
+        setAllLearnedMessage('');
+      }
+      
       // Xóa tham số từ URL khi hiển thị từ ngẫu nhiên mới
       navigate(ROUTES.WORD_GENERATOR, { replace: true });
     } catch (error) {
@@ -207,6 +231,23 @@ const WordGeneratorPage: React.FC = () => {
           </Spinner>
           <p className="mt-3">Đang tải từ vựng...</p>
         </div>
+      ) : allLearned ? (
+        <div className="text-center my-5 all-learned-container">
+          <div className="all-learned-message">
+            <i className="bi bi-trophy-fill text-warning mb-3" style={{ fontSize: '3rem' }}></i>
+            <h3 className="mb-4">{allLearnedMessage}</h3>
+            <p>Bạn đã hoàn thành việc học tất cả từ vựng có trong hệ thống.</p>
+            <p>Hãy tiếp tục ôn tập các từ đã học để củng cố kiến thức!</p>
+            <Button 
+              variant="primary" 
+              className="mt-3"
+              onClick={() => navigate(ROUTES.LEARNED_WORDS)}
+            >
+              <i className="bi bi-journal-text me-2"></i>
+              Xem danh sách từ đã học
+            </Button>
+          </div>
+        </div>
       ) : word ? (
         <div className="word-container">
           <div className="word-header">
@@ -223,7 +264,7 @@ const WordGeneratorPage: React.FC = () => {
               <div className="vietnamese-translation vietnamese-missing">
                 <h3 className="vietnamese-title">Nghĩa tiếng Việt:</h3>
                 <p className="vietnamese-text">Chưa có bản dịch</p>
-          </div>
+              </div>
             )}
 
             {word.pronunciations && word.pronunciations.length > 0 && (

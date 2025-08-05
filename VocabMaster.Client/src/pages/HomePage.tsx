@@ -2,6 +2,7 @@ import React from 'react';
 import { Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { ROUTES } from '../utils/constants';
 import './HomePage.css';
 
 /**
@@ -85,12 +86,12 @@ const HomePage: React.FC = () => {
             {/* Call to Action Button */}
             <div className="text-center">
               {isAuthenticated ? (
-                <Link to="/wordgenerator" className="btn btn-primary btn-lg px-5 py-3 rounded-pill start-button">
+                <Link to={ROUTES.WORD_GENERATOR} className="btn btn-primary btn-lg px-5 py-3 rounded-pill start-button">
                   <i className="bi bi-play-circle me-2"></i>
                   Bắt đầu học từ mới
                 </Link>
               ) : (
-                <Link to="/login" className="btn btn-primary btn-lg px-5 py-3 rounded-pill start-button">
+                <Link to={ROUTES.LOGIN} className="btn btn-primary btn-lg px-5 py-3 rounded-pill start-button">
                   <i className="bi bi-box-arrow-in-right me-2"></i>
                   Đăng nhập để bắt đầu
                 </Link>
