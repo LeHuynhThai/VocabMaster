@@ -93,10 +93,16 @@ namespace VocabMaster.API.Controllers
 
                 if (uncompletedQuestion == null)
                 {
-                    return NotFound(new
+                    _logger.LogInformation("User {UserId} has completed all quiz questions", userId);
+                    
+                    // Get stats to include in the response
+                    var stats = await _quizProgressService.GetQuizStatistics(userId.Value);
+                    
+                    return Ok(new
                     {
-                        error = "question_not_found",
-                        message = "Không tìm thấy câu hỏi nào"
+                        allCompleted = true,
+                        message = "Chúc mừng! Bạn đã hoàn thành tất cả các câu hỏi trắc nghiệm.",
+                        stats = stats
                     });
                 }
 
@@ -233,6 +239,67 @@ namespace VocabMaster.API.Controllers
                 {
                     error = "correct_quizzes_error",
                     message = "Đã xảy ra lỗi khi tải danh sách câu hỏi đã làm đúng",
+                    details = ex.Message
+                });
+            }
+        }
+        
+        [HttpGet("correct/paginated")]
+        public async Task<IActionResult> GetPaginatedCorrectQuizzes([FromQuery] int pageNumber = 1)
+        {
+            try
+            {
+                // Validate parameters
+                if (pageNumber < 1) pageNumber = 1;
+                // use default page size 10
+                const int pageSize = 10;
+                
+                var userId = GetUserIdSafe();
+                if (userId == null)
+                {
+                    _logger.LogWarning("User ID not found, returning empty paginated correct list");
+                    return Ok(new PaginatedResponseDto<CompletedQuizDto>
+                    {
+                        Items = new List<CompletedQuizDto>(),
+                        PageInfo = new PageInfoDto
+                        {
+                            CurrentPage = pageNumber,
+                            PageSize = pageSize,
+                            TotalItems = 0,
+                            TotalPages = 0
+                        }
+                    });
+                }
+                
+                _logger.LogInformation("Getting paginated correct quizzes for user {UserId}, page {Page}", 
+                    userId, pageNumber);
+                
+                var (items, totalCount, totalPages) = await _quizProgressService.GetPaginatedCorrectQuizzes(userId.Value, pageNumber, pageSize);
+                
+                _logger.LogInformation("Retrieved {Count} items, total {Total}, pages {Pages}", 
+                    items.Count, totalCount, totalPages);
+                
+                var response = new PaginatedResponseDto<CompletedQuizDto>
+                {
+                    Items = items ?? new List<CompletedQuizDto>(),
+                    PageInfo = new PageInfoDto
+                    {
+                        CurrentPage = pageNumber,
+                        PageSize = pageSize,
+                        TotalItems = totalCount,
+                        TotalPages = totalPages
+                    }
+                };
+                
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting paginated correct quizzes: {Message}", ex.Message);
+                return StatusCode(500, new
+                {
+                    error = "paginated_correct_error",
+                    message = "Đã xảy ra lỗi khi tải danh sách câu hỏi đã làm đúng theo trang",
                     details = ex.Message
                 });
             }

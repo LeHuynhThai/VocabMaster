@@ -11,5 +11,7 @@ namespace VocabMaster.Core.Interfaces.Repositories
         Task<bool> IsQuizQuestionCompletedByUser(int userId, int quizQuestionId);
 
         Task<CompletedQuiz> MarkAsCompleted(CompletedQuiz completedQuiz);
+        
+        Task<(List<CompletedQuiz> Items, int TotalCount)> GetPaginatedCorrectQuizzes(int userId, int pageNumber, int pageSize);
     }
 }

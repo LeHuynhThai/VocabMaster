@@ -10,6 +10,16 @@ export interface QuizQuestion {
   wrongAnswer3: string;
 }
 
+// Interface for response when all questions are completed
+export interface AllCompletedResponse {
+  allCompleted: boolean;
+  message: string;
+  stats: QuizStats;
+}
+
+// Union type for quiz question response
+export type QuizQuestionResponse = QuizQuestion | AllCompletedResponse;
+
 export interface QuizResult {
   isCorrect: boolean;
   correctAnswer: string;
@@ -32,6 +42,19 @@ export interface QuizStats {
   correctPercentage: number;
 }
 
+export interface PageInfo {
+  currentPage: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+// Interface cho kết quả phân trang
+export interface PaginatedResponse<T> {
+  items: T[];
+  pageInfo: PageInfo;
+}
+
 /**
  * Service for quiz operations
  */
@@ -52,9 +75,9 @@ const quizService = {
 
   /**
    * Gets a random uncompleted quiz question
-   * @returns Random uncompleted quiz question
+   * @returns Random uncompleted quiz question or completion message
    */
-  getRandomUncompletedQuestion: async (): Promise<QuizQuestion> => {
+  getRandomUncompletedQuestion: async (): Promise<QuizQuestionResponse> => {
     try {
       const response = await api.get(API_ENDPOINTS.QUIZ_RANDOM_UNCOMPLETED);
       return response.data;
@@ -135,6 +158,32 @@ const quizService = {
     } catch (error: any) {
       console.error('Error getting correct quizzes:', error);
       throw error;
+    }
+  },
+  
+  /**
+   * Gets paginated correctly answered quizzes
+   * @param pageNumber - Page number (1-based)
+   * @returns Paginated response with correctly answered quizzes
+   */
+  getPaginatedCorrectQuizzes: async (pageNumber: number = 1): Promise<PaginatedResponse<CompletedQuiz>> => {
+    try {
+      const response = await api.get(API_ENDPOINTS.QUIZ_CORRECT_PAGINATED, {
+        params: { pageNumber }
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching paginated correct quizzes:', error);
+      // Return empty paginated response if error
+      return {
+        items: [],
+        pageInfo: {
+          currentPage: pageNumber,
+          pageSize: 10, // default page size 10
+          totalItems: 0,
+          totalPages: 0
+        }
+      };
     }
   },
 

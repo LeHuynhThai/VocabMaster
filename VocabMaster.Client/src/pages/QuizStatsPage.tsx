@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import quizService, { QuizStats, CompletedQuiz } from '../services/quizService';
+import quizService, { QuizStats, CompletedQuiz, PaginatedResponse } from '../services/quizService';
 import { useQuizStats } from '../contexts/QuizStatsContext';
 import useToast from '../hooks/useToast';
 import '../components/ui/QuizStats.css';
@@ -20,7 +20,59 @@ const QuizStatsPage: React.FC = () => {
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const pageSize = 10;
+
+  // Fetch quiz stats
+  const fetchStats = async () => {
+    try {
+      const statsData = await quizService.getQuizStats();
+      setStats(statsData);
+      return true;
+    } catch (err) {
+      console.error('Error fetching quiz statistics:', err);
+      return false;
+    }
+  };
+
+  // Fetch paginated correct quizzes
+  const fetchPaginatedCorrectQuizzes = async (page: number = currentPage) => {
+    try {
+      // always use pageSize = 10
+      console.log(`Fetching page ${page} of correct quizzes`);
+      const response: PaginatedResponse<CompletedQuiz> = await quizService.getPaginatedCorrectQuizzes(page);
+      console.log('API response:', response);
+      
+      // Check if response.items is null or undefined
+      if (!response?.items) {
+        console.error('API returned invalid response: items is null or undefined');
+        setCorrectQuizzes([]);
+        setTotalPages(0);
+        setCurrentPage(1);
+        return false;
+      }
+      
+      // Ensure each item has a valid value
+      const validItems = response.items.map(item => ({
+        ...item,
+        word: item.word || 'N/A',
+        completedAt: item.completedAt || new Date().toISOString()
+      }));
+      
+      setCorrectQuizzes(validItems);
+      setTotalPages(response.pageInfo?.totalPages || 0);
+      setCurrentPage(response.pageInfo?.currentPage || 1);
+      console.log(`Set correctQuizzes:`, validItems);
+      console.log(`Total pages: ${response.pageInfo?.totalPages || 0}, Current page: ${response.pageInfo?.currentPage || 1}`);
+      return true;
+    } catch (err) {
+      console.error('Error fetching paginated correct quizzes:', err);
+      // Show error message
+      showToast('Không thể tải danh sách câu hỏi đã hoàn thành. Vui lòng thử lại sau.', 'danger');
+      setCorrectQuizzes([]);
+      return false;
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,37 +80,13 @@ const QuizStatsPage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Create a default stats object in case the API call fails
-        const defaultStats: QuizStats = {
-          totalQuestions: 0,
-          completedQuestions: 0,
-          correctAnswers: 0,
-          completionPercentage: 0,
-          correctPercentage: 0
-        };
-
-        let statsData: QuizStats = defaultStats;
-        let correctData: CompletedQuiz[] = [];
-
-        try {
-          // Try to get stats
-          statsData = await quizService.getQuizStats();
-        } catch (err) {
-          console.error('Error fetching quiz statistics:', err);
+        // Fetch stats and paginated correct quizzes
+        const statsSuccess = await fetchStats();
+        const quizzesSuccess = await fetchPaginatedCorrectQuizzes(1); // Start with page 1
+        
+        if (!statsSuccess && !quizzesSuccess) {
+          setError('Không thể tải thống kê. Vui lòng thử lại sau.');
         }
-        
-        try {
-          // Try to get correct quizzes
-          correctData = await quizService.getCompleteQuizz();
-        } catch (err) {
-          console.error('Error fetching correct quizzes:', err);
-        }
-        
-        setStats(statsData);
-        setCorrectQuizzes(correctData);
-        
-        // Reset to first page when data changes
-        setCurrentPage(1);
       } catch (err) {
         console.error('Error in fetchData:', err);
         setError('Không thể tải thống kê. Vui lòng thử lại sau.');
@@ -69,6 +97,29 @@ const QuizStatsPage: React.FC = () => {
 
     fetchData();
   }, [lastRefresh]);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    fetchPaginatedCorrectQuizzes(page);
+    // Scroll to top when changing page
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('vi-VN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (err) {
+      return dateString;
+    }
+  };
 
   if (loading) {
     return (
@@ -93,22 +144,6 @@ const QuizStatsPage: React.FC = () => {
     );
   }
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('vi-VN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (err) {
-      return dateString;
-    }
-  };
-
   // Make sure stats is defined
   const displayStats = stats || {
     totalQuestions: 0,
@@ -116,17 +151,6 @@ const QuizStatsPage: React.FC = () => {
     correctAnswers: 0,
     completionPercentage: 0,
     correctPercentage: 0
-  };
-
-  // Calculate total pages and data for current page        
-  const totalPages = Math.ceil(correctQuizzes.length / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, correctQuizzes.length);
-  const currentPageData = correctQuizzes.slice(startIndex, endIndex);
-
-  // Handle page change
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
   };
 
   return (
@@ -188,9 +212,9 @@ const QuizStatsPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentPageData.map((quiz, index) => (
+                  {correctQuizzes.map((quiz, index) => (
                     <tr key={quiz.id}>
-                      <td>{startIndex + index + 1}</td>
+                      <td>{(currentPage - 1) * pageSize + index + 1}</td>
                       <td>{quiz.quizQuestionId}</td>
                       <td className="stats-quiz-word">{quiz.word || 'N/A'}</td>
                       <td>{formatDate(quiz.completedAt)}</td>
@@ -201,13 +225,15 @@ const QuizStatsPage: React.FC = () => {
             </div>
             
             {/* Pagination component */}
-            <div className="quiz-stats-pagination">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            </div>
+            {totalPages > 1 && (
+              <div className="quiz-stats-pagination">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
           </>
         )}
       </div>

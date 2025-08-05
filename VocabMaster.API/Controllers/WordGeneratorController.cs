@@ -43,7 +43,6 @@ namespace VocabMaster.API.Controllers
         [HttpGet("getrandomword")]
         [ProducesResponseType(typeof(VocabularyResponseDto), 200)]
         [ProducesResponseType(typeof(object), 401)]
-        [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetRandomWord()
         {
@@ -71,7 +70,10 @@ namespace VocabMaster.API.Controllers
                 if (randomWord == null)
                 {
                     _logger.LogInformation("No random word found for user {UserId}", userId);
-                    return NotFound(new { message = "No word found or all words have been learned" });
+                    return Ok(new { 
+                        allLearned = true, 
+                        message = "Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống."
+                    });
                 }
 
                 bool isLearned = await _wordStatusService.IsWordLearned(userId, randomWord.Word);
@@ -113,7 +115,6 @@ namespace VocabMaster.API.Controllers
         [HttpGet("newrandomword")]
         [ProducesResponseType(typeof(VocabularyResponseDto), 200)]
         [ProducesResponseType(typeof(object), 401)]
-        [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetRandomWordExcludeLearned()
         {
@@ -140,7 +141,10 @@ namespace VocabMaster.API.Controllers
                 if (randomWord == null)
                 {
                     _logger.LogInformation("No random word found for user {UserId} - all words may be learned", userId);
-                    return NotFound(new { message = "No word found or all words have been learned" });
+                    return Ok(new { 
+                        allLearned = true, 
+                        message = "Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống."
+                    });
                 }
 
                 bool isLearned = await _wordStatusService.IsWordLearned(userId, randomWord.Word);

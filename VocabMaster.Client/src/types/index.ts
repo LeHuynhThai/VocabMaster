@@ -40,13 +40,15 @@ export interface Meaning {
 export interface Vocabulary {
   id: number;
   word: string;
-  phonetic: string;
-  pronunciations: Pronunciation[];
-  meanings: Meaning[];
+  phonetic?: string;
+  pronunciations?: Pronunciation[];
+  meanings?: Meaning[];
   isLearned: boolean;
   vietnamese?: string;
   phoneticsJson?: string;
   meaningsJson?: string;
+  allLearned?: boolean;
+  message?: string;
 }
 
 /**

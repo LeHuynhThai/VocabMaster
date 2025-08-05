@@ -84,5 +84,49 @@ namespace VocabMaster.Services.Quiz
                 throw;
             }
         }
+
+        // Get paginated correct quizzes for a user
+        public async Task<(List<CompletedQuizDto> Items, int TotalCount, int TotalPages)> GetPaginatedCorrectQuizzes(int userId, int pageNumber, int pageSize)
+        {
+            try
+            {
+                _logger.LogInformation("Getting paginated correct quizzes for user {UserId}, page {PageNumber}, size {PageSize}", 
+                    userId, pageNumber, pageSize);
+                
+                var (items, totalCount) = await _completedQuizRepo.GetPaginatedCorrectQuizzes(userId, pageNumber, pageSize);
+                
+                _logger.LogInformation("Repository returned {Count} items and {Total} total count", 
+                    items?.Count ?? 0, totalCount);
+                
+                if (items == null)
+                {
+                    _logger.LogWarning("Repository returned null items for user {UserId}", userId);
+                    return (new List<CompletedQuizDto>(), 0, 0);
+                }
+                
+                var dtos = _mapper.Map<List<CompletedQuizDto>>(items);
+                int totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+                
+                _logger.LogInformation("Mapped {Count} DTOs for user {UserId}, total {Total} items, {Pages} pages", 
+                    dtos.Count, userId, totalCount, totalPages);
+                
+                // Ensure each DTO has the word from the quiz question
+                foreach (var dto in dtos)
+                {
+                    if (string.IsNullOrEmpty(dto.Word))
+                    {
+                        _logger.LogWarning("Quiz {Id} is missing word information", dto.Id);
+                    }
+                }
+                
+                return (dtos, totalCount, totalPages);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting paginated correct quizzes for user {UserId}: {Message}", 
+                    userId, ex.Message);
+                throw;
+            }
+        }
     }
 }

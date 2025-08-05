@@ -153,11 +153,11 @@ namespace VocabMaster.Services.Dictionary
                                 {
                                     _logger.LogWarning("Both database and API failed for word: {Word}, creating basic response", randomVocab.Word);
                                     // Create a minimal response if both database and API fail
-                                    return new DictionaryResponseDto
-                                    {
-                                        Word = randomVocab.Word,
-                                        Vietnamese = randomVocab.Vietnamese
-                                    };
+                                        return new DictionaryResponseDto
+                                        {
+                                            Word = randomVocab.Word,
+                                            Vietnamese = randomVocab.Vietnamese
+                                        };
                                 }
                             }
                             catch (Exception ex)
@@ -188,16 +188,16 @@ namespace VocabMaster.Services.Dictionary
                         _logger.LogWarning("GetWordDefinitionFromDatabase returned null for word: {Word}, trying direct API...", vocabulary.Word);
                         response = await _dictionaryLookupService.GetWordDefinition(vocabulary.Word);
                     }
-                    
-                    if (response == null)
-                    {
+                        
+                        if (response == null)
+                        {
                         _logger.LogWarning("Both database and API failed for word: {Word}, creating basic response", vocabulary.Word);
                         // Create a minimal response if both database and API fail
-                        return new DictionaryResponseDto 
-                        {
-                            Word = vocabulary.Word,
-                            Vietnamese = vocabulary.Vietnamese
-                        };
+                            return new DictionaryResponseDto 
+                            {
+                                Word = vocabulary.Word,
+                                Vietnamese = vocabulary.Vietnamese
+                            };
                     }
                     return response;
                 }

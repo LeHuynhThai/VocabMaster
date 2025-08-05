@@ -36,6 +36,7 @@ export const API_ENDPOINTS = {
   QUIZ_CHECK_ANSWER_COMPLETE: '/api/quiz/check-complete',
   QUIZ_COMPLETED: '/api/quiz/completed',
   QUIZ_CORRECT: '/api/quiz/correct',
+  QUIZ_CORRECT_PAGINATED: '/api/quiz/correct/paginated',
   QUIZ_STATS: '/api/quiz/stats'
 };
 

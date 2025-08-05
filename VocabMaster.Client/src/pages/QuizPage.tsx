@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import useToast from '../hooks/useToast';
-import quizService, { QuizQuestion, QuizResult, QuizStats } from '../services/quizService';
-import { MESSAGES } from '../utils/constants';
+import quizService, { QuizQuestion, QuizResult, QuizStats, AllCompletedResponse } from '../services/quizService';
+import { MESSAGES, ROUTES } from '../utils/constants';
 import { useQuizStats } from '../contexts/QuizStatsContext';
+import { Link } from 'react-router-dom';
 import './QuizPage.css';
 
 const QuizPage: React.FC = () => {
@@ -17,6 +18,8 @@ const QuizPage: React.FC = () => {
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
   const [stats, setStats] = useState<QuizStats | null>(null);
   const [loadingStats, setLoadingStats] = useState<boolean>(false);
+  const [allCompleted, setAllCompleted] = useState<boolean>(false);
+  const [completionMessage, setCompletionMessage] = useState<string>('');
 
   useEffect(() => {
     loadQuestion();
@@ -42,13 +45,22 @@ const QuizPage: React.FC = () => {
     setError('');
     setSelectedAnswer('');
     setResult(null);
+    setAllCompleted(false);
+    setCompletionMessage('');
 
     try {
-      const questionData = await quizService.getRandomUncompletedQuestion();
-      if (!questionData) {
-        throw new Error('Không nhận được dữ liệu câu hỏi từ server');
+      const response = await quizService.getRandomUncompletedQuestion();
+      
+      // Check if response indicates all questions are completed
+      if ('allCompleted' in response && response.allCompleted) {
+        setAllCompleted(true);
+        setCompletionMessage(response.message);
+        setStats(response.stats);
+        setQuestion(null);
+      } else {
+        // It's a regular question
+        setQuestion(response as QuizQuestion);
       }
-      setQuestion(questionData);
     } catch (error: any) {
       console.error('Error fetching quiz question:', error);
       // Hiển thị thông báo lỗi cụ thể hơn
@@ -127,19 +139,57 @@ const QuizPage: React.FC = () => {
 
   return (
     <div className="quiz-container">
-      <div className="quiz-header">
-        <h1 className="quiz-title">Trắc nghiệm từ vựng</h1>
-      </div>
-
       {loading ? (
-        <div className="quiz-loading">Đang tải câu hỏi...</div>
+        <div className="quiz-loading">
+          <div className="spinner"></div>
+          <p>Đang tải câu hỏi...</p>
+        </div>
       ) : error ? (
         <div className="quiz-error">
           <p>{error}</p>
           <button className="btn btn-primary" onClick={loadQuestion}>Thử lại</button>
         </div>
+      ) : allCompleted ? (
+        <div className="quiz-content">
+          <div className="quiz-header">
+            <h1 className="quiz-title">Trắc nghiệm từ vựng</h1>
+          </div>
+          <div className="quiz-completed">
+            <div className="quiz-completed-icon">
+              <i className="bi bi-trophy-fill"></i>
+            </div>
+            <h2 className="quiz-completed-title">{completionMessage}</h2>
+            
+            {stats && (
+              <div className="quiz-completed-stats">
+                <div className="stats-item">
+                  <span className="stats-label">Tổng số câu hỏi:</span>
+                  <span className="stats-value">{stats.totalQuestions}</span>
+                </div>
+                <div className="stats-item">
+                  <span className="stats-label">Câu trả lời đúng:</span>
+                  <span className="stats-value">{stats.correctAnswers}</span>
+                </div>
+                <div className="stats-item">
+                  <span className="stats-label">Tỷ lệ chính xác:</span>
+                  <span className="stats-value">{formatPercentage(stats.correctPercentage)}</span>
+                </div>
+              </div>
+            )}
+            
+            <div className="quiz-completed-actions">
+              <Link to={ROUTES.QUIZ_STATS} className="btn btn-primary">
+                <i className="bi bi-bar-chart-fill me-2"></i>
+                Xem thống kê chi tiết
+              </Link>
+            </div>
+          </div>
+        </div>
       ) : question ? (
         <div className="quiz-content">
+          <div className="quiz-header">
+            <h1 className="quiz-title">Trắc nghiệm từ vựng</h1>
+          </div>
           <div className="quiz-question">
             <div className="quiz-word-container">
               <span className="quiz-word">{question.word}</span>
