@@ -10,6 +10,16 @@ export interface QuizQuestion {
   wrongAnswer3: string;
 }
 
+// Interface for response when all questions are completed
+export interface AllCompletedResponse {
+  allCompleted: boolean;
+  message: string;
+  stats: QuizStats;
+}
+
+// Union type for quiz question response
+export type QuizQuestionResponse = QuizQuestion | AllCompletedResponse;
+
 export interface QuizResult {
   isCorrect: boolean;
   correctAnswer: string;
@@ -65,9 +75,9 @@ const quizService = {
 
   /**
    * Gets a random uncompleted quiz question
-   * @returns Random uncompleted quiz question
+   * @returns Random uncompleted quiz question or completion message
    */
-  getRandomUncompletedQuestion: async (): Promise<QuizQuestion> => {
+  getRandomUncompletedQuestion: async (): Promise<QuizQuestionResponse> => {
     try {
       const response = await api.get(API_ENDPOINTS.QUIZ_RANDOM_UNCOMPLETED);
       return response.data;

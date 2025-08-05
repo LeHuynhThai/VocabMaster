@@ -93,10 +93,16 @@ namespace VocabMaster.API.Controllers
 
                 if (uncompletedQuestion == null)
                 {
-                    return NotFound(new
+                    _logger.LogInformation("User {UserId} has completed all quiz questions", userId);
+                    
+                    // Get stats to include in the response
+                    var stats = await _quizProgressService.GetQuizStatistics(userId.Value);
+                    
+                    return Ok(new
                     {
-                        error = "question_not_found",
-                        message = "Không tìm thấy câu hỏi nào"
+                        allCompleted = true,
+                        message = "Chúc mừng! Bạn đã hoàn thành tất cả các câu hỏi trắc nghiệm.",
+                        stats = stats
                     });
                 }
 

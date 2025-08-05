@@ -74,16 +74,17 @@ namespace VocabMaster.Services.Quiz
                 // Get a random quiz question that hasn't been completed by this user
                 var question = await _quizQuestionRepo.GetRandomUnansweredQuizQuestion(completedQuestionIds);
 
-                // If all questions have been answered, get a random question
+                // If all questions have been answered, return null
                 if (question == null)
                 {
-                    _logger.LogInformation("User {UserId} has completed all quiz questions, returning a random one", userId);
-                    question = await _quizQuestionRepo.GetRandomQuizQuestion();
-                }
-
-                if (question == null)
-                {
-                    _logger.LogWarning("No quiz questions available for user {UserId}", userId);
+                    // Count total questions
+                    int totalQuestions = await _quizQuestionRepo.CountQuizQuestions();
+                    int completedCount = completedQuestionIds.Count;
+                    
+                    _logger.LogInformation("User {UserId} has completed all quiz questions ({CompletedCount}/{TotalQuestions})", 
+                        userId, completedCount, totalQuestions);
+                    
+                    // All questions have been completed
                     return null;
                 }
 
