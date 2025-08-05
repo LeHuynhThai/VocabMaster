@@ -99,8 +99,8 @@ bld/
 # Configs with secrets
 VocabMaster.API/appsettings.json
 VocabMaster.API/appsettings.Development.json
-# Không loại trừ file example
-# */appsettings.*.json
+VocabMaster.Client/src/index.tsx
+VocabMaster.Client/src/utils/constants.ts
 
 # Temporary files
 *.swp
@@ -157,3 +157,8 @@ coverage/
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Do not ignore example files
+!VocabMaster.API/appsettings.example.json
+!VocabMaster.Client/src/index.example.tsx
+!VocabMaster.Client/src/utils/constants.example.ts

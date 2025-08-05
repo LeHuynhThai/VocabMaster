@@ -72,4 +72,4 @@
 - Phát sinh từ vựng ngẫu nhiên với phát âm, nghĩa Tiếng Việt
 - Lưu từ vựng đã học và xem lại sau
 - Tìm kiếm trong từ vựng đã học
-- Quản lý hồ sơ người dùng (avatar, mật khẩu) 
+- Quản lý hồ sơ người dùng (avatar, mật khẩu)
