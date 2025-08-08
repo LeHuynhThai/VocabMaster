@@ -176,10 +176,10 @@ public class AccountController : ControllerBase
 
         if (await _authenticationService.Register(user))
         {
-            return Ok(new { success = true, message = "Registration successful" });
+            return Ok(new { success = true, message = "Đăng ký thành công" });
         }
 
-        return BadRequest(new { message = "Username already exists" });
+        return BadRequest(new { message = "Tên đăng nhập đã tồn tại" });
     }
 
     // Logout
@@ -188,7 +188,7 @@ public class AccountController : ControllerBase
     public IActionResult Logout()
     {
         // JWT doesn't need server-side logout
-        return Ok(new { success = true, message = "Logout successful" });
+        return Ok(new { success = true, message = "Đăng xuất thành công" });
     }
 
     // Get Current User
