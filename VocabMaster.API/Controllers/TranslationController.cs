@@ -22,8 +22,6 @@ namespace VocabMaster.API.Controllers
         }
 
         [HttpPost("crawl-all")]
-        [ProducesResponseType(typeof(object), 200)]
-        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> CrawlAllTranslations()
         {
             try
