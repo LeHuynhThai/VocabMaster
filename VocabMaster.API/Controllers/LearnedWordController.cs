@@ -38,9 +38,6 @@ namespace VocabMaster.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(List<LearnedWordDto>), 200)]
-        [ProducesResponseType(typeof(object), 401)]
-        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetLearnedWords()
         {
             try
@@ -100,10 +97,6 @@ namespace VocabMaster.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(VocabularyResponseDto), 200)]
-        [ProducesResponseType(typeof(object), 401)]
-        [ProducesResponseType(typeof(object), 404)]
-        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetLearnedWord(int id)
         {
             try
@@ -151,9 +144,6 @@ namespace VocabMaster.API.Controllers
         }
 
         [HttpGet("paginated")]
-        [ProducesResponseType(typeof(PaginatedResponseDto<LearnedWordDto>), 200)]
-        [ProducesResponseType(typeof(object), 401)]
-        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetPaginatedLearnedWords([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try
@@ -205,10 +195,6 @@ namespace VocabMaster.API.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(object), 200)]
-        [ProducesResponseType(typeof(object), 400)]
-        [ProducesResponseType(typeof(object), 401)]
-        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> AddLearnedWord([FromBody] AddLearnedWordDto request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.Word))
@@ -267,11 +253,6 @@ namespace VocabMaster.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(object), 200)]
-        [ProducesResponseType(typeof(object), 400)]
-        [ProducesResponseType(typeof(object), 401)]
-        [ProducesResponseType(typeof(object), 404)]
-        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteLearnedWord(int id)
         {
             if (id <= 0)

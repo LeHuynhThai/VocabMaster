@@ -41,9 +41,6 @@ namespace VocabMaster.API.Controllers
         }
 
         [HttpGet("getrandomword")]
-        [ProducesResponseType(typeof(VocabularyResponseDto), 200)]
-        [ProducesResponseType(typeof(object), 401)]
-        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetRandomWord()
         {
             try
@@ -113,9 +110,6 @@ namespace VocabMaster.API.Controllers
         }
 
         [HttpGet("newrandomword")]
-        [ProducesResponseType(typeof(VocabularyResponseDto), 200)]
-        [ProducesResponseType(typeof(object), 401)]
-        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetRandomWordExcludeLearned()
         {
             try
@@ -228,8 +222,6 @@ namespace VocabMaster.API.Controllers
         }
 
         [HttpGet("islearned/{word}")]
-        [ProducesResponseType(typeof(object), 200)]
-        [ProducesResponseType(typeof(object), 401)]
         public async Task<IActionResult> IsLearned(string word)
         {
             var userId = GetUserIdFromClaims();
@@ -259,10 +251,6 @@ namespace VocabMaster.API.Controllers
         }
 
         [HttpPost("learned/{word}")]
-        [ProducesResponseType(typeof(object), 200)]
-        [ProducesResponseType(typeof(object), 400)]
-        [ProducesResponseType(typeof(object), 401)]
-        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> AddLearnedWord(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
