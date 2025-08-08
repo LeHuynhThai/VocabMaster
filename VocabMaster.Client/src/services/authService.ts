@@ -1,63 +1,52 @@
 import api, { removeToken } from './api';
 import { LoginRequest, RegisterRequest, User, TokenResponse, GoogleAuthRequest } from '../types';
 
+const getErrorMessage = (error: any, fallback: string): string => {
+  const serverMessage = error?.response?.data?.message || error?.response?.data?.Message;
+  const modelStateErrors = error?.response?.data?.errors;
+  let firstModelError = '';
+
+  if (modelStateErrors && typeof modelStateErrors === 'object') {
+    const firstKey = Object.keys(modelStateErrors)[0];
+    const arr = (firstKey && modelStateErrors[firstKey]) || [];
+    if (Array.isArray(arr) && arr.length > 0) firstModelError = arr[0];
+  }
+
+  return serverMessage || firstModelError || fallback;
+};
+
 const authService = {
   login: async (credentials: LoginRequest): Promise<User> => {
     try {
       const response = await api.post<TokenResponse>('/api/account/login', credentials);
-      // Token đã được lưu tự động trong api interceptor
-      // Trả về thông tin user từ token response
       return {
         id: response.data.userId,
         name: response.data.userName,
         role: response.data.role
       };
     } catch (error: any) {
-      console.error('Login API error:', error.response?.data || error.message);
-      throw error;
+      const message = getErrorMessage(error, 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
+      throw new Error(message);
     }
   },
 
   googleLogin: async (googleAuth: GoogleAuthRequest): Promise<User> => {
     try {
-      console.log('GoogleLogin API call with token length:', googleAuth.accessToken.length);
-      
-      if (googleAuth.idToken) {
-        console.log('IdToken is provided, length:', googleAuth.idToken.length);
-      } else {
-        console.log('No idToken provided');
-      }
-      
-      // Đảm bảo luôn có idToken
       const payload = {
         accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken || 'dummy_token' // Nếu không có, thêm giá trị giả
+        idToken: googleAuth.idToken || 'dummy_token'
       };
-      
-      console.log('Sending Google auth payload to API');
-      
       const response = await api.post<TokenResponse>('/api/account/google-login', payload, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
-      
-      console.log('Google login successful, received token response');
-      
       return {
         id: response.data.userId,
         name: response.data.userName,
         role: response.data.role
       };
     } catch (error: any) {
-      console.error('Google Login API error:', error);
-      console.error('Error details:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        headers: error.response?.headers
-      });
-      throw error;
+      const message = getErrorMessage(error, 'Đăng nhập Google thất bại. Vui lòng thử lại.');
+      throw new Error(message);
     }
   },
 
@@ -66,17 +55,18 @@ const authService = {
       const response = await api.post('/api/account/register', userData);
       return response.status === 200;
     } catch (error: any) {
-      console.error('Register API error:', error.response?.data || error.message);
-      throw error;
+      let friendly = getErrorMessage(error, 'Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.');
+      if (/Username already exists/i.test(error?.response?.data?.message || '')) {
+        friendly = 'Tên đăng nhập đã tồn tại';
+      }
+      throw new Error(friendly);
     }
   },
 
   logout: async (): Promise<void> => {
     try {
-      // Với JWT, chỉ cần xóa token ở client
       removeToken();
     } catch (error: any) {
-      console.error('Logout error:', error.message);
       throw error;
     }
   },
@@ -86,7 +76,6 @@ const authService = {
       const response = await api.get('/api/account/currentuser');
       return response.data;
     } catch (error: any) {
-      // Nếu lỗi 401 (Unauthorized), không log lỗi vì đây là trường hợp bình thường khi chưa đăng nhập
       if (error.response?.status !== 401) {
         console.error('Get current user API error:', error.response?.data || error.message);
       }
@@ -96,8 +85,7 @@ const authService = {
 
   refreshToken: async (): Promise<boolean> => {
     try {
-      const response = await api.get<TokenResponse>('/api/account/refresh-token');
-      // Token đã được lưu tự động trong api interceptor
+      await api.get<TokenResponse>('/api/account/refresh-token');
       return true;
     } catch (error: any) {
       console.error('Refresh token error:', error.response?.data || error.message);
