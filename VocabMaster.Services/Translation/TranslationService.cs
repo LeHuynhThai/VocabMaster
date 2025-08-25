@@ -5,7 +5,7 @@ using VocabMaster.Core.Interfaces.Repositories;
 
 namespace VocabMaster.Services.Translation
 {
-    // Service for translating words from English to Vietnamese and updating vocabulary database
+    // Service dịch từ tiếng Anh sang tiếng Việt và cập nhật vào database từ vựng
     public class TranslationService
     {
         private readonly HttpClient _httpClient;
@@ -13,6 +13,7 @@ namespace VocabMaster.Services.Translation
         private readonly ILogger<TranslationService> _logger;
         private readonly int _delayBetweenRequestsMs;
 
+        // Hàm khởi tạo service, inject repository, logger, config và httpClient
         public TranslationService(
             IVocabularyRepo vocabularyRepository,
             ILogger<TranslationService> logger,
@@ -25,14 +26,14 @@ namespace VocabMaster.Services.Translation
             _httpClient = httpClient;
         }
 
-        // Main method for crawling and updating translations for all untranslated vocabulary
+        // Hàm chính crawl và cập nhật nghĩa tiếng Việt cho toàn bộ từ chưa dịch
         public async Task<int> CrawlAllTranslations()
         {
             try
             {
                 _logger.LogInformation("Starting to crawl Vietnamese translations for all vocabulary");
 
-                // Get all vocabularies without Vietnamese translation
+                // Lấy toàn bộ từ vựng chưa có nghĩa tiếng Việt
                 var vocabularies = await _vocabularyRepository.GetAll();
                 if (vocabularies == null || !vocabularies.Any())
                 {
@@ -46,12 +47,12 @@ namespace VocabMaster.Services.Translation
                 int successCount = 0;
                 int failCount = 0;
 
-                // Process each vocabulary
+                // Duyệt từng từ vựng
                 foreach (var vocabulary in untranslatedVocabularies)
                 {
                     try
                     {
-                        // Get translation from Google API 
+                        // Dịch từ qua Google API
                         var translation = await TranslateWordViaApi(vocabulary.Word);
                         if (string.IsNullOrEmpty(translation))
                         {
@@ -60,14 +61,14 @@ namespace VocabMaster.Services.Translation
                             continue;
                         }
 
-                        // Update vocabulary with translation
+                        // Cập nhật nghĩa tiếng Việt cho từ vựng
                         vocabulary.Vietnamese = translation;
                         await _vocabularyRepository.Update(vocabulary);
 
                         successCount++;
                         _logger.LogInformation("Successfully translated word: {Word} to {Translation}", vocabulary.Word, translation);
 
-                        // Add a delay to avoid overloading the API
+                        // Thêm delay để tránh spam API
                         await Task.Delay(_delayBetweenRequestsMs);
                     }
                     catch (Exception ex)
@@ -89,7 +90,7 @@ namespace VocabMaster.Services.Translation
             }
         }
 
-        // Translates a single word from English to Vietnamese using Google Translate API
+        // Dịch một từ từ tiếng Anh sang tiếng Việt qua Google Translate API
         private async Task<string> TranslateWordViaApi(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
@@ -102,7 +103,7 @@ namespace VocabMaster.Services.Translation
             {
                 _logger.LogInformation("Translating word via API: {Word}", word);
 
-                // Use Google Translate API
+                // Gọi Google Translate API
                 string apiUrl = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q={Uri.EscapeDataString(word)}";
                 var response = await _httpClient.GetAsync(apiUrl);
 
@@ -112,13 +113,13 @@ namespace VocabMaster.Services.Translation
                     
                     try
                     {
-                        // Parse the JSON response from Google Translate
+                        // Parse kết quả JSON trả về từ Google Translate
                         using (JsonDocument document = JsonDocument.Parse(content))
                         {
                             var root = document.RootElement;
                             
-                            // Navigate to the first translation
-                            // Google Translate API returns a nested array structure
+                            // Lấy nghĩa dịch đầu tiên
+                            // Google Translate API trả về mảng lồng nhau
                             if (root.ValueKind == JsonValueKind.Array &&
                                 root[0].ValueKind == JsonValueKind.Array &&
                                 root[0][0].ValueKind == JsonValueKind.Array &&

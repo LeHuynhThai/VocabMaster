@@ -6,6 +6,7 @@ using VocabMaster.Core.Interfaces.Services.Quiz;
 
 namespace VocabMaster.Services.Quiz
 {
+    // Service xử lý tiến trình làm quiz của user (thống kê, phân trang, lấy quiz đã hoàn thành...)
     public class QuizProgressService : IQuizProgressService
     {
         private readonly IQuizQuestionRepo _quizQuestionRepo;
@@ -13,6 +14,7 @@ namespace VocabMaster.Services.Quiz
         private readonly IMapper _mapper;
         private readonly ILogger<QuizProgressService> _logger;
 
+        // Hàm khởi tạo service, inject các dependency cần thiết
         public QuizProgressService(
             IQuizQuestionRepo quizQuestionRepo,
             ICompletedQuizRepo completedQuizRepo,
@@ -25,6 +27,7 @@ namespace VocabMaster.Services.Quiz
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        // Lấy danh sách quiz đã hoàn thành của user
         public async Task<List<CompletedQuizDto>> GetCompletedQuizzes(int userId)
         {
             try
@@ -39,7 +42,7 @@ namespace VocabMaster.Services.Quiz
             }
         }
 
-        // Get only correct quizzes for a user
+        // Lấy danh sách quiz user đã làm đúng
         public async Task<List<CompletedQuizDto>> GetCompleteQuizz(int userId)
         {
             try
@@ -56,15 +59,15 @@ namespace VocabMaster.Services.Quiz
             }
         }
 
-        // Get quiz statistics for a user
+        // Lấy thống kê quiz cho user
         public async Task<QuizStatsDto> GetQuizStatistics(int userId)
         {
             try
             {
-                // Get total number of quiz questions
+                // Lấy tổng số câu hỏi quiz
                 int totalQuestions = await _quizQuestionRepo.CountQuizQuestions();
 
-                // Get user's completed quizzes
+                // Lấy danh sách quiz đã hoàn thành của user
                 var completedQuizzes = await _completedQuizRepo.GetByUserId(userId);
                 int completedCount = completedQuizzes.Count;
                 int correctCount = completedQuizzes.Count(cq => cq.WasCorrect);
@@ -85,7 +88,7 @@ namespace VocabMaster.Services.Quiz
             }
         }
 
-        // Get paginated correct quizzes for a user
+        // Lấy danh sách quiz đã làm đúng (có phân trang) cho user
         public async Task<(List<CompletedQuizDto> Items, int TotalCount, int TotalPages)> GetPaginatedCorrectQuizzes(int userId, int pageNumber, int pageSize)
         {
             try
@@ -110,7 +113,7 @@ namespace VocabMaster.Services.Quiz
                 _logger.LogInformation("Mapped {Count} DTOs for user {UserId}, total {Total} items, {Pages} pages", 
                     dtos.Count, userId, totalCount, totalPages);
                 
-                // Ensure each DTO has the word from the quiz question
+                // Đảm bảo mỗi DTO có trường word từ quiz question
                 foreach (var dto in dtos)
                 {
                     if (string.IsNullOrEmpty(dto.Word))
