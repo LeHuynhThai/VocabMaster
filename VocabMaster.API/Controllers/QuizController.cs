@@ -7,17 +7,25 @@ using VocabMaster.Core.Interfaces.Services.Quiz;
 
 namespace VocabMaster.API.Controllers
 {
+    // Controller quản lý các API liên quan đến trắc nghiệm (quiz) cho người dùng
+    // Bao gồm lấy câu hỏi, kiểm tra đáp án, lấy thống kê, phân trang, ...
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class QuizController : ControllerBase
     {
+        // Service lấy câu hỏi trắc nghiệm
         private readonly IQuizQuestionService _quizQuestionService;
+        // Service kiểm tra đáp án
         private readonly IQuizAnswerService _quizAnswerService;
+        // Service quản lý tiến trình làm quiz của user
         private readonly IQuizProgressService _quizProgressService;
+        // Repository thao tác trực tiếp với bảng câu hỏi
         private readonly IQuizQuestionRepo _quizQuestionRepo;
+        // Ghi log cho controller
         private readonly ILogger<QuizController> _logger;
 
+        // Hàm khởi tạo controller, inject các service cần thiết
         public QuizController(
             IQuizQuestionService quizQuestionService,
             IQuizAnswerService quizAnswerService,
@@ -32,6 +40,9 @@ namespace VocabMaster.API.Controllers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <summary>
+        /// Lấy một câu hỏi trắc nghiệm ngẫu nhiên
+        /// </summary>
         [HttpGet("random")]
         public async Task<IActionResult> GetRandomQuestion()
         {
@@ -39,6 +50,7 @@ namespace VocabMaster.API.Controllers
             {
                 _logger.LogInformation("Getting random quiz question");
 
+                // Lấy câu hỏi ngẫu nhiên từ service
                 var question = await _quizQuestionService.GetRandomQuestion();
 
                 if (question == null)
@@ -66,15 +78,20 @@ namespace VocabMaster.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Lấy một câu hỏi trắc nghiệm mà user chưa hoàn thành (nếu có)
+        /// Nếu user đã làm hết thì trả về thông báo và thống kê
+        /// </summary>
         [HttpGet("uncompleted")]
         public async Task<IActionResult> GetRandomUncompletedQuestion()
         {
             try
             {
-                var userId = GetUserIdSafe();
+                var userId = GetUserIdSafe(); // Lấy userId từ claim (có thể null)
                 if (userId == null)
                 {
                     _logger.LogWarning("User ID not found, returning random question instead");
+                    // Nếu không xác định được user thì trả về câu hỏi ngẫu nhiên
                     var question = await _quizQuestionService.GetRandomQuestion();
 
                     if (question == null)
@@ -89,13 +106,14 @@ namespace VocabMaster.API.Controllers
                     return Ok(question);
                 }
 
+                // Lấy câu hỏi chưa hoàn thành của user
                 var uncompletedQuestion = await _quizQuestionService.GetRandomUncompletedQuestion(userId.Value);
 
                 if (uncompletedQuestion == null)
                 {
                     _logger.LogInformation("User {UserId} has completed all quiz questions", userId);
                     
-                    // Get stats to include in the response
+                    // Lấy thống kê quiz để trả về kèm thông báo
                     var stats = await _quizProgressService.GetQuizStatistics(userId.Value);
                     
                     return Ok(new
@@ -120,6 +138,9 @@ namespace VocabMaster.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Kiểm tra đáp án của một câu hỏi trắc nghiệm
+        /// </summary>
         [HttpPost("check")]
         public async Task<IActionResult> CheckAnswer([FromBody] QuizAnswerDto quizAnswerDto)
         {
@@ -127,6 +148,7 @@ namespace VocabMaster.API.Controllers
             {
                 if (quizAnswerDto == null)
                 {
+                    // Kiểm tra dữ liệu đầu vào
                     return BadRequest(new
                     {
                         error = "invalid_input",
@@ -134,6 +156,7 @@ namespace VocabMaster.API.Controllers
                     });
                 }
 
+                // Kiểm tra đáp án qua service
                 var result = await _quizAnswerService.CheckAnswer(quizAnswerDto.QuestionId, quizAnswerDto.SelectedAnswer);
                 return Ok(result);
             }
@@ -149,6 +172,9 @@ namespace VocabMaster.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Kiểm tra đáp án và đánh dấu đã hoàn thành cho user (nếu xác định được user)
+        /// </summary>
         [HttpPost("check-complete")]
         public async Task<IActionResult> CheckAnswerAndMarkCompleted([FromBody] QuizAnswerDto quizAnswerDto)
         {
@@ -167,10 +193,12 @@ namespace VocabMaster.API.Controllers
                 if (userId == null)
                 {
                     _logger.LogWarning("User ID not found, checking answer without marking completed");
+                    // Nếu không xác định được user thì chỉ kiểm tra đáp án, không đánh dấu hoàn thành
                     var resultUserId = await _quizAnswerService.CheckAnswer(quizAnswerDto.QuestionId, quizAnswerDto.SelectedAnswer);
                     return Ok(resultUserId);
                 }
 
+                // Kiểm tra đáp án và đánh dấu đã hoàn thành cho user
                 var result = await _quizAnswerService.CheckAnswerAndMarkCompleted(
                     quizAnswerDto.QuestionId,
                     quizAnswerDto.SelectedAnswer,
@@ -190,6 +218,9 @@ namespace VocabMaster.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Lấy danh sách các quiz đã hoàn thành của user
+        /// </summary>
         [HttpGet("completed")]
         public async Task<IActionResult> GetCompletedQuizzes()
         {
@@ -202,6 +233,7 @@ namespace VocabMaster.API.Controllers
                     return Ok(new List<CompletedQuizDto>());
                 }
 
+                // Lấy danh sách quiz đã hoàn thành qua service
                 var completedQuizzes = await _quizProgressService.GetCompletedQuizzes(userId.Value);
                 return Ok(completedQuizzes);
             }
@@ -217,6 +249,9 @@ namespace VocabMaster.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Lấy danh sách các quiz user đã làm đúng
+        /// </summary>
         [HttpGet("correct")]
         public async Task<IActionResult> GetCompleteQuizz()
         {
@@ -229,6 +264,7 @@ namespace VocabMaster.API.Controllers
                     return Ok(new List<CompletedQuizDto>());
                 }
 
+                // Lấy danh sách quiz đã làm đúng qua service
                 var correctQuizzes = await _quizProgressService.GetCompleteQuizz(userId.Value);
                 return Ok(correctQuizzes);
             }
@@ -244,14 +280,17 @@ namespace VocabMaster.API.Controllers
             }
         }
         
+        /// <summary>
+        /// Lấy danh sách quiz user đã làm đúng (có phân trang)
+        /// </summary>
         [HttpGet("correct/paginated")]
         public async Task<IActionResult> GetPaginatedCorrectQuizzes([FromQuery] int pageNumber = 1)
         {
             try
             {
-                // Validate parameters
+                // Kiểm tra tham số phân trang
                 if (pageNumber < 1) pageNumber = 1;
-                // use default page size 10
+                // Sử dụng page size mặc định là 10
                 const int pageSize = 10;
                 
                 var userId = GetUserIdSafe();
@@ -274,11 +313,13 @@ namespace VocabMaster.API.Controllers
                 _logger.LogInformation("Getting paginated correct quizzes for user {UserId}, page {Page}", 
                     userId, pageNumber);
                 
+                // Lấy dữ liệu phân trang từ service
                 var (items, totalCount, totalPages) = await _quizProgressService.GetPaginatedCorrectQuizzes(userId.Value, pageNumber, pageSize);
                 
                 _logger.LogInformation("Retrieved {Count} items, total {Total}, pages {Pages}", 
                     items.Count, totalCount, totalPages);
                 
+                // Tạo response phân trang
                 var response = new PaginatedResponseDto<CompletedQuizDto>
                 {
                     Items = items ?? new List<CompletedQuizDto>(),
@@ -305,6 +346,9 @@ namespace VocabMaster.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Lấy thống kê quiz cho user hiện tại
+        /// </summary>
         [HttpGet("stats")]
         public async Task<IActionResult> GetQuizStatistics()
         {
@@ -315,11 +359,11 @@ namespace VocabMaster.API.Controllers
                 {
                     _logger.LogWarning("User ID not found, returning default stats");
                     
-                    // Get total number of quiz questions
+                    // Lấy tổng số câu hỏi quiz
                     int totalQuestions;
                     try
                     {
-                        // Use repository directly instead of calling service
+                        // Gọi trực tiếp repository để đếm số lượng câu hỏi
                         totalQuestions = await _quizQuestionRepo.CountQuizQuestions();
                     }
                     catch (Exception ex)
@@ -328,6 +372,7 @@ namespace VocabMaster.API.Controllers
                         totalQuestions = 0;
                     }
                     
+                    // Trả về thống kê mặc định nếu không xác định được user
                     return Ok(new QuizStatsDto
                     {
                         TotalQuestions = totalQuestions,
@@ -338,6 +383,7 @@ namespace VocabMaster.API.Controllers
                     });
                 }
 
+                // Lấy thống kê quiz qua service
                 var stats = await _quizProgressService.GetQuizStatistics(userId.Value);
                 return Ok(stats);
             }
@@ -353,6 +399,9 @@ namespace VocabMaster.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Lấy userId từ claim của user hiện tại (có thể null nếu không xác thực)
+        /// </summary>
         private int? GetUserIdSafe()
         {
             try
@@ -379,6 +428,9 @@ namespace VocabMaster.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Lấy userId hiện tại, nếu không có thì throw exception
+        /// </summary>
         private int GetCurrentUserId()
         {
             var userId = GetUserIdSafe();
