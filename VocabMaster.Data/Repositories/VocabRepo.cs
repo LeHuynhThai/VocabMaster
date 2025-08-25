@@ -5,12 +5,14 @@ using VocabMaster.Core.Interfaces.Repositories;
 
 namespace VocabMaster.Data.Repositories
 {
+    // Repository thao tác với dữ liệu từ vựng (Vocabulary)
     public class VocabRepo : IVocabularyRepo
     {
         private readonly AppDbContext _context;
         private readonly ILogger<VocabRepo> _logger;
         private readonly Random _random;
 
+        // Hàm khởi tạo repository, inject context và logger
         public VocabRepo(
             AppDbContext context,
             ILogger<VocabRepo> logger = null)
@@ -20,14 +22,14 @@ namespace VocabMaster.Data.Repositories
             _random = new Random();
         }
 
-        // Get total count of vocabularies
+        // Lấy tổng số lượng từ vựng trong hệ thống
         public async Task<int> Count()
         {
             _logger?.LogInformation("Getting total count of vocabularies");
             return await _context.Vocabularies.CountAsync();
         }
 
-        // Get a random vocabulary
+        // Lấy một từ vựng ngẫu nhiên
         public async Task<Vocabulary> GetRandom()
         {
             try
@@ -42,12 +44,12 @@ namespace VocabMaster.Data.Repositories
 
                 _logger?.LogInformation("Found {Count} vocabularies in the database", count);
 
-                // Generate a random index
+                // Sinh chỉ số ngẫu nhiên
                 var skipCount = _random.Next(count);
 
                 _logger?.LogDebug("Selecting vocabulary at random index: {Index}", skipCount);
 
-                // Get the vocabulary at the random index
+                // Lấy từ vựng tại vị trí ngẫu nhiên
                 var vocabulary = await _context.Vocabularies
                     .Skip(skipCount)
                     .Take(1)
@@ -69,12 +71,12 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        // Get a random vocabulary excluding learned words
+        // Lấy một từ vựng ngẫu nhiên, loại trừ các từ đã học
         public async Task<Vocabulary> GetRandomExcludeLearned(List<string> learnedWords)
         {
             try
             {
-                // If no learned words provided, return any random word
+                // Nếu không truyền danh sách từ đã học, trả về bất kỳ từ nào
                 if (learnedWords == null || !learnedWords.Any())
                 {
                     _logger?.LogInformation("No learned words provided, returning any random word");
@@ -83,7 +85,7 @@ namespace VocabMaster.Data.Repositories
 
                 _logger?.LogInformation("Finding random word excluding {Count} learned words", learnedWords.Count);
 
-                // Get all vocabularies that are not in the learned words list
+                // Lấy tất cả các từ chưa học
                 var availableWords = await _context.Vocabularies
                     .Where(v => !learnedWords.Contains(v.Word))
                     .ToListAsync();
@@ -96,7 +98,7 @@ namespace VocabMaster.Data.Repositories
 
                 _logger?.LogInformation("Found {Count} unlearned words", availableWords.Count);
 
-                // Select a random word from the available words
+                // Chọn ngẫu nhiên một từ trong danh sách chưa học
                 var randomIndex = _random.Next(availableWords.Count);
                 var selectedWord = availableWords[randomIndex];
 
@@ -110,7 +112,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        // Get all vocabularies
+        // Lấy toàn bộ danh sách từ vựng
         public async Task<List<Vocabulary>> GetAll()
         {
             try
@@ -127,7 +129,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        // Update a vocabulary, use for crawl Vietnamese from api
+        // Cập nhật nghĩa tiếng Việt cho một từ vựng (dùng khi crawl từ API)
         public async Task<bool> Update(Vocabulary vocabulary)
         {
             try
@@ -140,7 +142,7 @@ namespace VocabMaster.Data.Repositories
 
                 _logger?.LogInformation("Updating vocabulary: {Word}", vocabulary.Word);
 
-                // Check if the vocabulary exists
+                // Kiểm tra từ vựng đã tồn tại chưa
                 var existingVocabulary = await _context.Vocabularies.FindAsync(vocabulary.Id);
                 if (existingVocabulary == null)
                 {
@@ -148,7 +150,7 @@ namespace VocabMaster.Data.Repositories
                     return false;
                 }
 
-                // Update properties
+                // Cập nhật thuộc tính
                 existingVocabulary.Vietnamese = vocabulary.Vietnamese;
 
                 await _context.SaveChangesAsync();

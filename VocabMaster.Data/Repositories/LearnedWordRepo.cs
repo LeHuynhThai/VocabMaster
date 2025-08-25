@@ -5,13 +5,13 @@ using VocabMaster.Core.Interfaces.Repositories;
 
 namespace VocabMaster.Data.Repositories
 {
-    // Repository for learned word operations
+    // Repository thao tác với dữ liệu từ đã học của người dùng
     public class LearnedWordRepo : ILearnedWordRepo
     {
         private readonly AppDbContext _context;
         private readonly ILogger<LearnedWordRepo> _logger;
 
-        // Initializes a new instance of the LearnedWordRepo
+        // Hàm khởi tạo repository, inject context và logger
         public LearnedWordRepo(
             AppDbContext context,
             ILogger<LearnedWordRepo> logger = null)
@@ -20,7 +20,7 @@ namespace VocabMaster.Data.Repositories
             _logger = logger;
         }
 
-        // Gets a learned word by its ID
+        // Lấy từ đã học theo Id
         public async Task<LearnedWord> GetById(int id)
         {
             try
@@ -35,14 +35,14 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        // Gets all learned words for a specific user
+        // Lấy toàn bộ từ đã học của một user
         public async Task<List<LearnedWord>> GetByUserId(int userId)
         {
             try
             {
                 _logger?.LogInformation("Getting learned words for user: {UserId}", userId);
 
-                // Use a more efficient query with Include for eager loading
+                // Truy vấn hiệu quả, có thể dùng Include nếu cần load thêm navigation property
                 return await _context.LearnedVocabularies
                     .Where(lv => lv.UserId == userId)
                     .ToListAsync();
@@ -54,7 +54,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        // Adds a new learned word
+        // Thêm một từ đã học mới
         public async Task<bool> Add(LearnedWord learnedWord)
         {
             try
@@ -82,7 +82,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        // Deletes a learned word by its ID
+        // Xóa một từ đã học theo Id
         public async Task<bool> Delete(int id)
         {
             try
@@ -109,7 +109,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        // Removes a learned word for a specific user by word text
+        // Xóa một từ đã học của user theo từ (word)
         public async Task<bool> RemoveByWord(int userId, string word)
         {
             try
@@ -122,7 +122,7 @@ namespace VocabMaster.Data.Repositories
 
                 _logger?.LogInformation("Removing learned word: {Word} for user: {UserId}", word, userId);
 
-                // Find the learned word to remove
+                // Tìm bản ghi cần xóa
                 var learnedWord = await _context.LearnedVocabularies
                     .FirstOrDefaultAsync(lv =>
                         lv.UserId == userId &&
@@ -134,7 +134,7 @@ namespace VocabMaster.Data.Repositories
                     return false;
                 }
 
-                // Remove the learned word
+                // Xóa bản ghi
                 _context.LearnedVocabularies.Remove(learnedWord);
                 await _context.SaveChangesAsync();
 
@@ -148,7 +148,7 @@ namespace VocabMaster.Data.Repositories
             }
         }
 
-        // Gets paginated learned words for a specific user
+        // Lấy danh sách từ đã học có phân trang cho user
         public async Task<(List<LearnedWord> Items, int TotalCount)> GetPaginatedByUserId(int userId, int pageNumber, int pageSize)
         {
             try

@@ -5,12 +5,13 @@ using VocabMaster.Core.Interfaces.Repositories;
 
 namespace VocabMaster.Data.Repositories
 {
-    // Repository implementation for completed quiz operations
+    // Repository thao tác với dữ liệu các lần hoàn thành quiz của user
     public class CompletedQuizRepo : ICompletedQuizRepo
     {
-        private readonly AppDbContext _context;
-        private readonly ILogger<CompletedQuizRepo> _logger;
+        private readonly AppDbContext _context; // DbContext truy cập database
+        private readonly ILogger<CompletedQuizRepo> _logger; // Ghi log cho repository
 
+        // Hàm khởi tạo, inject context và logger
         public CompletedQuizRepo(
             AppDbContext context,
             ILogger<CompletedQuizRepo> logger = null)
@@ -20,6 +21,7 @@ namespace VocabMaster.Data.Repositories
         }
 
         // Gets all completed quiz questions for a specific user
+        // Lấy toàn bộ danh sách quiz đã hoàn thành của user
         public async Task<List<CompletedQuiz>> GetByUserId(int userId)
         {
             try
@@ -38,6 +40,7 @@ namespace VocabMaster.Data.Repositories
         }
 
         // Gets IDs of all completed quiz questions for a specific user
+        // Lấy danh sách Id các câu hỏi quiz đã hoàn thành của user
         public async Task<List<int>> GetCompletedQuizQuestionIdsByUserId(int userId)
         {
             try
@@ -56,6 +59,7 @@ namespace VocabMaster.Data.Repositories
         }
 
         // Checks if a quiz question has been completed by a user
+        // Kiểm tra một câu hỏi quiz đã được user hoàn thành chưa
         public async Task<bool> IsQuizQuestionCompletedByUser(int userId, int quizQuestionId)
         {
             try
@@ -72,6 +76,7 @@ namespace VocabMaster.Data.Repositories
         }
 
         // Marks a quiz question as completed by a user
+        // Đánh dấu một câu hỏi quiz đã được user hoàn thành (nếu đã có thì trả về bản ghi cũ)
         public async Task<CompletedQuiz> MarkAsCompleted(CompletedQuiz completedQuiz)
         {
             try
@@ -79,7 +84,7 @@ namespace VocabMaster.Data.Repositories
                 _logger?.LogInformation("START: MarkAsCompleted - UserId={UserId}, QuizQuestionId={QuizQuestionId}, WasCorrect={WasCorrect}",
                     completedQuiz.UserId, completedQuiz.QuizQuestionId, completedQuiz.WasCorrect);
 
-                // Check if already completed
+                // Kiểm tra đã có bản ghi hoàn thành chưa
                 _logger?.LogInformation("Checking if record already exists");
                 var existingRecord = await _context.CompletedQuizzes
                     .FirstOrDefaultAsync(cq => cq.UserId == completedQuiz.UserId && cq.QuizQuestionId == completedQuiz.QuizQuestionId);
@@ -91,7 +96,7 @@ namespace VocabMaster.Data.Repositories
                     return existingRecord;
                 }
 
-                // Add new record
+                // Thêm bản ghi mới
                 _logger?.LogInformation("Record does not exist, adding new record");
 
                 try
@@ -124,6 +129,7 @@ namespace VocabMaster.Data.Repositories
         }
         
         // Gets paginated correctly answered quizzes for a user
+        // Lấy danh sách quiz đã trả lời đúng (có phân trang) cho user
         public async Task<(List<CompletedQuiz> Items, int TotalCount)> GetPaginatedCorrectQuizzes(int userId, int pageNumber, int pageSize)
         {
             try
@@ -131,13 +137,13 @@ namespace VocabMaster.Data.Repositories
                 _logger?.LogInformation("Getting paginated correct quizzes for user {UserId}, page {PageNumber}, size {PageSize}", 
                     userId, pageNumber, pageSize);
                 
-                // Get only correct answers
+                // Chỉ lấy các bản ghi trả lời đúng
                 var query = _context.CompletedQuizzes
                     .Where(cq => cq.UserId == userId && cq.WasCorrect)
                     .Include(cq => cq.QuizQuestion)
                     .OrderByDescending(cq => cq.CompletedAt);
                 
-                // Get total count
+                // Đếm tổng số bản ghi
                 int totalCount = await query.CountAsync();
                 _logger?.LogInformation("Total count of correct quizzes for user {UserId}: {Count}", userId, totalCount);
                 
@@ -147,7 +153,7 @@ namespace VocabMaster.Data.Repositories
                     return (new List<CompletedQuiz>(), 0);
                 }
                 
-                // Apply pagination
+                // Áp dụng phân trang
                 var items = await query
                     .Skip((pageNumber - 1) * pageSize)
                     .Take(pageSize)
@@ -156,7 +162,7 @@ namespace VocabMaster.Data.Repositories
                 _logger?.LogInformation("Retrieved {Count} correct quizzes for user {UserId} (total: {Total})",
                     items.Count, userId, totalCount);
                 
-                // Ensure QuizQuestion is loaded
+                // Đảm bảo QuizQuestion đã được load
                 foreach (var item in items)
                 {
                     if (item.QuizQuestion == null)
@@ -164,7 +170,7 @@ namespace VocabMaster.Data.Repositories
                         _logger?.LogWarning("QuizQuestion is null for CompletedQuiz {Id}, QuizQuestionId: {QuizId}", 
                             item.Id, item.QuizQuestionId);
                         
-                        // Try to load the quiz question explicitly
+                        // Thử load quiz question thủ công nếu cần
                         item.QuizQuestion = await _context.QuizQuestions.FindAsync(item.QuizQuestionId);
                         if (item.QuizQuestion == null)
                         {
