@@ -2,26 +2,29 @@
 
 namespace VocabMaster.Core.Entities
 {
+    // Entity đại diện cho người dùng trong hệ thống
     public class User
     {
         [Key]
-        public int Id { get; set; }
+        public int Id { get; set; } // Khóa chính, định danh duy nhất cho user
 
         [Required]
         [MaxLength(50)]
-        public string Name { get; set; }
+        public string Name { get; set; } // Tên người dùng
 
         [Required]
         [MaxLength(100)]
-        public string Password { get; set; }
+        public string Password { get; set; } // Mật khẩu đã mã hóa
 
-        public UserRole Role { get; set; } = UserRole.User;
+        public UserRole Role { get; set; } = UserRole.User; // Vai trò của user (User/Admin...)
 
-        // user can have many learned words, and learned words cannot duplicate (HashSet)
+        // Danh sách các từ đã học của user (không trùng lặp)
         public virtual ICollection<LearnedWord> LearnedVocabularies { get; set; } = new HashSet<LearnedWord>();
     }
+
+    // Enum định nghĩa các vai trò của user
     public enum UserRole
     {
-        User
+        User // Người dùng thông thường
     }
 }
