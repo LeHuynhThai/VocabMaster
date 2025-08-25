@@ -9,6 +9,7 @@ using VocabMaster.Core.Entities;
 
 namespace VocabMaster.Services.Dictionary
 {
+    // Service tra cứu định nghĩa từ vựng từ database hoặc API
     public class DictionaryLookupService : IDictionaryLookupService
     {
         private readonly ILogger<DictionaryLookupService> _logger;
@@ -16,6 +17,7 @@ namespace VocabMaster.Services.Dictionary
         private readonly IDictionaryDetailsRepo _dictionaryDetailsRepository;
         private const string API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
 
+        // Hàm khởi tạo service, inject logger và repository
         public DictionaryLookupService(
             ILogger<DictionaryLookupService> logger,
             IVocabularyRepo vocabularyRepository,
@@ -26,21 +28,21 @@ namespace VocabMaster.Services.Dictionary
             _dictionaryDetailsRepository = dictionaryDetailsRepository ?? throw new ArgumentNullException(nameof(dictionaryDetailsRepository));
         }
 
-        // Get word definition from api or database
+        // Lấy định nghĩa từ vựng từ API hoặc database
         public async Task<DictionaryResponseDto> GetWordDefinition(string word)
         {
-            // first try to get from database
+            // Thử lấy từ database trước
             var result = await GetWordDefinitionFromDatabase(word);
             
-            // if not found in database, get from API
+            // Nếu không có trong database thì lấy từ API
             if (result == null)
             {
                 _logger.LogInformation("Word '{Word}' not found in database, getting from API", word);
                 
-                // call API dictionary directly
+                // Gọi API dictionary trực tiếp
                 result = await GetWordDefinitionFromApi(word);
                 
-                // if found in API, save to database
+                // Nếu lấy được từ API thì lưu vào database
                 if (result != null)
                 {
                     await SaveWordDefinitionToDatabase(result);
@@ -50,7 +52,7 @@ namespace VocabMaster.Services.Dictionary
             return result;
         }
 
-        // get word definition from database
+        // Lấy định nghĩa từ database
         public async Task<DictionaryResponseDto> GetWordDefinitionFromDatabase(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
@@ -64,7 +66,7 @@ namespace VocabMaster.Services.Dictionary
                 _logger.LogInformation("Getting data from database for word: {Word}", word);
                 var vocabulary = await _dictionaryDetailsRepository.GetByWord(word);
 
-                // get vietnamese translation from vocabulary
+                // Lấy nghĩa tiếng Việt từ vocabulary
                 string vietnameseTranslation = vocabulary?.Vietnamese;
 
                 _logger.LogInformation("Vietnamese translation for word {Word}: {Translation}", 
@@ -78,7 +80,7 @@ namespace VocabMaster.Services.Dictionary
 
                 _logger.LogInformation("Found word: {Word} in database", word);
 
-                // deserialize json data
+                // Deserialize dữ liệu json
                 var options = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
@@ -92,7 +94,7 @@ namespace VocabMaster.Services.Dictionary
                     ? new List<Meaning>()
                     : JsonSerializer.Deserialize<List<Meaning>>(vocabulary.MeaningsJson, options);
 
-                // create response object
+                // Tạo response trả về
                 var response = new DictionaryResponseDto
                 {
                     Word = vocabulary.Word,
@@ -102,7 +104,7 @@ namespace VocabMaster.Services.Dictionary
                     Vietnamese = vietnameseTranslation
                 };
 
-                // Include raw JSON fields
+                // Gán thêm trường json thô
                 response.PhoneticsJson = vocabulary.PhoneticsJson;
                 response.MeaningsJson = vocabulary.MeaningsJson;
 
@@ -121,7 +123,7 @@ namespace VocabMaster.Services.Dictionary
             }
         }
 
-        // call dictionary API directly
+        // Gọi API dictionary trực tiếp để lấy định nghĩa
         private async Task<DictionaryResponseDto> GetWordDefinitionFromApi(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
@@ -134,10 +136,10 @@ namespace VocabMaster.Services.Dictionary
             {
                 _logger.LogInformation("Calling dictionary API for word: {Word}", word);
                 
-                // Create HttpClient for this request
+                // Tạo HttpClient cho request này
                 using (var httpClient = new HttpClient())
                 {
-                    // Call API directly with full URL
+                    // Gọi API trực tiếp với URL đầy đủ
                     string apiUrl = $"{API_URL}{Uri.EscapeDataString(word)}";
                     var response = await httpClient.GetAsync(apiUrl);
 
@@ -181,7 +183,7 @@ namespace VocabMaster.Services.Dictionary
             }
         }
 
-        // save word definition to database
+        // Lưu định nghĩa từ vựng vào database
         private async Task<bool> SaveWordDefinitionToDatabase(DictionaryResponseDto definition)
         {
             if (definition == null)
@@ -194,7 +196,7 @@ namespace VocabMaster.Services.Dictionary
             {
                 _logger.LogInformation("Saving definition for word: {Word} to database", definition.Word);
                 
-                // check if word already exists in database
+                // Kiểm tra từ đã tồn tại trong database chưa
                 var existingVocabulary = await _dictionaryDetailsRepository.GetByWord(definition.Word);
                 
                 var options = new JsonSerializerOptions
@@ -202,7 +204,7 @@ namespace VocabMaster.Services.Dictionary
                     PropertyNameCaseInsensitive = true,
                 };
 
-                // serialize phonetics and meanings data
+                // Serialize dữ liệu phonetics và meanings
                 var phoneticsJson = definition.Phonetics != null && definition.Phonetics.Any()
                     ? JsonSerializer.Serialize(definition.Phonetics, options)
                     : "[]";
@@ -213,12 +215,12 @@ namespace VocabMaster.Services.Dictionary
 
                 if (existingVocabulary != null)
                 {
-                    // update existing vocabulary
+                    // Cập nhật từ đã có
                     existingVocabulary.PhoneticsJson = phoneticsJson;
                     existingVocabulary.MeaningsJson = meaningsJson;
                     existingVocabulary.UpdatedAt = DateTime.UtcNow;
                     
-                    // update vietnamese translation if available
+                    // Cập nhật nghĩa tiếng Việt nếu có
                     if (!string.IsNullOrEmpty(definition.Vietnamese))
                     {
                         existingVocabulary.Vietnamese = definition.Vietnamese;
@@ -230,7 +232,7 @@ namespace VocabMaster.Services.Dictionary
                 }
                 else
                 {
-                    // create new vocabulary
+                    // Tạo mới từ vựng
                     var newVocabulary = new VocabMaster.Core.Entities.Vocabulary
                     {
                         Word = definition.Word,
