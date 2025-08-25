@@ -6,6 +6,7 @@ using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Services.Authentication
 {
+    // Service xử lý xác thực người dùng (login, register, lấy user hiện tại...)
     public class AuthenticationService : IAuthenticationService
     {
         private readonly IUserRepo _userRepository;
@@ -14,6 +15,7 @@ namespace VocabMaster.Services.Authentication
         private readonly IPasswordService _passwordService;
         private readonly ILogger<AuthenticationService> _logger;
 
+        // Hàm khởi tạo service, inject các dependency cần thiết
         public AuthenticationService(
             IUserRepo userRepository,
             IHttpContextAccessor httpContextAccessor,
@@ -28,12 +30,14 @@ namespace VocabMaster.Services.Authentication
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        // Đăng nhập, trả về token nếu thành công
         public async Task<TokenResponseDto> Login(string name, string password)
         {
             var user = await _userRepository.ValidateUser(name, password);
             return user != null ? await _tokenService.GenerateJwtToken(user) : null;
         }
 
+        // Đăng ký tài khoản mới
         public async Task<bool> Register(User user)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
@@ -46,12 +50,13 @@ namespace VocabMaster.Services.Authentication
             return true;
         }
 
+        // Đăng xuất (với JWT thì không cần xử lý phía server)
         public async Task Logout()
         {
-            // JWT not need to logout on server
             await Task.CompletedTask;
         }
 
+        // Lấy user hiện tại từ context (dựa vào claim trong JWT)
         public async Task<User> GetCurrentUser()
         {
             if (_httpContextAccessor.HttpContext == null ||
