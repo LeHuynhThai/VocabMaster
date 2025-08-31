@@ -3,7 +3,7 @@ using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services.Quiz;
-// Service kiểm tra đáp án câu hỏi trắc nghiệm và đánh dấu hoàn thành nếu đúng
+
 namespace VocabMaster.Services.Quiz
 {
     public class QuizAnswerService : IQuizAnswerService
@@ -12,7 +12,6 @@ namespace VocabMaster.Services.Quiz
         private readonly ICompletedQuizRepo _completedQuizRepo;
         private readonly ILogger<QuizAnswerService> _logger;
 
-        // Hàm khởi tạo service, inject các dependency cần thiết
         public QuizAnswerService(
             IQuizQuestionRepo quizQuestionRepo,
             ICompletedQuizRepo completedQuizRepo,
@@ -22,12 +21,10 @@ namespace VocabMaster.Services.Quiz
             _completedQuizRepo = completedQuizRepo ?? throw new ArgumentNullException(nameof(completedQuizRepo));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-        // Kiểm tra đáp án của một câu hỏi trắc nghiệm
         public async Task<QuizResultDto> CheckAnswer(int questionId, string answer)
         {
             try
             {
-                // Lấy câu hỏi trắc nghiệm
                 var question = await _quizQuestionRepo.GetQuizQuestionById(questionId);
 
                 if (question == null)
@@ -41,7 +38,6 @@ namespace VocabMaster.Services.Quiz
                     };
                 }
 
-                // Kiểm tra đáp án đúng hay sai
                 bool isCorrect = question.CorrectAnswer == answer;
 
                 return new QuizResultDto
@@ -58,7 +54,6 @@ namespace VocabMaster.Services.Quiz
             }
         }
         
-        // Kiểm tra đáp án và đánh dấu hoàn thành cho user (nếu đúng)
         public async Task<QuizResultDto> CheckAnswerAndMarkCompleted(int questionId, string answer, int userId)
         {
             try
@@ -66,12 +61,9 @@ namespace VocabMaster.Services.Quiz
                 _logger.LogInformation("CheckAnswerAndMarkCompleted called with QuestionId={QuestionId}, Answer={Answer}, UserId={UserId}",
                     questionId, answer, userId);
 
-                // Lấy kết quả kiểm tra đáp án trước
                 var result = await CheckAnswer(questionId, answer);
                 _logger.LogInformation("CheckAnswer result: IsCorrect={IsCorrect}, CorrectAnswer={CorrectAnswer}",
                     result.IsCorrect, result.CorrectAnswer);
-
-                // Tạo bản ghi CompletedQuiz với kết quả đúng/sai
                 var completedQuiz = new CompletedQuiz
                 {
                     UserId = userId,

@@ -5,7 +5,6 @@ using VocabMaster.Core.Interfaces.Repositories;
 
 namespace VocabMaster.Services.Translation
 {
-    // Service dịch từ tiếng Anh sang tiếng Việt và cập nhật vào database từ vựng
     public class TranslationService
     {
         private readonly HttpClient _httpClient;
@@ -13,7 +12,6 @@ namespace VocabMaster.Services.Translation
         private readonly ILogger<TranslationService> _logger;
         private readonly int _delayBetweenRequestsMs;
 
-        // Hàm khởi tạo service, inject repository, logger, config và httpClient
         public TranslationService(
             IVocabularyRepo vocabularyRepository,
             ILogger<TranslationService> logger,
@@ -26,14 +24,12 @@ namespace VocabMaster.Services.Translation
             _httpClient = httpClient;
         }
 
-        // Hàm chính crawl và cập nhật nghĩa tiếng Việt cho toàn bộ từ chưa dịch
         public async Task<int> CrawlAllTranslations()
         {
             try
             {
                 _logger.LogInformation("Starting to crawl Vietnamese translations for all vocabulary");
 
-                // Lấy toàn bộ từ vựng chưa có nghĩa tiếng Việt
                 var vocabularies = await _vocabularyRepository.GetAll();
                 if (vocabularies == null || !vocabularies.Any())
                 {
@@ -47,12 +43,10 @@ namespace VocabMaster.Services.Translation
                 int successCount = 0;
                 int failCount = 0;
 
-                // Duyệt từng từ vựng
                 foreach (var vocabulary in untranslatedVocabularies)
                 {
                     try
                     {
-                        // Dịch từ qua Google API
                         var translation = await TranslateWordViaApi(vocabulary.Word);
                         if (string.IsNullOrEmpty(translation))
                         {
@@ -61,14 +55,12 @@ namespace VocabMaster.Services.Translation
                             continue;
                         }
 
-                        // Cập nhật nghĩa tiếng Việt cho từ vựng
                         vocabulary.Vietnamese = translation;
                         await _vocabularyRepository.Update(vocabulary);
 
                         successCount++;
                         _logger.LogInformation("Successfully translated word: {Word} to {Translation}", vocabulary.Word, translation);
 
-                        // Thêm delay để tránh spam API
                         await Task.Delay(_delayBetweenRequestsMs);
                     }
                     catch (Exception ex)
@@ -90,7 +82,6 @@ namespace VocabMaster.Services.Translation
             }
         }
 
-        // Dịch một từ từ tiếng Anh sang tiếng Việt qua Google Translate API
         private async Task<string> TranslateWordViaApi(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
@@ -103,7 +94,6 @@ namespace VocabMaster.Services.Translation
             {
                 _logger.LogInformation("Translating word via API: {Word}", word);
 
-                // Gọi Google Translate API
                 string apiUrl = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q={Uri.EscapeDataString(word)}";
                 var response = await _httpClient.GetAsync(apiUrl);
 
@@ -113,13 +103,10 @@ namespace VocabMaster.Services.Translation
                     
                     try
                     {
-                        // Parse kết quả JSON trả về từ Google Translate
                         using (JsonDocument document = JsonDocument.Parse(content))
                         {
                             var root = document.RootElement;
                             
-                            // Lấy nghĩa dịch đầu tiên
-                            // Google Translate API trả về mảng lồng nhau
                             if (root.ValueKind == JsonValueKind.Array &&
                                 root[0].ValueKind == JsonValueKind.Array &&
                                 root[0][0].ValueKind == JsonValueKind.Array &&

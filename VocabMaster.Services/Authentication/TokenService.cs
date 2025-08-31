@@ -10,13 +10,10 @@ using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Services.Authentication
 {
-    // Service tạo và xác thực JWT token cho user
     public class TokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<TokenService> _logger;
-
-        // Hàm khởi tạo service, inject config và logger
         public TokenService(
             IConfiguration configuration,
             ILogger<TokenService> logger)
@@ -25,7 +22,6 @@ namespace VocabMaster.Services.Authentication
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        // Sinh JWT token cho user
         public async Task<TokenResponseDto> GenerateJwtToken(User user)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
@@ -59,7 +55,6 @@ namespace VocabMaster.Services.Authentication
             };
         }
 
-        // Tạo danh sách claim cho user
         public List<Claim> CreateUserClaims(User user)
         {
             return new List<Claim>
@@ -74,7 +69,6 @@ namespace VocabMaster.Services.Authentication
             };
         }
 
-        // Lấy userId từ claim trong JWT
         public string FindUserIdFromClaims(ClaimsPrincipal user)
         {
             return user.FindFirst(ClaimTypes.NameIdentifier)?.Value

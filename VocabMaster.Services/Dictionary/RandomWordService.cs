@@ -5,7 +5,6 @@ using VocabMaster.Core.Interfaces.Services.Dictionary;
 
 namespace VocabMaster.Services.Dictionary
 {
-    // Service lấy từ vựng ngẫu nhiên, loại trừ từ đã học, lấy định nghĩa từ API hoặc database
     public class RandomWordService : IRandomWordService
     {
         private readonly ILogger<RandomWordService> _logger;
@@ -15,7 +14,6 @@ namespace VocabMaster.Services.Dictionary
         private readonly Random _random = new Random();
         private const int MAX_ATTEMPTS = 5;
 
-        // Hàm khởi tạo service, inject các dependency cần thiết
         public RandomWordService(
             ILogger<RandomWordService> logger,
             IVocabularyRepo vocabularyRepository,
@@ -28,7 +26,6 @@ namespace VocabMaster.Services.Dictionary
             _dictionaryLookupService = dictionaryLookupService ?? throw new ArgumentNullException(nameof(dictionaryLookupService));
         }
 
-        // Lấy một từ vựng ngẫu nhiên (có định nghĩa)
         public async Task<DictionaryResponseDto> GetRandomWord()
         {
             try
@@ -42,7 +39,6 @@ namespace VocabMaster.Services.Dictionary
                     return null;
                 }
 
-                // Thử lấy định nghĩa từ database trước
                 try 
                 {
                     _logger.LogInformation("Getting definition for word: {Word}", vocabulary.Word);
@@ -75,16 +71,13 @@ namespace VocabMaster.Services.Dictionary
             }
         }
 
-        // Lấy một từ vựng ngẫu nhiên mà user chưa học
         public async Task<DictionaryResponseDto> GetRandomWordExcludeLearned(int userId)
         {
             try
             {
                 _logger.LogInformation("Getting random word excluding learned ones for user {UserId}", userId);
-                // Thử lấy từ chưa học
                 var result = await TryGetRandomWordExcludeLearned(userId);
 
-                // Nếu không tìm được thì fallback về bất kỳ từ nào
                 if (result == null)
                 {
                     _logger.LogInformation("Falling back to any random word for user {UserId}", userId);
@@ -96,12 +89,10 @@ namespace VocabMaster.Services.Dictionary
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in GetRandomWordExcludeLearned for user {UserId}, falling back to any random word", userId);
-                // Nếu có lỗi vẫn trả về một từ ngẫu nhiên bất kỳ
                 return await GetRandomWord();
             }
         }
 
-        // Thử lấy một từ chưa học (có thể thử nhiều lần)
         private async Task<DictionaryResponseDto> TryGetRandomWordExcludeLearned(int userId)
         {
             try
@@ -124,14 +115,12 @@ namespace VocabMaster.Services.Dictionary
                 var learnedWords = learnedVocabularies.Select(lv => lv.Word.ToLowerInvariant()).ToHashSet();
                 _logger.LogInformation("User {UserId} has learned {Count} words", userId, learnedWords.Count);
 
-                // Thử lấy một từ chưa học
                 var vocabulary = await _vocabularyRepository.GetRandomExcludeLearned(learnedWords.ToList());
 
                 if (vocabulary == null)
                 {
                     _logger.LogInformation("No unlearned words found for user {UserId} in the first attempt", userId);
 
-                    // Nếu tất cả từ đã học, thử lấy ngẫu nhiên nhiều lần
                     for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++)
                     {
                         var randomVocab = await _vocabularyRepository.GetRandom();
@@ -156,18 +145,16 @@ namespace VocabMaster.Services.Dictionary
                                 else
                                 {
                                     _logger.LogWarning("Both database and API failed for word: {Word}, creating basic response", randomVocab.Word);
-                                    // Tạo response cơ bản nếu cả database và API đều fail
-                                        return new DictionaryResponseDto
-                                        {
-                                            Word = randomVocab.Word,
-                                            Vietnamese = randomVocab.Vietnamese
-                                        };
+                                    return new DictionaryResponseDto
+                                    {
+                                        Word = randomVocab.Word,
+                                        Vietnamese = randomVocab.Vietnamese
+                                    };
                                 }
                             }
                             catch (Exception ex)
                             {
                                 _logger.LogError(ex, "Error getting definition for word {Word}, creating basic response", randomVocab.Word);
-                                // Trả về thông tin cơ bản nếu lookup thất bại
                                 return new DictionaryResponseDto
                                 {
                                     Word = randomVocab.Word,
@@ -196,7 +183,6 @@ namespace VocabMaster.Services.Dictionary
                         if (response == null)
                         {
                         _logger.LogWarning("Both database and API failed for word: {Word}, creating basic response", vocabulary.Word);
-                        // Tạo response cơ bản nếu cả database và API đều fail
                             return new DictionaryResponseDto 
                             {
                                 Word = vocabulary.Word,
@@ -208,7 +194,6 @@ namespace VocabMaster.Services.Dictionary
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error getting definition for word {Word}, creating basic response", vocabulary.Word);
-                    // Trả về thông tin cơ bản nếu lookup thất bại
                     return new DictionaryResponseDto 
                     {
                         Word = vocabulary.Word,

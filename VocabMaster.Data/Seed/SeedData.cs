@@ -12,19 +12,16 @@ namespace VocabMaster.Data.Seed
             using var context = new AppDbContext(
                 serviceProvider.GetRequiredService<DbContextOptions<AppDbContext>>());
 
-            // Ensure database is created
             await context.Database.EnsureCreatedAsync();
 
             try
             {
-                // Seed users if there are none
                 if (!context.Users.Any())
                 {
                     logger.LogInformation("Seeding users...");
                     await SeedUsers(context);
                 }
 
-                // Seed quiz questions
                 if (!context.QuizQuestions.Any())
                 {
                     logger.LogInformation("Seeding quiz questions...");
@@ -44,14 +41,12 @@ namespace VocabMaster.Data.Seed
         {
             var users = new List<User>();
 
-            // Create 50 basic users
             for (int i = 1; i <= 50; i++)
             {
                 var user = new User
                 {
                     Name = $"user{i}",
-                    // Hash the password using BCrypt
-                    Password = BCrypt.Net.BCrypt.HashPassword($"123"), // password is 123
+                    Password = BCrypt.Net.BCrypt.HashPassword($"123"),
                     Role = UserRole.User
                 };
 

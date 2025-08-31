@@ -6,7 +6,6 @@ using VocabMaster.Core.Interfaces.Services;
 
 namespace VocabMaster.Services.Authentication
 {
-    // Service xác thực người dùng qua Google (OAuth2)
     public class ExternalAuthService : IExternalAuthService
     {
         private readonly IUserRepo _userRepository;
@@ -16,7 +15,6 @@ namespace VocabMaster.Services.Authentication
         private readonly ILogger<ExternalAuthService> _logger;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        // Hàm khởi tạo service, inject các dependency cần thiết
         public ExternalAuthService(
             IUserRepo userRepository,
             ITokenService tokenService,
@@ -36,7 +34,6 @@ namespace VocabMaster.Services.Authentication
             };
         }
 
-        // Xác thực người dùng Google, trả về token nếu thành công
         public async Task<TokenResponseDto> AuthenticateGoogleUser(GoogleAuthDto googleAuth)
         {
             try
@@ -77,7 +74,6 @@ namespace VocabMaster.Services.Authentication
             }
         }
 
-        // Lấy thông tin user từ Google bằng access token
         public async Task<GoogleUserInfoDto> GetGoogleUserInfo(string accessToken)
         {
             if (string.IsNullOrEmpty(accessToken))
@@ -91,7 +87,6 @@ namespace VocabMaster.Services.Authentication
                 _logger.LogInformation($"Getting user info with token length: {accessToken.Length}");
                 var httpClient = _httpClientFactory.CreateClient("GoogleApi");
 
-                // Thử cách 1: Dùng Authorization header
                 var userInfo = await TryGetGoogleUserInfo(
                     httpClient,
                     "https://www.googleapis.com/oauth2/v3/userinfo",
@@ -100,7 +95,6 @@ namespace VocabMaster.Services.Authentication
 
                 if (userInfo != null) return userInfo;
 
-                // Thử cách 2: Dùng query parameter
                 return await TryGetGoogleUserInfo(
                     httpClient,
                     $"https://www.googleapis.com/oauth2/v3/userinfo?access_token={accessToken}",
@@ -114,7 +108,6 @@ namespace VocabMaster.Services.Authentication
             }
         }
 
-        // Gọi API Google để lấy thông tin user (dùng cho cả 2 cách truyền token)
         private async Task<GoogleUserInfoDto> TryGetGoogleUserInfo(HttpClient httpClient, string url, bool useAuthHeader, string accessToken)
         {
             try
@@ -158,7 +151,6 @@ namespace VocabMaster.Services.Authentication
             }
         }
 
-        // Tạo user mới từ thông tin Google
         private async Task<User> CreateGoogleUser(GoogleUserInfoDto googleUserInfo)
         {
             var newUser = new User

@@ -3,28 +3,25 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace VocabMaster.Core.Entities
 {
-    // Entity đại diện cho một lần hoàn thành câu hỏi trắc nghiệm của user
     public class CompletedQuiz
     {
         [Key]
-        public int Id { get; set; } // Khóa chính, định danh duy nhất cho bản ghi hoàn thành quiz
+        public int Id { get; set; }
 
         [Required]
-        public int UserId { get; set; } // Id của user đã hoàn thành quiz này
+        public int UserId { get; set; }
 
         [Required]
-        public int QuizQuestionId { get; set; } // Id của câu hỏi trắc nghiệm đã hoàn thành
+        public int QuizQuestionId { get; set; }
 
         [Required]
-        public DateTime CompletedAt { get; set; } = DateTime.UtcNow; // Thời điểm hoàn thành quiz
+        public DateTime CompletedAt { get; set; } = DateTime.UtcNow;
 
-        public bool WasCorrect { get; set; } // Kết quả trả lời đúng hay sai
+        public bool WasCorrect { get; set; }
 
-        // Thuộc tính điều hướng tới user đã hoàn thành quiz này
         [ForeignKey("UserId")]
         public virtual User User { get; set; }
 
-        // Thuộc tính điều hướng tới câu hỏi trắc nghiệm đã hoàn thành
         [ForeignKey("QuizQuestionId")]
         public virtual QuizQuestion QuizQuestion { get; set; }
     }

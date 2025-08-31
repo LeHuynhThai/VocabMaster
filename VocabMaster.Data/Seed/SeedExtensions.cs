@@ -8,18 +8,12 @@ namespace VocabMaster.Data.Seed
     {
         public static IApplicationBuilder SeedDatabaseAsync(this IApplicationBuilder app)
         {
-            // Create a scope to resolve services
             using var scope = app.ApplicationServices.CreateScope();
             var services = scope.ServiceProvider;
             var logger = services.GetRequiredService<ILogger<AppDbContext>>();
-
-            // Run the initialization in a try/catch block
             try
             {
-                // Get the context instance
                 var context = services.GetRequiredService<AppDbContext>();
-
-                // Run initialization
                 Task.Run(() => SeedData.Initialize(services, logger)).Wait();
 
                 logger.LogInformation("Database seeded successfully");
