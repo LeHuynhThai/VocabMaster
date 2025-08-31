@@ -8,34 +8,22 @@ using VocabMaster.Core.Interfaces.Services.Vocabulary;
 
 namespace VocabMaster.API.Controllers
 {
-    // Controller quản lý các API liên quan đến sinh từ vựng ngẫu nhiên, tra cứu từ, đánh dấu đã học...
-    // Sử dụng các service để lấy từ ngẫu nhiên, kiểm tra trạng thái đã học, tra cứu từ điển, caching...
     [ApiController]
     [Authorize]
     [Route("api/[controller]")]
     [Produces("application/json")]
     public class WordGeneratorController : ControllerBase
     {
-        // Service sinh từ ngẫu nhiên (loại trừ từ đã học)
         private readonly IRandomWordService _randomWordService;
-        // Service tra cứu thông tin từ điển
         private readonly IDictionaryLookupService _dictionaryLookupService;
-        // Service thao tác với từ đã học
         private readonly ILearnedWordService _learnedWordService;
-        // Service kiểm tra trạng thái đã học của từ
         private readonly IWordStatusService _wordStatusService;
-        // Ghi log cho controller
         private readonly ILogger<WordGeneratorController> _logger;
-        // Bộ nhớ đệm (cache) trong bộ nhớ
         private readonly IMemoryCache _cache;
-        // Key dùng cho cache từ ngẫu nhiên
         private const string RandomWordCacheKey = "RandomWord_";
-        // Key dùng cho cache tra cứu từ
         private const string LookupCacheKey = "Lookup_";
-        // Thời gian hết hạn cache (phút)
         private const int CacheExpirationMinutes = 30;
 
-        // Hàm khởi tạo controller, inject các service cần thiết
         public WordGeneratorController(
             IRandomWordService randomWordService,
             IDictionaryLookupService dictionaryLookupService,
@@ -52,9 +40,6 @@ namespace VocabMaster.API.Controllers
             _cache = cache;
         }
 
-        /// <summary>
-        /// Lấy một từ vựng ngẫu nhiên mà user chưa học (ưu tiên lấy từ cache nếu có)
-        /// </summary>
         [HttpGet("getrandomword")]
         public async Task<IActionResult> GetRandomWord()
         {
@@ -67,7 +52,6 @@ namespace VocabMaster.API.Controllers
                     return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
                 }
 
-                // Thử lấy từ cache trước
                 string cacheKey = $"{RandomWordCacheKey}{userId}";
                 if (_cache != null && _cache.TryGetValue(cacheKey, out VocabularyResponseDto cachedWord))
                 {
@@ -77,7 +61,6 @@ namespace VocabMaster.API.Controllers
                 }
 
                 _logger.LogInformation("Getting random word for user {UserId}", userId);
-                // Lấy từ ngẫu nhiên loại trừ từ đã học
                 var randomWord = await _randomWordService.GetRandomWordExcludeLearned(userId);
 
                 if (randomWord == null)
@@ -89,20 +72,15 @@ namespace VocabMaster.API.Controllers
                     });
                 }
 
-                // Kiểm tra từ này đã học chưa
                 bool isLearned = await _wordStatusService.IsWordLearned(userId, randomWord.Word);
 
                 _logger.LogInformation("Random word {Word} has Vietnamese translation: {HasVietnamese}",
                     randomWord.Word, !string.IsNullOrEmpty(randomWord.Vietnamese) ? "Yes" : "No");
-
-                // Chuyển sang response đơn giản
                 var response = VocabularyResponseDto.FromDictionaryResponse(randomWord, 0, isLearned, randomWord.Vietnamese);
 
-                // Debug response
                 _logger.LogInformation("Response for word {Word} has Vietnamese: {HasVietnamese}",
                     response.Word, !string.IsNullOrEmpty(response.Vietnamese) ? "Yes" : "No");
 
-                // Lưu vào cache
                 if (_cache != null)
                 {
                     var cacheOptions = new MemoryCacheEntryOptions()
@@ -126,9 +104,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Lấy một từ vựng ngẫu nhiên chưa học (luôn làm mới cache)
-        /// </summary>
         [HttpGet("newrandomword")]
         public async Task<IActionResult> GetRandomWordExcludeLearned()
         {
@@ -141,7 +116,6 @@ namespace VocabMaster.API.Controllers
                     return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
                 }
 
-                // Xóa cache cũ
                 string cacheKey = $"{RandomWordCacheKey}{userId}";
                 if (_cache != null)
                 {
@@ -163,10 +137,8 @@ namespace VocabMaster.API.Controllers
 
                 bool isLearned = await _wordStatusService.IsWordLearned(userId, randomWord.Word);
 
-                // Chuyển sang response đơn giản
                 var response = VocabularyResponseDto.FromDictionaryResponse(randomWord, 0, isLearned, randomWord.Vietnamese);
 
-                // Lưu vào cache
                 if (_cache != null)
                 {
                     var cacheOptions = new MemoryCacheEntryOptions()
@@ -191,9 +163,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Tra cứu thông tin từ vựng trong cơ sở dữ liệu
-        /// </summary>
         [HttpGet("lookup/{word}")]
         [Authorize]
         public async Task<IActionResult> Lookup(string word)
@@ -209,7 +178,6 @@ namespace VocabMaster.API.Controllers
                     return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
                 }
 
-                // Lấy định nghĩa từ database
                 var definition = await _dictionaryLookupService.GetWordDefinitionFromDatabase(word);
 
                 if (definition == null)
@@ -222,10 +190,8 @@ namespace VocabMaster.API.Controllers
                     });
                 }
 
-                // Kiểm tra từ đã học chưa
                 bool isLearned = await _wordStatusService.IsWordLearned(userId, word);
                 
-                // Chuyển sang response đơn giản
                 var response = VocabularyResponseDto.FromDictionaryResponse(definition, 0, isLearned, definition.Vietnamese);
 
                 _logger.LogInformation("Successfully retrieved definition for word: {Word}", word);
@@ -243,9 +209,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Kiểm tra một từ đã học hay chưa
-        /// </summary>
         [HttpGet("islearned/{word}")]
         public async Task<IActionResult> IsLearned(string word)
         {
@@ -275,9 +238,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Đánh dấu một từ là đã học cho user hiện tại
-        /// </summary>
         [HttpPost("learned/{word}")]
         public async Task<IActionResult> AddLearnedWord(string word)
         {
@@ -333,9 +293,6 @@ namespace VocabMaster.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Lấy userId từ claim của user hiện tại
-        /// </summary>
         private int GetUserIdFromClaims()
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier) ??
