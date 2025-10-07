@@ -16,26 +16,17 @@ namespace VocabMaster.API.Controllers
         private readonly IQuizAnswerService _quizAnswerService;
         private readonly IQuizProgressService _quizProgressService;
         private readonly IQuizQuestionRepo _quizQuestionRepo;
-        private readonly ILogger<QuizController> _logger;
 
         public QuizController(
             IQuizQuestionService quizQuestionService,
             IQuizAnswerService quizAnswerService,
             IQuizProgressService quizProgressService,
-            IQuizQuestionRepo quizQuestionRepo,
-            ILogger<QuizController> logger)
-        public QuizController(
-            IQuizQuestionService quizQuestionService,
-            IQuizAnswerService quizAnswerService,
-            IQuizProgressService quizProgressService,
-            IQuizQuestionRepo quizQuestionRepo,
-            ILogger<QuizController> logger)
+            IQuizQuestionRepo quizQuestionRepo)
         {
             _quizQuestionService = quizQuestionService ?? throw new ArgumentNullException(nameof(quizQuestionService));
             _quizAnswerService = quizAnswerService ?? throw new ArgumentNullException(nameof(quizAnswerService));
             _quizProgressService = quizProgressService ?? throw new ArgumentNullException(nameof(quizProgressService));
             _quizQuestionRepo = quizQuestionRepo ?? throw new ArgumentNullException(nameof(quizQuestionRepo));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         [HttpGet("random")]
@@ -43,13 +34,11 @@ namespace VocabMaster.API.Controllers
         {
             try
             {
-                _logger.LogInformation("Getting random quiz question");
 
                 var question = await _quizQuestionService.GetRandomQuestion();
 
                 if (question == null)
                 {
-                    _logger.LogWarning("No quiz questions available");
                     return NotFound(new
                     {
                         error = "question_not_found",
@@ -57,12 +46,10 @@ namespace VocabMaster.API.Controllers
                     });
                 }
 
-                _logger.LogInformation("Successfully retrieved random question: {QuestionId}", question.Id);
                 return Ok(question);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled error getting random quiz question: {Message}", ex.Message);
                 return StatusCode(500, new
                 {
                     error = "server_error",
@@ -80,7 +67,6 @@ namespace VocabMaster.API.Controllers
                 var userId = GetUserIdSafe();
                 if (userId == null)
                 {
-                    _logger.LogWarning("User ID not found, returning random question instead");
                     var question = await _quizQuestionService.GetRandomQuestion();
 
                     if (question == null)
@@ -99,7 +85,6 @@ namespace VocabMaster.API.Controllers
 
                 if (uncompletedQuestion == null)
                 {
-                    _logger.LogInformation("User {UserId} has completed all quiz questions", userId);
                     
                     var stats = await _quizProgressService.GetQuizStatistics(userId.Value);
                     
@@ -115,7 +100,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting random uncompleted quiz question");
                 return StatusCode(500, new
                 {
                     error = "question_error",
@@ -144,7 +128,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error checking quiz answer");
                 return StatusCode(500, new
                 {
                     error = "check_error",
@@ -171,7 +154,6 @@ namespace VocabMaster.API.Controllers
                 var userId = GetUserIdSafe();
                 if (userId == null)
                 {
-                    _logger.LogWarning("User ID not found, checking answer without marking completed");
                     var resultUserId = await _quizAnswerService.CheckAnswer(quizAnswerDto.QuestionId, quizAnswerDto.SelectedAnswer);
                     return Ok(resultUserId);
                 }
@@ -185,7 +167,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error checking and marking quiz answer");
                 return StatusCode(500, new
                 {
                     error = "check_error",
@@ -203,7 +184,6 @@ namespace VocabMaster.API.Controllers
                 var userId = GetUserIdSafe();
                 if (userId == null)
                 {
-                    _logger.LogWarning("User ID not found, returning empty completed list");
                     return Ok(new List<CompletedQuizDto>());
                 }
 
@@ -212,7 +192,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting completed quizzes");
                 return StatusCode(500, new
                 {
                     error = "completed_error",
@@ -230,7 +209,6 @@ namespace VocabMaster.API.Controllers
                 var userId = GetUserIdSafe();
                 if (userId == null)
                 {
-                    _logger.LogWarning("User ID not found, returning empty correct list");
                     return Ok(new List<CompletedQuizDto>());
                 }
 
@@ -239,7 +217,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting correct quizzes");
                 return StatusCode(500, new
                 {
                     error = "correct_quizzes_error",
@@ -260,7 +237,6 @@ namespace VocabMaster.API.Controllers
                 var userId = GetUserIdSafe();
                 if (userId == null)
                 {
-                    _logger.LogWarning("User ID not found, returning empty paginated correct list");
                     return Ok(new PaginatedResponseDto<CompletedQuizDto>
                     {
                         Items = new List<CompletedQuizDto>(),
@@ -274,13 +250,9 @@ namespace VocabMaster.API.Controllers
                     });
                 }
                 
-                _logger.LogInformation("Getting paginated correct quizzes for user {UserId}, page {Page}", 
-                    userId, pageNumber);
                 
                 var (items, totalCount, totalPages) = await _quizProgressService.GetPaginatedCorrectQuizzes(userId.Value, pageNumber, pageSize);
                 
-                _logger.LogInformation("Retrieved {Count} items, total {Total}, pages {Pages}", 
-                    items.Count, totalCount, totalPages);
                 
                 var response = new PaginatedResponseDto<CompletedQuizDto>
                 {
@@ -298,7 +270,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting paginated correct quizzes: {Message}", ex.Message);
                 return StatusCode(500, new
                 {
                     error = "paginated_correct_error",
@@ -316,7 +287,6 @@ namespace VocabMaster.API.Controllers
                 var userId = GetUserIdSafe();
                 if (userId == null)
                 {
-                    _logger.LogWarning("User ID not found, returning default stats");
                     
                     int totalQuestions;
                     try
@@ -325,7 +295,6 @@ namespace VocabMaster.API.Controllers
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Error counting quiz questions");
                         totalQuestions = 0;
                     }
                     
@@ -344,7 +313,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting quiz statistics");
                 return StatusCode(500, new
                 {
                     error = "stats_error",
@@ -368,14 +336,11 @@ namespace VocabMaster.API.Controllers
                     return userId;
                 }
 
-                _logger.LogWarning("User ID claim not found or not valid. Available claims: {Claims}",
-                    string.Join(", ", User.Claims.Select(c => $"{c.Type}: {c.Value}")));
 
                 return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting user ID from claims");
                 return null;
             }
         }

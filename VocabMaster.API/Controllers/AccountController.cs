@@ -16,20 +16,17 @@ public class AccountController : ControllerBase
     private readonly ITokenService _tokenService;
     private readonly IExternalAuthService _externalAuthService;
     private readonly IMapper _mapper;
-    private readonly ILogger<AccountController> _logger;
 
     public AccountController(
         IAuthenticationService authenticationService,
         ITokenService tokenService,
         IExternalAuthService externalAuthService,
-        IMapper mapper,
-        ILogger<AccountController> logger)
+        IMapper mapper)
     {
         _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
         _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
         _externalAuthService = externalAuthService ?? throw new ArgumentNullException(nameof(externalAuthService));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     [HttpPost("login")]
@@ -56,29 +53,15 @@ public class AccountController : ControllerBase
     {
         try
         {
-            Console.WriteLine("Google Login API endpoint được gọi");
-
             if (googleAuth == null)
             {
-                Console.WriteLine("GoogleAuthDto là null");
                 return BadRequest("Dữ liệu không hợp lệ");
             }
 
-            Console.WriteLine($"GoogleAuth: accessToken length={googleAuth.AccessToken?.Length ?? 0}, idToken length={googleAuth.IdToken?.Length ?? 0}");
-
             if (string.IsNullOrEmpty(googleAuth.AccessToken))
             {
-                Console.WriteLine("AccessToken là null hoặc rỗng");
                 return BadRequest("AccessToken không được cung cấp");
             }
-
-            if (string.IsNullOrEmpty(googleAuth.IdToken))
-            {
-                Console.WriteLine("IdToken không được cung cấp, nhưng tiếp tục xử lý với AccessToken");
-            }
-
-            Console.WriteLine($"Token preview: {googleAuth.AccessToken.Substring(0, Math.Min(20, googleAuth.AccessToken.Length))}...");
-            Console.WriteLine($"Token preview: {googleAuth.AccessToken.Substring(0, Math.Min(20, googleAuth.AccessToken.Length))}...");
 
             try
             {
@@ -89,27 +72,15 @@ public class AccountController : ControllerBase
                     return Unauthorized("Không thể xác thực với Google");
                 }
 
-                Console.WriteLine($"Xác thực thành công cho user: {tokenResponse.UserName}");
                 return Ok(tokenResponse);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Lỗi xác thực Google: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
-
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
-                    Console.WriteLine($"Inner stack trace: {ex.InnerException.StackTrace}");
-                }
-
                 return StatusCode(500, $"Lỗi xác thực Google: {ex.Message}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Lỗi không xác định trong GoogleLogin: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
             return StatusCode(500, "Đã xảy ra lỗi không xác định");
         }
     }
@@ -119,7 +90,6 @@ public class AccountController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> ValidateGoogleToken([FromBody] GoogleAuthDto googleAuth)
     {
-        _logger.LogInformation("ValidateGoogleToken endpoint called");
 
         try
         {
@@ -150,7 +120,6 @@ public class AccountController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error validating Google token");
             return StatusCode(500, new { valid = false, message = ex.Message });
         }
     }
@@ -218,7 +187,6 @@ public class AccountController : ControllerBase
     [AllowAnonymous]
     public IActionResult Test()
     {
-        Console.WriteLine("Test endpoint được gọi");
         return Ok(new { message = "API đang hoạt động", time = DateTime.Now });
     }
 }

@@ -17,7 +17,6 @@ namespace VocabMaster.API.Controllers
     { 
         private readonly ILearnedWordService _learnedWordService;
         private readonly IDictionaryLookupService _dictionaryLookupService;
-        private readonly ILogger<LearnedWordController> _logger;
         private readonly IMemoryCache _cache;
         private readonly IMapper _mapper;
         private const string LearnedWordsListCacheKey = "LearnedWordsList_";
@@ -26,13 +25,11 @@ namespace VocabMaster.API.Controllers
         public LearnedWordController(
             ILearnedWordService learnedWordService,
             IDictionaryLookupService dictionaryLookupService,
-            ILogger<LearnedWordController> logger,
             IMapper mapper,
             IMemoryCache cache = null)
         {
             _learnedWordService = learnedWordService ?? throw new ArgumentNullException(nameof(learnedWordService));
             _dictionaryLookupService = dictionaryLookupService ?? throw new ArgumentNullException(nameof(dictionaryLookupService));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _cache = cache;
         }
@@ -57,16 +54,13 @@ namespace VocabMaster.API.Controllers
                 string cacheKey = $"{LearnedWordsListCacheKey}{userId}";
                 if (!skipCache && _cache != null && _cache.TryGetValue(cacheKey, out List<LearnedWordDto> cachedWords))
                 {
-                    _logger.LogInformation("Retrieved learned words from cache for user {UserId}", userId);
                     return Ok(cachedWords);
                 }
 
-                _logger.LogInformation("Getting learned words for user {UserId}", userId);
                 var learnedWords = await _learnedWordService.GetUserLearnedVocabularies(userId);
 
                 if (learnedWords == null)
                 {
-                    _logger.LogInformation("No learned words found for user {UserId}", userId);
                     return Ok(new List<LearnedWordDto>());
                 }
 
@@ -85,7 +79,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading learned words");
                 return StatusCode(500, new
                 {
                     error = "load_error",
@@ -132,7 +125,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting learned word details");
                 return StatusCode(500, new
                 {
                     error = "details_error",
@@ -161,8 +153,6 @@ namespace VocabMaster.API.Controllers
                     });
                 }
                 
-                _logger.LogInformation("Getting paginated learned words for user {UserId}, page {Page}, size {Size}", 
-                    userId, pageNumber, pageSize);
                 
                 var (items, totalCount, totalPages) = await _learnedWordService.GetPaginatedLearnedWords(userId, pageNumber, pageSize);
                 
@@ -182,7 +172,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting paginated learned words");
                 return StatusCode(500, new
                 {
                     error = "pagination_error",
@@ -216,7 +205,6 @@ namespace VocabMaster.API.Controllers
 
             try
             {
-                _logger.LogInformation("Adding word '{Word}' to learned list for user {UserId}", request.Word, userId);
                 var result = await _learnedWordService.MarkWordAsLearned(userId, request.Word.Trim());
 
                 if (result.Success)
@@ -240,7 +228,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error marking word as learned: {Word}", request.Word);
                 return StatusCode(500, new
                 {
                     error = "add_error",
@@ -274,7 +261,6 @@ namespace VocabMaster.API.Controllers
 
             try
             {
-                _logger.LogInformation("Removing learned word with ID {WordId} for user {UserId}", id, userId);
                 var result = await _learnedWordService.RemoveLearnedWordById(userId, id);
 
                 if (result)
@@ -293,7 +279,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error removing learned word: {Id}", id);
                 return StatusCode(500, new
                 {
                     error = "delete_error",
@@ -313,7 +298,6 @@ namespace VocabMaster.API.Controllers
                 return userId;
             }
 
-            _logger.LogWarning("UserId not found in claims or could not be parsed");
             return 0;
         }
 

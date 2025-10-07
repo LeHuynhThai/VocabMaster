@@ -18,7 +18,6 @@ namespace VocabMaster.API.Controllers
         private readonly IDictionaryLookupService _dictionaryLookupService;
         private readonly ILearnedWordService _learnedWordService;
         private readonly IWordStatusService _wordStatusService;
-        private readonly ILogger<WordGeneratorController> _logger;
         private readonly IMemoryCache _cache;
         private const string RandomWordCacheKey = "RandomWord_";
         private const string LookupCacheKey = "Lookup_";
@@ -29,14 +28,12 @@ namespace VocabMaster.API.Controllers
             IDictionaryLookupService dictionaryLookupService,
             ILearnedWordService learnedWordService,
             IWordStatusService wordStatusService,
-            ILogger<WordGeneratorController> logger,
             IMemoryCache cache = null)
         {
             _randomWordService = randomWordService ?? throw new ArgumentNullException(nameof(randomWordService));
             _dictionaryLookupService = dictionaryLookupService ?? throw new ArgumentNullException(nameof(dictionaryLookupService));
             _learnedWordService = learnedWordService ?? throw new ArgumentNullException(nameof(learnedWordService));
             _wordStatusService = wordStatusService ?? throw new ArgumentNullException(nameof(wordStatusService));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _cache = cache;
         }
 
@@ -48,24 +45,19 @@ namespace VocabMaster.API.Controllers
                 var userId = GetUserIdFromClaims();
                 if (userId <= 0)
                 {
-                    _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
                     return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
                 }
 
                 string cacheKey = $"{RandomWordCacheKey}{userId}";
                 if (_cache != null && _cache.TryGetValue(cacheKey, out VocabularyResponseDto cachedWord))
                 {
-                    _logger.LogInformation("Retrieved random word from cache for user {UserId}", userId);
-                    _logger.LogInformation("Cached word has Vietnamese: {HasVietnamese}", !string.IsNullOrEmpty(cachedWord.Vietnamese) ? "Yes" : "No");
                     return Ok(cachedWord);
                 }
 
-                _logger.LogInformation("Getting random word for user {UserId}", userId);
                 var randomWord = await _randomWordService.GetRandomWordExcludeLearned(userId);
 
                 if (randomWord == null)
                 {
-                    _logger.LogInformation("No random word found for user {UserId}", userId);
                     return Ok(new { 
                         allLearned = true, 
                         message = "Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống."
@@ -74,12 +66,7 @@ namespace VocabMaster.API.Controllers
 
                 bool isLearned = await _wordStatusService.IsWordLearned(userId, randomWord.Word);
 
-                _logger.LogInformation("Random word {Word} has Vietnamese translation: {HasVietnamese}",
-                    randomWord.Word, !string.IsNullOrEmpty(randomWord.Vietnamese) ? "Yes" : "No");
                 var response = VocabularyResponseDto.FromDictionaryResponse(randomWord, 0, isLearned, randomWord.Vietnamese);
-
-                _logger.LogInformation("Response for word {Word} has Vietnamese: {HasVietnamese}",
-                    response.Word, !string.IsNullOrEmpty(response.Vietnamese) ? "Yes" : "No");
 
                 if (_cache != null)
                 {
@@ -94,7 +81,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting random word");
                 return StatusCode(500, new
                 {
                     error = "server_error",
@@ -112,7 +98,6 @@ namespace VocabMaster.API.Controllers
                 var userId = GetUserIdFromClaims();
                 if (userId <= 0)
                 {
-                    _logger.LogWarning("Invalid user ID from claims when getting random word excluding learned");
                     return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
                 }
 
@@ -120,15 +105,12 @@ namespace VocabMaster.API.Controllers
                 if (_cache != null)
                 {
                     _cache.Remove(cacheKey);
-                    _logger.LogInformation("Cache invalidated for user {UserId}", userId);
                 }
 
-                _logger.LogInformation("Getting random word excluding learned for user {UserId}", userId);
                 var randomWord = await _randomWordService.GetRandomWordExcludeLearned(userId);
 
                 if (randomWord == null)
                 {
-                    _logger.LogInformation("No random word found for user {UserId} - all words may be learned", userId);
                     return Ok(new { 
                         allLearned = true, 
                         message = "Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống."
@@ -146,14 +128,12 @@ namespace VocabMaster.API.Controllers
                         .SetPriority(CacheItemPriority.Normal);
 
                     _cache.Set(cacheKey, response, cacheOptions);
-                    _logger.LogInformation("Random word cached for user {UserId}", userId);
                 }
 
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting random word excluding learned for user ID {UserId}", GetUserIdFromClaims());
                 return StatusCode(500, new
                 {
                     error = "server_error",
@@ -169,12 +149,10 @@ namespace VocabMaster.API.Controllers
         {
             try
             {
-                _logger.LogInformation("Looking up definition for word: {Word}", word);
 
                 var userId = GetUserIdFromClaims();
                 if (userId <= 0)
                 {
-                    _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
                     return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
                 }
 
@@ -182,7 +160,6 @@ namespace VocabMaster.API.Controllers
 
                 if (definition == null)
                 {
-                    _logger.LogWarning("No definition found for word: {Word}", word);
                     return NotFound(new
                     {
                         error = "word_not_found",
@@ -194,12 +171,10 @@ namespace VocabMaster.API.Controllers
                 
                 var response = VocabularyResponseDto.FromDictionaryResponse(definition, 0, isLearned, definition.Vietnamese);
 
-                _logger.LogInformation("Successfully retrieved definition for word: {Word}", word);
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error looking up definition for word: {Word}", word);
                 return StatusCode(500, new
                 {
                     error = "lookup_error",
@@ -215,20 +190,17 @@ namespace VocabMaster.API.Controllers
             var userId = GetUserIdFromClaims();
             if (userId <= 0)
             {
-                _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
                 return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
             }
 
             try
             {
-                _logger.LogInformation("Checking if word {Word} is learned by user {UserId}", word, userId);
                 bool isLearned = await _wordStatusService.IsWordLearned(userId, word);
 
                 return Ok(new { isLearned });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error checking if word {Word} is learned", word);
                 return StatusCode(500, new
                 {
                     error = "check_error",
@@ -253,13 +225,11 @@ namespace VocabMaster.API.Controllers
             var userId = GetUserIdFromClaims();
             if (userId <= 0)
             {
-                _logger.LogWarning("Invalid user ID from claims: {UserId}", userId);
                 return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
             }
 
             try
             {
-                _logger.LogInformation("Adding word {Word} to learned list for user {UserId}", word, userId);
                 var result = await _learnedWordService.MarkWordAsLearned(userId, word);
 
                 if (result.Success)
@@ -283,7 +253,6 @@ namespace VocabMaster.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding word {Word} to learned list", word);
                 return StatusCode(500, new
                 {
                     error = "add_error",
@@ -303,7 +272,6 @@ namespace VocabMaster.API.Controllers
                 return userId;
             }
 
-            _logger.LogWarning("UserId not found in claims or could not be parsed");
             return 0;
         }
     }
