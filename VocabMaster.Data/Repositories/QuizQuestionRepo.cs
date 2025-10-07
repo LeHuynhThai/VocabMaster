@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Repositories;
 
@@ -8,23 +7,16 @@ namespace VocabMaster.Data.Repositories
     public class QuizQuestionRepo : IQuizQuestionRepo
     {
         private readonly AppDbContext _context;
-        private readonly ILogger<QuizQuestionRepo> _logger;
         private readonly Random _random = new Random();
 
-        public QuizQuestionRepo(AppDbContext context, ILogger<QuizQuestionRepo> logger)
+        public QuizQuestionRepo(AppDbContext context)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _context = context;
         }
 
         public async Task<QuizQuestion> GetRandomQuizQuestion()
         {
-            try
-            {
                 int count = await _context.QuizQuestions.CountAsync();
-
-                if (count == 0)
-                    return null;
 
                 int randomIndex = new Random().Next(0, count);
 
@@ -32,35 +24,19 @@ namespace VocabMaster.Data.Repositories
                     .OrderBy(q => q.Id)
                     .Skip(randomIndex)
                     .FirstOrDefaultAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetRandomQuizQuestion: {Message}", ex.Message);
-                throw;
-            }
         }
 
         public async Task<QuizQuestion> GetRandomUnansweredQuizQuestion(List<int> completedQuestionIds)
         {
-            try
-            {
                 var unansweredQuestions = await _context.QuizQuestions
-                    .Where(q => !completedQuestionIds.Contains(q.Id))
-                var unansweredQuestions = await _context.QuizQuestions
-                    .Where(q => !completedQuestionIds.Contains(q.Id))
-                    .ToListAsync();
+                .Where(q => !completedQuestionIds.Contains(q.Id))
+                .ToListAsync();
 
-                if (!unansweredQuestions.Any())
-                    return null;
+            if (!unansweredQuestions.Any())
+                return null;
 
                 int randomIndex = new Random().Next(0, unansweredQuestions.Count);
-                return unansweredQuestions[randomIndex];
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetRandomUnansweredQuizQuestion");
-                throw;
-            }
+            return unansweredQuestions[randomIndex];
         }
 
         public async Task<QuizQuestion> GetQuizQuestionById(int id)

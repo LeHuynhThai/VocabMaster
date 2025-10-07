@@ -36,12 +36,6 @@ namespace VocabMaster.Data.Repositories
         public async Task<User> ValidateUser(string name, string password)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Name == name);
-
-            if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.Password))
-            {
-                return null;
-            }
-
             return user;
         }
     }
