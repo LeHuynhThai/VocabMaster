@@ -18,21 +18,18 @@ namespace Services.Implementation
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
-        private readonly ILogger<AuthenticationService> _logger;
         private readonly JsonSerializerOptions _jsonOptions;
 
         public AuthenticationService(
             IUserRepo userRepository,
             IHttpContextAccessor httpContextAccessor,
             IHttpClientFactory httpClientFactory,
-            IConfiguration configuration,
-            ILogger<AuthenticationService> logger)
+            IConfiguration configuration)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             _jsonOptions = new JsonSerializerOptions
             {
@@ -86,23 +83,23 @@ namespace Services.Implementation
             {
                 if (googleAuth == null || string.IsNullOrEmpty(googleAuth.AccessToken))
                 {
-                    _logger.LogError("GoogleAuthDto or AccessToken is null/empty");
+                    Console.WriteLine("GoogleAuthDto or AccessToken is null/empty");
                     return null;
                 }
 
-                _logger.LogInformation($"Starting Google authentication with token length: {googleAuth.AccessToken.Length}");
+                Console.WriteLine($"Starting Google authentication with token length: {googleAuth.AccessToken.Length}");
 
                 var googleUserInfo = await GetGoogleUserInfo(googleAuth.AccessToken);
                 if (googleUserInfo == null || string.IsNullOrEmpty(googleUserInfo.Email))
                 {
-                    _logger.LogError("Failed to get valid Google user info or email is missing");
+                    Console.WriteLine("Failed to get valid Google user info or email is missing");
                     return null;
                 }
 
-                _logger.LogInformation($"Google user info received: {googleUserInfo}");
+                Console.WriteLine($"Google user info received: {googleUserInfo}");
 
                 var existingUser = await _userRepository.GetByName(googleUserInfo.Email);
-                _logger.LogInformation($"Existing user found: {existingUser != null}");
+                Console.WriteLine($"Existing user found: {existingUser != null}");
 
                 if (existingUser == null)
                 {
@@ -110,12 +107,12 @@ namespace Services.Implementation
                     if (existingUser == null) return null;
                 }
 
-                _logger.LogInformation($"Generating JWT token for user ID: {existingUser.Id}");
+                Console.WriteLine($"Generating JWT token for user ID: {existingUser.Id}");
                 return await GenerateJwtToken(existingUser);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error authenticating Google user");
+                Console.WriteLine(ex.Message);
                 return null;
             }
         }
@@ -124,13 +121,13 @@ namespace Services.Implementation
         {
             if (string.IsNullOrEmpty(accessToken))
             {
-                _logger.LogError("AccessToken is null or empty");
+                Console.WriteLine("AccessToken is null or empty");
                 return null;
             }
 
             try
             {
-                _logger.LogInformation($"Getting user info with token length: {accessToken.Length}");
+                Console.WriteLine($"Getting user info with token length: {accessToken.Length}");
                 var httpClient = _httpClientFactory.CreateClient("GoogleApi");
 
                 var userInfo = await TryGetGoogleUserInfo(
@@ -149,7 +146,7 @@ namespace Services.Implementation
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting Google user info");
+                Console.WriteLine(ex.Message);
                 return null;
             }
         }
@@ -168,31 +165,31 @@ namespace Services.Implementation
                     httpClient.DefaultRequestHeaders.Authorization = null;
                 }
 
-                _logger.LogInformation($"Trying URL: {url}");
+                Console.WriteLine($"Trying URL: {url}");
                 var response = await httpClient.GetAsync(url);
                 var content = await response.Content.ReadAsStringAsync();
 
-                _logger.LogInformation($"Response status: {response.StatusCode}");
+                Console.WriteLine($"Response status: {response.StatusCode}");
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning($"Failed to get user info. Status: {response.StatusCode}, Content: {content}");
+                    Console.WriteLine($"Failed to get user info. Status: {response.StatusCode}, Content: {content}");
                     return null;
                 }
 
                 var userInfo = JsonSerializer.Deserialize<GoogleUserInfoDto>(content, _jsonOptions);
                 if (userInfo == null)
                 {
-                    _logger.LogError("Failed to deserialize Google user info");
+                    Console.WriteLine("Failed to deserialize Google user info");
                     return null;
                 }
 
-                _logger.LogInformation($"Successfully obtained user info for: {userInfo.Email}");
+                Console.WriteLine($"Successfully obtained user info for: {userInfo.Email}");
                 return userInfo;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error in TryGetGoogleUserInfo ({(useAuthHeader ? "auth header" : "query param")})");
+                Console.WriteLine(ex.Message);
                 return null;
             }
         }
@@ -206,7 +203,7 @@ namespace Services.Implementation
                 Role = UserRole.User
             };
 
-            _logger.LogInformation($"Creating new user with email: {newUser.Name}");
+            Console.WriteLine($"Creating new user with email: {newUser.Name}");
             await _userRepository.Add(newUser);
             return await _userRepository.GetByName(googleUserInfo.Email);
         }

@@ -22,6 +22,7 @@ namespace VocabMaster.Core.Entities
 
     public enum UserRole
     {
-        User
+        User,
+        Admin
     }
 }

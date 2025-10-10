@@ -8,7 +8,9 @@ using VocabMaster.Core.Interfaces.Services;
 using VocabMaster.Core.Interfaces.Services.Vocabulary;
 using VocabMaster.Data;
 using VocabMaster.Data.Repositories;
+using Repository.SeedData;
 using static Services.Implementation.DictionaryCacheService;
+using Repository.SeedData;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -158,5 +160,23 @@ app.UseAuthorization();
 app.UseSession();
 
 app.MapControllers();
+
+// Seed data
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        await context.Database.MigrateAsync();
+
+        await SeedUser.Initialize(services);
+        await SeedVocabulary.Initialize(services);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.Message);
+    }
+}
 
 app.Run();

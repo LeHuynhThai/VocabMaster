@@ -6,6 +6,7 @@ namespace VocabMaster.Data.Repositories
     public class UserRepo : IUserRepo
     {
         private readonly AppDbContext _context;
+        
         public UserRepo(AppDbContext context)
         {
             _context = context;
