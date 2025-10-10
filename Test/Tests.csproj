@@ -18,10 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\VocabMaster.API\VocabMaster.API.csproj" />
-    <ProjectReference Include="..\VocabMaster.Core\VocabMaster.Core.csproj" />
-    <ProjectReference Include="..\VocabMaster.Data\VocabMaster.Data.csproj" />
-    <ProjectReference Include="..\VocabMaster.Services\VocabMaster.Services.csproj" />
+    <ProjectReference Include="..\VocabMaster.API\API.csproj" />
   </ItemGroup>
 
   <ItemGroup>
