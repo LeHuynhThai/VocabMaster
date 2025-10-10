@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Services.Implementation;
 using System.Security.Claims;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Interfaces.Services.Dictionary;
@@ -16,7 +17,7 @@ namespace VocabMaster.API.Controllers
     public class LearnedWordController : ControllerBase
     { 
         private readonly ILearnedWordService _learnedWordService;
-        private readonly IDictionaryLookupService _dictionaryLookupService;
+        private readonly DictionaryLookupService _dictionaryLookupService;
         private readonly IMemoryCache _cache;
         private readonly IMapper _mapper;
         private const string LearnedWordsListCacheKey = "LearnedWordsList_";
@@ -24,7 +25,7 @@ namespace VocabMaster.API.Controllers
 
         public LearnedWordController(
             ILearnedWordService learnedWordService,
-            IDictionaryLookupService dictionaryLookupService,
+            DictionaryLookupService dictionaryLookupService,
             IMapper mapper,
             IMemoryCache cache = null)
         {

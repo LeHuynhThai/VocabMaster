@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using VocabMaster.Core.Interfaces.Repositories;
 
-namespace VocabMaster.Services.Translation
+namespace Services.Implementation
 {
     public class TranslationService
     {

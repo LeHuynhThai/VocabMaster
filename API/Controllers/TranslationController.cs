@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using VocabMaster.Services.Translation;
+using Services.Implementation;
 
 namespace VocabMaster.API.Controllers
 {

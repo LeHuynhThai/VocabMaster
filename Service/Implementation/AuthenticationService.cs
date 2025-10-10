@@ -1,37 +1,83 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Entities;
 using VocabMaster.Core.Interfaces.Services;
 
-namespace VocabMaster.Services.Authentication
+namespace Services.Implementation
 {
-    public class ExternalAuthService : IExternalAuthService
+    public class AuthenticationService : IAuthenticationService
     {
         private readonly IUserRepo _userRepository;
-        private readonly ITokenService _tokenService;
-        private readonly IPasswordService _passwordService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ILogger<ExternalAuthService> _logger;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthenticationService> _logger;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        public ExternalAuthService(
+        public AuthenticationService(
             IUserRepo userRepository,
-            ITokenService tokenService,
-            IPasswordService passwordService,
+            IHttpContextAccessor httpContextAccessor,
             IHttpClientFactory httpClientFactory,
-            ILogger<ExternalAuthService> logger)
+            IConfiguration configuration,
+            ILogger<AuthenticationService> logger)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-            _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
-            _passwordService = passwordService ?? throw new ArgumentNullException(nameof(passwordService));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             };
+        }
+
+        public async Task<TokenResponseDto> Login(string name, string password)
+        {
+            var user = await _userRepository.ValidateUser(name, password);
+            return user != null ? await GenerateJwtToken(user) : null;
+        }
+
+        public async Task<bool> Register(User user)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+
+            if (await _userRepository.IsNameExist(user.Name))
+                return false;
+
+            user.Password = HashPassword(user.Password);
+            await _userRepository.Add(user);
+            return true;
+        }
+
+        public async Task Logout()
+        {
+            await Task.CompletedTask;
+        }
+
+        public async Task<User> GetCurrentUser()
+        {
+            if (_httpContextAccessor.HttpContext == null ||
+                !_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+            {
+                return null;
+            }
+
+            var userId = FindUserIdFromClaims(_httpContextAccessor.HttpContext.User);
+            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int id))
+            {
+                return null;
+            }
+
+            return await _userRepository.GetById(id);
         }
 
         public async Task<TokenResponseDto> AuthenticateGoogleUser(GoogleAuthDto googleAuth)
@@ -65,7 +111,7 @@ namespace VocabMaster.Services.Authentication
                 }
 
                 _logger.LogInformation($"Generating JWT token for user ID: {existingUser.Id}");
-                return await _tokenService.GenerateJwtToken(existingUser);
+                return await GenerateJwtToken(existingUser);
             }
             catch (Exception ex)
             {
@@ -156,13 +202,88 @@ namespace VocabMaster.Services.Authentication
             var newUser = new User
             {
                 Name = googleUserInfo.Email,
-                Password = _passwordService.HashPassword(Guid.NewGuid().ToString()),
+                Password = HashPassword(Guid.NewGuid().ToString()),
                 Role = UserRole.User
             };
 
             _logger.LogInformation($"Creating new user with email: {newUser.Name}");
             await _userRepository.Add(newUser);
             return await _userRepository.GetByName(googleUserInfo.Email);
+        }
+
+        public string HashPassword(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException("Password cannot be null or empty", nameof(password));
+
+            return BCrypt.Net.BCrypt.HashPassword(password);
+        }
+
+        public bool VerifyPassword(string password, string hash)
+        {
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException("Password cannot be null or empty", nameof(password));
+
+            if (string.IsNullOrEmpty(hash))
+                throw new ArgumentException("Hash cannot be null or empty", nameof(hash));
+
+            return BCrypt.Net.BCrypt.Verify(password, hash);
+        }
+
+        public async Task<TokenResponseDto> GenerateJwtToken(User user)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+
+            var jwtSettings = _configuration.GetSection("JWT");
+            var secretKey = jwtSettings["Secret"];
+            var issuer = jwtSettings["Issuer"];
+            var audience = jwtSettings["Audience"];
+            var expiryInDays = int.Parse(jwtSettings["ExpiryInDays"]);
+
+            var claims = CreateUserClaims(user);
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var tokenExpiration = DateTime.UtcNow.AddDays(expiryInDays);
+
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: tokenExpiration,
+                signingCredentials: credentials
+            );
+
+            return await Task.FromResult(new TokenResponseDto
+            {
+                AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
+                ExpiresIn = (int)(tokenExpiration - DateTime.UtcNow).TotalSeconds,
+                UserId = user.Id,
+                UserName = user.Name,
+                Role = user.Role.ToString()
+            });
+        }
+
+        public List<Claim> CreateUserClaims(User user)
+        {
+            return new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Name),
+                new Claim(ClaimTypes.Role, user.Role.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim("UserId", user.Id.ToString()),
+                new Claim("userId", user.Id.ToString()),
+                new Claim("id", user.Id.ToString()),
+                new Claim("sub", user.Id.ToString())
+            };
+        }
+
+        public string FindUserIdFromClaims(ClaimsPrincipal user)
+        {
+            return user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? user.FindFirst("UserId")?.Value
+                ?? user.FindFirst("userId")?.Value
+                ?? user.FindFirst("id")?.Value
+                ?? user.FindFirst("sub")?.Value;
         }
     }
 }

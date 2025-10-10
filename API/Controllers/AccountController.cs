@@ -13,19 +13,13 @@ namespace VocabMaster.API.Controllers;
 public class AccountController : ControllerBase
 {
     private readonly IAuthenticationService _authenticationService;
-    private readonly ITokenService _tokenService;
-    private readonly IExternalAuthService _externalAuthService;
     private readonly IMapper _mapper;
 
     public AccountController(
         IAuthenticationService authenticationService,
-        ITokenService tokenService,
-        IExternalAuthService externalAuthService,
         IMapper mapper)
     {
         _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
-        _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
-        _externalAuthService = externalAuthService ?? throw new ArgumentNullException(nameof(externalAuthService));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
@@ -65,7 +59,7 @@ public class AccountController : ControllerBase
 
             try
             {
-                var tokenResponse = await _externalAuthService.AuthenticateGoogleUser(googleAuth);
+                var tokenResponse = await _authenticationService.AuthenticateGoogleUser(googleAuth);
 
                 if (tokenResponse == null)
                 {
@@ -98,7 +92,7 @@ public class AccountController : ControllerBase
                 return BadRequest(new { valid = false, message = "Token is missing" });
             }
 
-            var userInfo = await _externalAuthService.GetGoogleUserInfo(googleAuth.AccessToken);
+            var userInfo = await _authenticationService.GetGoogleUserInfo(googleAuth.AccessToken);
 
             if (userInfo != null)
             {
@@ -179,7 +173,7 @@ public class AccountController : ControllerBase
             return Unauthorized();
         }
 
-        var tokenResponse = await _tokenService.GenerateJwtToken(user);
+        var tokenResponse = await _authenticationService.GenerateJwtToken(user);
         return Ok(tokenResponse);
     }
 

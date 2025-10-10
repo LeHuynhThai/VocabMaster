@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Services.Implementation;
 using System.Security.Claims;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Interfaces.Services.Dictionary;
 using VocabMaster.Core.Interfaces.Services.Vocabulary;
+using static Services.Implementation.DictionaryCacheService;
 
 namespace VocabMaster.API.Controllers
 {
@@ -14,20 +16,20 @@ namespace VocabMaster.API.Controllers
     [Produces("application/json")]
     public class WordGeneratorController : ControllerBase
     {
-        private readonly IRandomWordService _randomWordService;
-        private readonly IDictionaryLookupService _dictionaryLookupService;
+        private readonly RandomWordService _randomWordService;
+        private readonly DictionaryLookupService _dictionaryLookupService;
         private readonly ILearnedWordService _learnedWordService;
-        private readonly IWordStatusService _wordStatusService;
+        private readonly WordStatusService _wordStatusService;
         private readonly IMemoryCache _cache;
         private const string RandomWordCacheKey = "RandomWord_";
         private const string LookupCacheKey = "Lookup_";
         private const int CacheExpirationMinutes = 30;
 
         public WordGeneratorController(
-            IRandomWordService randomWordService,
-            IDictionaryLookupService dictionaryLookupService,
+            RandomWordService randomWordService,
+            DictionaryLookupService dictionaryLookupService,
             ILearnedWordService learnedWordService,
-            IWordStatusService wordStatusService,
+            WordStatusService wordStatusService,
             IMemoryCache cache = null)
         {
             _randomWordService = randomWordService ?? throw new ArgumentNullException(nameof(randomWordService));

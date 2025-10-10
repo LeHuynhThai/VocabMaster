@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Services.Implementation;
 using System.Security.Claims;
 using VocabMaster.Core.DTOs;
 using VocabMaster.Core.Interfaces.Repositories;
@@ -12,15 +13,15 @@ namespace VocabMaster.API.Controllers
     [Authorize]
     public class QuizController : ControllerBase
     {
-        private readonly IQuizQuestionService _quizQuestionService;
+        private readonly QuizQuestionService _quizQuestionService;
         private readonly IQuizAnswerService _quizAnswerService;
-        private readonly IQuizProgressService _quizProgressService;
+        private readonly QuizProgressService _quizProgressService;
         private readonly IQuizQuestionRepo _quizQuestionRepo;
 
         public QuizController(
-            IQuizQuestionService quizQuestionService,
+            QuizQuestionService quizQuestionService,
             IQuizAnswerService quizAnswerService,
-            IQuizProgressService quizProgressService,
+            QuizProgressService quizProgressService,
             IQuizQuestionRepo quizQuestionRepo)
         {
             _quizQuestionService = quizQuestionService ?? throw new ArgumentNullException(nameof(quizQuestionService));

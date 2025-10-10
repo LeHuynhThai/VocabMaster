@@ -1,25 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Services.Implementation;
 using System.Text;
 using VocabMaster.Core.Interfaces.Repositories;
 using VocabMaster.Core.Interfaces.Services;
-using VocabMaster.Core.Interfaces.Services.Dictionary;
-using VocabMaster.Core.Interfaces.Services.Quiz;
-using VocabMaster.Core.Interfaces.Services.Translation;
 using VocabMaster.Core.Interfaces.Services.Vocabulary;
 using VocabMaster.Data;
 using VocabMaster.Data.Repositories;
-using VocabMaster.Data.Seed;
-using VocabMaster.Services.Authentication;
-using VocabMaster.Services.Dictionary;
-using VocabMaster.Services.Quiz;
-using VocabMaster.Services.Translation;
-using VocabMaster.Services.Vocabulary;
-using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using VocabMaster.Core.DTOs;
-using VocabMaster.Core.Entities;
+using static Services.Implementation.DictionaryCacheService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,9 +50,6 @@ builder.Services.AddScoped<ICompletedQuizRepo, CompletedQuizRepo>();
 
 // services for authentication
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IExternalAuthService, ExternalAuthService>();
-builder.Services.AddScoped<IPasswordService, PasswordService>();
 
 // Add HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
@@ -136,21 +122,21 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<TranslationService>();
 
 // services for dictionary
-builder.Services.AddScoped<IDictionaryLookupService, DictionaryLookupService>();
-builder.Services.AddScoped<IDictionaryCacheService, DictionaryCacheService>();
+builder.Services.AddScoped<DictionaryLookupService>();
+builder.Services.AddScoped<DictionaryCacheService>();
 
 // services for vocabulary
-builder.Services.AddScoped<IWordStatusService, WordStatusService>();
+builder.Services.AddScoped<WordStatusService>();
 builder.Services.AddScoped<ILearnedWordService, LearnedWordService>();
 
 // services for quiz
-builder.Services.AddScoped<IQuizQuestionService, QuizQuestionService>();
-builder.Services.AddScoped<IQuizAnswerService, QuizAnswerService>();
-builder.Services.AddScoped<IQuizProgressService, QuizProgressService>();
+builder.Services.AddScoped<QuizQuestionService>();
+builder.Services.AddScoped<QuizAnswerService>();
+builder.Services.AddScoped<QuizProgressService>();
 
 
 // Add RandomWordService
-builder.Services.AddScoped<IRandomWordService, RandomWordService>();
+builder.Services.AddScoped<RandomWordService>();
 
 
 var app = builder.Build();
@@ -160,8 +146,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
 }
-
-app.UseStaticFiles();
 
 // Use CORS before Authentication
 app.UseCors("AllowAll");
@@ -174,25 +158,5 @@ app.UseAuthorization();
 app.UseSession();
 
 app.MapControllers();
-
-// Seed database
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AppDbContext>();
-        await context.Database.MigrateAsync();
-
-        // Seed data from SeedData
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        await SeedData.Initialize(services, logger);
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
-    }
-}
 
 app.Run();
