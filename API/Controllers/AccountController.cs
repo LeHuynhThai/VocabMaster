@@ -24,26 +24,35 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("login")]
-    [Produces("application/json")]
-    public async Task<IActionResult> Login([FromBody] LoginRequestDto model)
+    public async Task<IActionResult> Login(LoginRequestDto model)
     {
+        // validate fields login request
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
-        var tokenResponse = await _authenticationService.Login(model.Name, model.Password);
-        if (tokenResponse != null)
+        try
         {
-            return Ok(tokenResponse);
+            var loginResult = await _authenticationService.Login(model.Name, model.Password);
+            if (loginResult != null)
+            {
+                return Ok(loginResult);
+            }
+            else
+            {
+                return Unauthorized(new { message = "Tên đăng nhập hoặc mật khẩu không hợp lệ" });
+            }
         }
-
-        return Unauthorized(new { message = "Tên đăng nhập hoặc mật khẩu không hợp lệ" });
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return BadRequest(new { message = "Đã xảy ra lỗi khi đăng nhập" });
+        }
     }
 
     [HttpPost("google-login")]
-    [Produces("application/json")]
     [AllowAnonymous]
-    public async Task<IActionResult> GoogleLogin([FromBody] GoogleAuthDto googleAuth)
+    public async Task<IActionResult> GoogleLogin(GoogleAuthDto googleAuth)
     {
         try
         {
@@ -80,9 +89,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("validate-google-token")]
-    [Produces("application/json")]
     [AllowAnonymous]
-    public async Task<IActionResult> ValidateGoogleToken([FromBody] GoogleAuthDto googleAuth)
+    public async Task<IActionResult> ValidateGoogleToken(GoogleAuthDto googleAuth)
     {
 
         try
@@ -119,22 +127,31 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("register")]
-    [Produces("application/json")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequestDto model)
+    public async Task<IActionResult> Register(RegisterRequestDto model)
     {
-        if (!ModelState.IsValid)
+        try
         {
-            return BadRequest(ModelState);
+            var user = new User
+            {
+                Name = model.Name,
+                Password = model.Password,
+                Role = UserRole.User
+            };
+            var result = await _authenticationService.Register(user);
+            if (result)
+            {
+             return Ok(new { success = true, message = "Đăng ký thành công" });
+            }
+            else
+            {
+                return BadRequest(new { message = "Tên đăng nhập đã tồn tại" });
+            }
         }
-
-        var user = _mapper.Map<User>(model);
-
-        if (await _authenticationService.Register(user))
+        catch (Exception ex)
         {
-            return Ok(new { success = true, message = "Đăng ký thành công" });
+            Console.WriteLine(ex.Message);
+            return BadRequest(new { message = "Đã xảy ra lỗi khi đăng ký" });
         }
-
-        return BadRequest(new { message = "Tên đăng nhập đã tồn tại" });
     }
 
     [HttpGet("logout")]
@@ -175,12 +192,5 @@ public class AccountController : ControllerBase
 
         var tokenResponse = await _authenticationService.GenerateJwtToken(user);
         return Ok(tokenResponse);
-    }
-
-    [HttpGet("test")]
-    [AllowAnonymous]
-    public IActionResult Test()
-    {
-        return Ok(new { message = "API đang hoạt động", time = DateTime.Now });
     }
 }
