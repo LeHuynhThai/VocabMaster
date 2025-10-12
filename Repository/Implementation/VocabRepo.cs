@@ -1,65 +1,50 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using VocabMaster.Core.Entities;
-using VocabMaster.Core.Interfaces.Repositories;
+using Repository.Entities;
+using Repository.Interfaces;
 
-namespace VocabMaster.Data.Repositories
+namespace Repository.Implementation
 {
     public class VocabRepo : IVocabularyRepo
     {
         private readonly AppDbContext _context;
-        private readonly Random _random;
 
-        public VocabRepo(
-            AppDbContext context)
+        public VocabRepo(AppDbContext context)
         {
             _context = context;
-            _random = new Random();
         }
 
-        public async Task<int> Count()
+        // Get random word using for get random word exclude learned words
+        public async Task<Vocabulary?> GetRandom()
         {
-            return await _context.Vocabularies.CountAsync();
+            var count = await _context.Vocabularies.CountAsync();
+            var skipCount = new Random().Next(count);
+            return await _context.Vocabularies
+                .Skip(skipCount)                    
+                .Take(1)
+                .FirstOrDefaultAsync();
         }
 
-        public async Task<Vocabulary> GetRandom()
+        // Get random word exclude learned words
+        public async Task<Vocabulary?> GetRandomExcludeLearned(List<string> learnedWords)
         {
-                var count = await _context.Vocabularies.CountAsync();
-
-                var skipCount = _random.Next(count);
-
-                var vocabulary = await _context.Vocabularies
-                    .Skip(skipCount)
-                    .Take(1)
-                    .FirstOrDefaultAsync();
-                return vocabulary;
+            var count = await _context.Vocabularies
+                .Where(v => !learnedWords.Contains(v.Word))
+                .CountAsync();
+            var skipCount = new Random().Next(count);
+            return await _context.Vocabularies
+                .Where(v => !learnedWords.Contains(v.Word))
+                .Skip(skipCount)
+                .Take(1)
+                .FirstOrDefaultAsync();
         }
 
-        public async Task<Vocabulary> GetRandomExcludeLearned(List<string> learnedWords)
-        {
-                var availableWords = await _context.Vocabularies
-                    .Where(v => !learnedWords.Contains(v.Word))
-                    .ToListAsync();
-                var randomIndex = _random.Next(availableWords.Count);
-                var selectedWord = availableWords[randomIndex];
-
-                return selectedWord;
-        }
-
-        public async Task<List<Vocabulary>> GetAll()
-        {
-                var vocabularies = await _context.Vocabularies.ToListAsync();
-                return vocabularies;
-        }
-
+        // Update a vocabulary, use for crawl Vietnamese from api
         public async Task<bool> Update(Vocabulary vocabulary)
         {
-                var existingVocabulary = await _context.Vocabularies.FindAsync(vocabulary.Id);
-
-                existingVocabulary.Vietnamese = vocabulary.Vietnamese;
-
-                await _context.SaveChangesAsync();
-
-                return true;
+            var existingVocabulary = await _context.Vocabularies.FindAsync(vocabulary.Id);
+            existingVocabulary.Vietnamese = vocabulary.Vietnamese;
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

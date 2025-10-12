@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace VocabMaster.Core.Entities
+namespace Repository.Entities
 {
     public class QuizQuestion
     {

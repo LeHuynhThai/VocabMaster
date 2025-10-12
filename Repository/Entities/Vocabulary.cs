@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace VocabMaster.Core.Entities
+namespace Repository.Entities
 {
     public class Vocabulary
     {
@@ -16,7 +16,7 @@ namespace VocabMaster.Core.Entities
 
         public string PhoneticsJson { get; set; } = "[]";
 
-        public string MeaningsJson { get; set; }
+        public string MeaningsJson { get; set; } = "[]";
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

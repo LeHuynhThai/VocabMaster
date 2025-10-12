@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace VocabMaster.Core.DTOs
+namespace Repository.DTOs
 {
     public class VocabularyResponseDto
     {

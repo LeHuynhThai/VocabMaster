@@ -1,8 +1,8 @@
-﻿using System.Security.Claims;
-using VocabMaster.Core.DTOs;
-using VocabMaster.Core.Entities;
+﻿using Repository.DTOs;
+using Repository.Entities;
+using System.Security.Claims;
 
-namespace VocabMaster.Core.Interfaces.Services
+namespace Service.Interfaces
 {
     public interface IAuthenticationService
     {

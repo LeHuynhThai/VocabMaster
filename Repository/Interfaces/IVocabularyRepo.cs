@@ -1,17 +1,11 @@
-﻿using VocabMaster.Core.Entities;
+﻿using Repository.Entities;
 
-namespace VocabMaster.Core.Interfaces.Repositories
+namespace Repository.Interfaces
 {
     public interface IVocabularyRepo
     {
         Task<Vocabulary> GetRandom();
-
-        Task<int> Count();
-
         Task<Vocabulary> GetRandomExcludeLearned(List<string> learnedWords);
-
-        Task<List<Vocabulary>> GetAll();
-
-        Task<bool> Update(Vocabulary vocabulary); // Update a vocabulary, use for crawl Vietnamese from api
+        Task<bool> Update(Vocabulary vocabulary);
     }
 }

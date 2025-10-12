@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using VocabMaster.Data;
+using Repository;
 
 #nullable disable
 
@@ -22,7 +22,7 @@ namespace Repository.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("VocabMaster.Core.Entities.CompletedQuiz", b =>
+            modelBuilder.Entity("Repository.Entities.CompletedQuiz", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -52,7 +52,7 @@ namespace Repository.Migrations
                     b.ToTable("CompletedQuizzes");
                 });
 
-            modelBuilder.Entity("VocabMaster.Core.Entities.LearnedWord", b =>
+            modelBuilder.Entity("Repository.Entities.LearnedWord", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -81,7 +81,7 @@ namespace Repository.Migrations
                     b.ToTable("LearnedVocabularies");
                 });
 
-            modelBuilder.Entity("VocabMaster.Core.Entities.QuizQuestion", b =>
+            modelBuilder.Entity("Repository.Entities.QuizQuestion", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -118,7 +118,7 @@ namespace Repository.Migrations
                     b.ToTable("QuizQuestions");
                 });
 
-            modelBuilder.Entity("VocabMaster.Core.Entities.User", b =>
+            modelBuilder.Entity("Repository.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -144,7 +144,7 @@ namespace Repository.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("VocabMaster.Core.Entities.Vocabulary", b =>
+            modelBuilder.Entity("Repository.Entities.Vocabulary", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -184,15 +184,15 @@ namespace Repository.Migrations
                     b.ToTable("Vocabularies");
                 });
 
-            modelBuilder.Entity("VocabMaster.Core.Entities.CompletedQuiz", b =>
+            modelBuilder.Entity("Repository.Entities.CompletedQuiz", b =>
                 {
-                    b.HasOne("VocabMaster.Core.Entities.QuizQuestion", "QuizQuestion")
+                    b.HasOne("Repository.Entities.QuizQuestion", "QuizQuestion")
                         .WithMany()
                         .HasForeignKey("QuizQuestionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("VocabMaster.Core.Entities.User", "User")
+                    b.HasOne("Repository.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -203,9 +203,9 @@ namespace Repository.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("VocabMaster.Core.Entities.LearnedWord", b =>
+            modelBuilder.Entity("Repository.Entities.LearnedWord", b =>
                 {
-                    b.HasOne("VocabMaster.Core.Entities.User", "User")
+                    b.HasOne("Repository.Entities.User", "User")
                         .WithMany("LearnedVocabularies")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -214,7 +214,7 @@ namespace Repository.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("VocabMaster.Core.Entities.User", b =>
+            modelBuilder.Entity("Repository.Entities.User", b =>
                 {
                     b.Navigation("LearnedVocabularies");
                 });

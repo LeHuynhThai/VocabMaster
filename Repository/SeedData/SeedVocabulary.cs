@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using VocabMaster.Core.Entities;
+using Repository.Entities;
 using Microsoft.EntityFrameworkCore;
-using VocabMaster.Data;
+using Repository;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Repository.SeedData

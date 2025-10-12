@@ -1,16 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Services.Implementation;
 using System.Text;
-using VocabMaster.Core.Interfaces.Repositories;
-using VocabMaster.Core.Interfaces.Services;
-using VocabMaster.Core.Interfaces.Services.Vocabulary;
-using VocabMaster.Data;
-using VocabMaster.Data.Repositories;
 using Repository.SeedData;
-using static Services.Implementation.DictionaryCacheService;
-using Repository.SeedData;
+using Service.Interfaces;
+using Repository.Interfaces;
+using Repository.Implementation;
+using Repository;
+using Service.Implementation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -119,26 +116,6 @@ builder.Services.AddHttpClient("GoogleApi", client =>
 
 // Add memory caching
 builder.Services.AddMemoryCache();
-
-// Add new TranslationService (replaces old translation services)
-builder.Services.AddScoped<TranslationService>();
-
-// services for dictionary
-builder.Services.AddScoped<DictionaryLookupService>();
-builder.Services.AddScoped<DictionaryCacheService>();
-
-// services for vocabulary
-builder.Services.AddScoped<WordStatusService>();
-builder.Services.AddScoped<ILearnedWordService, LearnedWordService>();
-
-// services for quiz
-builder.Services.AddScoped<QuizQuestionService>();
-builder.Services.AddScoped<QuizAnswerService>();
-builder.Services.AddScoped<QuizProgressService>();
-
-
-// Add RandomWordService
-builder.Services.AddScoped<RandomWordService>();
 
 
 var app = builder.Build();

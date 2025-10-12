@@ -1,6 +1,6 @@
-﻿using VocabMaster.Core.Entities;
+﻿using Repository.Entities;
 
-namespace VocabMaster.Core.DTOs
+namespace Repository.DTOs
 {
     public class MarkWordResultDto
     {

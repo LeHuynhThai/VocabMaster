@@ -1,16 +1,16 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using VocabMaster.Core.DTOs;
-using VocabMaster.Core.Entities;
-using VocabMaster.Core.Interfaces.Services;
+using Repository.DTOs;
+using Repository.Entities;
+using Service.Interfaces;
+using Repository.Interfaces;
 
-namespace Services.Implementation
+namespace Service.Implementation
 {
     public class AuthenticationService : IAuthenticationService
     {

@@ -1,8 +1,8 @@
-﻿using VocabMaster.Core.DTOs;
+﻿using Repository.DTOs;
 
-namespace VocabMaster.Core.Interfaces.Services.Quiz
+namespace Service.Interfaces
 {
-    public interface IQuizAnswerService
+    public interface IQuizService
     {
         Task<QuizResultDto> CheckAnswer(int questionId, string answer);
         Task<QuizResultDto> CheckAnswerAndMarkCompleted(int questionId, string answer, int userId);

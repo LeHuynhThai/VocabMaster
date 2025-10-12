@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using VocabMaster.Core.Entities;
-using VocabMaster.Core.Interfaces.Repositories;
+using Repository.Entities;
+using Repository.Interfaces;
 
-namespace VocabMaster.Data.Repositories
+namespace Repository.Implementation
 {
     public class LearnedWordRepo : ILearnedWordRepo
     {

@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using VocabMaster.Core.DTOs;
-using VocabMaster.Core.Entities;
-using VocabMaster.Core.Interfaces.Services;
+using Repository.DTOs;
+using Repository.Entities;
+using Service.Interfaces;
 
-namespace VocabMaster.API.Controllers;
+namespace API.Controllers;
 
 
 [ApiController]

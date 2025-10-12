@@ -1,7 +1,6 @@
-﻿using VocabMaster.Core.DTOs;
-using VocabMaster.Core.Entities;
+﻿using Repository.DTOs;
 
-namespace VocabMaster.Core.Interfaces.Services.Dictionary
+namespace Service.Interfaces
 {
     public interface IDictionaryCacheService
     {

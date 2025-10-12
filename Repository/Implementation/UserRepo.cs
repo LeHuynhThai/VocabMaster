@@ -1,7 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using VocabMaster.Core.Entities;
+using Repository.Entities;
+using Repository.Interfaces;
 
-namespace VocabMaster.Data.Repositories
+namespace Repository.Implementation
 {
     public class UserRepo : IUserRepo
     {

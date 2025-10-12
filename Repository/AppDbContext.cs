@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using VocabMaster.Core.Entities;
+using Repository.Entities;
 
-namespace VocabMaster.Data
+namespace Repository
 {
     public class AppDbContext : DbContext
     {

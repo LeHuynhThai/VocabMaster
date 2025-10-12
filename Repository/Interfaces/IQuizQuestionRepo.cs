@@ -1,6 +1,6 @@
-﻿using VocabMaster.Core.Entities;
+﻿using Repository.Entities;
 
-namespace VocabMaster.Core.Interfaces.Repositories
+namespace Repository.Interfaces
 {
     public interface IQuizQuestionRepo
     {
