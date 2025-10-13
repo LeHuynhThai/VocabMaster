@@ -1,5 +1,11 @@
 /* Word Generator Page Styles */
 
+.word-generator-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
 .page-title {
   font-size: 2rem;
   font-weight: 600;

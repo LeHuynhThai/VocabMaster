@@ -161,7 +161,7 @@ const LearnedWordsPage: React.FC = () => {
   };
 
   return (
-    <Container className="py-4">
+    <Container className="py-4 learned-words-page">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <Button 
           variant="outline-primary" 

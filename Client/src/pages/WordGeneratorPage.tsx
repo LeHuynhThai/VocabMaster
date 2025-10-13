@@ -184,7 +184,7 @@ const WordGeneratorPage: React.FC = () => {
   }, [getWordFromUrl, fetchRandomWord, addToast, navigate]);
 
   return (
-    <Container className="py-4">
+    <Container className="py-4 word-generator-page">
       <Row>
         <Col lg={8} className="mx-auto">
           <Form onSubmit={handleSearch} className="mb-4">
