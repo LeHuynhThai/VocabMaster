@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Table, Button, Alert, Spinner, Form, InputGroup } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import vocabularyService, { LearnedWord, PaginatedResponse } from '../services/vocabularyService';
+import { Container, Card, Table, Button, Alert, Spinner } from 'react-bootstrap';
+import vocabularyService, { LearnedWord } from '../services/vocabularyService';
 import { useAuth } from '../contexts/AuthContext';
-import { ROUTES } from '../utils/constants';
 import Pagination from '../components/ui/Pagination';
 import useToast from '../hooks/useToast';
 import './LearnedWordsPage.css';
@@ -35,13 +33,11 @@ const LearnedWordsPage: React.FC = () => {
   const [filteredWords, setFilteredWords] = useState<LearnedWord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10); // Fixed page size of 10
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   const { showToast } = useToast();
 
   /**
@@ -99,29 +95,7 @@ const LearnedWordsPage: React.FC = () => {
     }
   };
 
-  /**
-   * Navigate to word details page
-   */
-  const viewWordDetails = async (word: string) => {
-    navigate(`${ROUTES.WORD_GENERATOR}?word=${encodeURIComponent(word)}`);
-  };
-
-  /**
-   * Handle search input change
-   */
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    
-    if (!query.trim()) {
-      setFilteredWords(words);
-    } else {
-      const filtered = words.filter(word => 
-        word.word.toLowerCase().includes(query.toLowerCase())
-      );
-      setFilteredWords(filtered);
-    }
-  };
+  // Search is removed
 
   /**
    * Handle page change
@@ -171,21 +145,6 @@ const LearnedWordsPage: React.FC = () => {
           <i className="bi bi-arrow-clockwise me-2"></i>
           Làm mới
         </Button>
-        
-        <div className="search-container" style={{ width: '40%' }}>
-          <InputGroup>
-            <Form.Control
-              type="text"
-              placeholder="Tìm kiếm từ vựng đã học..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              disabled={isLoading}
-            />
-            <InputGroup.Text>
-              <i className="bi bi-search"></i>
-            </InputGroup.Text>
-          </InputGroup>
-        </div>
       </div>
       
       {error && (
@@ -207,17 +166,7 @@ const LearnedWordsPage: React.FC = () => {
             </div>
           ) : filteredWords.length === 0 ? (
             <div className="text-center py-5">
-              {searchQuery.trim() ? (
-                <p className="text-muted mb-4">Không tìm thấy từ vựng nào phù hợp với "{searchQuery}".</p>
-              ) : (
-                <>
-                  <p className="text-muted mb-4">Bạn chưa lưu từ vựng nào.</p>
-                  <Button variant="primary" href={ROUTES.WORD_GENERATOR}>
-                    <i className="bi bi-plus-circle me-2"></i>
-                    Bắt đầu học từ mới
-                  </Button>
-                </>
-              )}
+              <p className="text-muted mb-4">Bạn chưa lưu từ vựng nào.</p>
             </div>
           ) : (
             <>
@@ -238,15 +187,6 @@ const LearnedWordsPage: React.FC = () => {
                         <td>{word.word}</td>
                         <td>{word.learnedAt ? formatDate(word.learnedAt) : '-'}</td>
                         <td className="text-end">
-                          <Button 
-                            variant="outline-primary" 
-                            size="sm"
-                            className="me-2"
-                            onClick={() => viewWordDetails(word.word)}
-                            title="Xem chi tiết từ vựng"
-                          >
-                            <i className="bi bi-search"></i>
-                          </Button>
                           <Button 
                             variant="outline-danger" 
                             size="sm"
