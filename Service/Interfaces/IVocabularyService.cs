@@ -5,5 +5,6 @@ namespace Service.Interfaces
     {
         Task<Vocabulary> GetRandomWord(int userId);
         Task<List<LearnedWord>> GetLearnedWords(int userId);
+        Task<LearnedWord> AddLearnedWord(LearnedWord learnedWord);
     }
 }

@@ -97,8 +97,8 @@ const vocabularyService = {
    */
   markAsLearned: async (word: string): Promise<boolean> => {
     try {
-      const response = await api.post('/api/learnedword', { word });
-      return response.data && response.data.id > 0;
+      const response = await api.post(API_ENDPOINTS.ADD_LEARNED_WORD, { word });
+      return response.data && response.data.success;
     } catch (error: any) {
       console.error('Error marking word as learned:', error);
       return false;

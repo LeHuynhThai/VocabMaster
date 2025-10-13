@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Repository.DTOs;
+using Repository.Entities;
 using Service.Interfaces;
 using System.Security.Claims;
 
@@ -43,8 +44,9 @@ namespace VocabMaster.API.Controllers
 
                 if (randomWord == null)
                 {
-                    return Ok(new { 
-                        allLearned = true, 
+                    return Ok(new
+                    {
+                        allLearned = true,
                         message = "Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống."
                     });
                 }
@@ -60,6 +62,56 @@ namespace VocabMaster.API.Controllers
                 });
             }
         }
+
+        [HttpPost("learned-word")]
+        public async Task<IActionResult> AddLearnedWord([FromBody] AddLearnedWordDto dto)
+        {
+            try
+            {
+                var userId = GetUserIdFromClaims();
+                if (userId <= 0)
+                {
+                    return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { error = "validation_error", message = "Dữ liệu không hợp lệ", details = ModelState });
+                }
+
+                var learnedWord = new LearnedWord
+                {
+                    Word = dto.Word,
+                    UserId = userId,
+                    LearnedAt = DateTime.UtcNow
+                };
+
+                var result = await _vocabularyService.AddLearnedWord(learnedWord);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Đã lưu từ vựng thành công",
+                    data = new
+                    {
+                        id = result.Id,
+                        word = result.Word,
+                        learnedAt = result.LearnedAt
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = "server_error",
+                    message = "Đã xảy ra lỗi khi lưu từ vựng",
+                    details = ex.Message
+                });
+            }
+        }
+
+
         private int GetUserIdFromClaims()
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier) ??

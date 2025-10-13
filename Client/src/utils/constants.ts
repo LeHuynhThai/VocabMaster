@@ -23,6 +23,7 @@ export const API_ENDPOINTS = {
   CURRENT_USER: '/api/account/currentuser',
   RANDOM_WORD: '/api/wordgenerator/random-word',
   LEARNED_WORDS: '/api/learnedword',
+  ADD_LEARNED_WORD: '/api/wordgenerator/learned-word',
   LEARNED_WORDS_PAGINATED: '/api/learnedword/paginated',
   TRANSLATE_EN_VI: '/api/translation/en-to-vi',
   TRANSLATE: '/api/translation/translate',

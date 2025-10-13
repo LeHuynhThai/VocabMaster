@@ -37,5 +37,11 @@ namespace Service.Implementation
         {
             return await _vocab.GetLearnedWords(userId);
         }
+
+        // Add learned word
+        public async Task<LearnedWord> AddLearnedWord(LearnedWord learnedWord)
+        {
+            return await _vocab.AddLearnedWord(learnedWord);
+        }
     }
 }

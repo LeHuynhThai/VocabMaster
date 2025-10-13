@@ -65,7 +65,7 @@ const WordGeneratorPage: React.FC = () => {
       console.error('Error fetching random word:', error);
       addToast({
         type: 'error',
-        message: 'Không thể lấy từ vựng ngẫu nhiên. Vui lòng thử lại sau.'
+        message: 'Bạn đã học hết tất cả từ vựng trong hệ thống.'
       });
     } finally {
       setLoading(false);
@@ -96,7 +96,7 @@ const WordGeneratorPage: React.FC = () => {
       console.error('Error fetching new random word:', error);
       addToast({
         type: 'error',
-        message: 'Không thể lấy từ vựng mới. Vui lòng thử lại sau.'
+        message: 'Bạn đã học hết tất cả từ vựng trong hệ thống.'
       });
     } finally {
       setLoading(false);

@@ -56,6 +56,14 @@ namespace Repository.Implementation
 
             return learnedWords;
         }
+        
+        // Add learned word
+        public async Task<LearnedWord> AddLearnedWord(LearnedWord learnedWord)
+        {
+            _context.LearnedVocabularies.Add(learnedWord);
+            await _context.SaveChangesAsync();
+            return learnedWord;
+        }
     }
 }
 
