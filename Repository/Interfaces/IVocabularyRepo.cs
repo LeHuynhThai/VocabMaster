@@ -7,6 +7,6 @@ namespace Repository.Interfaces
         Task<Vocabulary> GetRandom();
         Task<Vocabulary> GetRandomExcludeLearned(List<string> learnedWords);
         Task<bool> Update(Vocabulary vocabulary);
-        Task<bool> GetLearnedWords(int userId);
+        Task<List<LearnedWord>> GetLearnedWords(int userId);
     }
 }

@@ -1,35 +1,41 @@
-﻿//using Repository.Implementation;
-//using Repository.Interfaces;
-//using Service.Interfaces;
-//using Repository.Entities;
+﻿using Repository.Implementation;
+using Repository.Interfaces;
+using Service.Interfaces;
+using Repository.Entities;
 
-//namespace Service.Implementation
-//{
-//    public class VocabularyService : IVocabularyService
-//    {
-//        private readonly VocabRepo _vocab;
+namespace Service.Implementation
+{
+    public class VocabularyService : IVocabularyService
+    {
+        private readonly IVocabularyRepo _vocab;
 
-//        public VocabularyService(VocabRepo vocabulary)
-//        {
-//            _vocab = vocabulary;
-//        }
+        public VocabularyService(IVocabularyRepo vocabulary)
+        {
+            _vocab = vocabulary;
+        }
 
-//        //public async Task<Vocabulary?> GetRandomWord(int userId)
-//        //{
-//        //    //// 1. take learned words from user
-//        //    //var learnedWords = await _learnedWord.GetByUserId(userId);
-//        //    //var learnedWordsList = learnedWords.Select(lw => lw.Word).ToList();
+        public async Task<Vocabulary?> GetRandomWord(int userId)
+        {
+            // 1. take learned words from user
+            var learnedWords = await _vocab.GetLearnedWords(userId);
+            var learnedWordsList = learnedWords.Select(lw => lw.Word).ToList();
 
-//        //    //// 2. get random word from vocabulary exclude learned words
-//        //    //var randomWord = await _vocab.GetRandomExcludeLearned(learnedWordsList);
+            // 2. get random word from vocabulary exclude learned words
+            var randomWord = await _vocab.GetRandomExcludeLearned(learnedWordsList);
 
-//        //    //// 3. if user learned all words, throw exception
-//        //    //if (randomWord == null)
-//        //    //{
-//        //    //    throw new InvalidOperationException("Bạn đã học hết tất cả từ vựng trong hệ thống!");
-//        //    //}
+            // 3. if user learned all words, throw exception
+            if (randomWord == null)
+            {
+                throw new InvalidOperationException("Bạn đã học hết tất cả từ vựng trong hệ thống!");
+            }
 
-//        //    //return randomWord;
-//        //}
-//    }
-//}
+            return randomWord;
+        }
+
+        // Get learned words
+        public async Task<List<LearnedWord>> GetLearnedWords(int userId)
+        {
+            return await _vocab.GetLearnedWords(userId);
+        }
+    }
+}

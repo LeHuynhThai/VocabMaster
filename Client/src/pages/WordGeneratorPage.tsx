@@ -103,28 +103,6 @@ const WordGeneratorPage: React.FC = () => {
     }
   }, [addToast, navigate]);
 
-  const lookupWord = useCallback(async (wordToLookup: string) => {
-    if (!wordToLookup.trim()) return;
-    
-    setLoading(true);
-    try {
-      const data = await vocabularyService.lookup(wordToLookup.trim());
-      console.log('Lookup Word Data:', data);
-      console.log('Vietnamese translation:', data.vietnamese);
-      setWord(data);
-      // Cập nhật URL với từ vựng đang tra cứu
-      navigate(`${ROUTES.WORD_GENERATOR}?word=${encodeURIComponent(wordToLookup.trim())}`, { replace: true });
-      setSearchTerm(wordToLookup.trim());
-    } catch (error) {
-      console.error('Error searching for word:', error);
-      addToast({
-        type: 'error',
-        message: `Không tìm thấy từ "${wordToLookup}" trong cơ sở dữ liệu, vui lòng tìm kiếm từ khác`
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [addToast, navigate]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +110,11 @@ const WordGeneratorPage: React.FC = () => {
     
     setSearching(true);
     try {
-      await lookupWord(searchTerm);
+      // Search functionality removed - lookup method no longer available
+      addToast({
+        type: 'info',
+        message: 'Chức năng tìm kiếm từ vựng tạm thời không khả dụng'
+      });
     } finally {
       setSearching(false);
     }
@@ -188,11 +170,18 @@ const WordGeneratorPage: React.FC = () => {
     const wordFromUrl = getWordFromUrl();
     
     if (wordFromUrl) {
-      lookupWord(wordFromUrl);
+      // URL word lookup functionality removed - lookup method no longer available
+      addToast({
+        type: 'info',
+        message: 'Chức năng tìm kiếm từ URL tạm thời không khả dụng'
+      });
+      // Clear URL parameter and fetch random word instead
+      navigate(ROUTES.WORD_GENERATOR, { replace: true });
+      fetchRandomWord();
     } else {
       fetchRandomWord();
     }
-  }, [getWordFromUrl, lookupWord, fetchRandomWord]);
+  }, [getWordFromUrl, fetchRandomWord, addToast, navigate]);
 
   return (
     <Container className="py-4">

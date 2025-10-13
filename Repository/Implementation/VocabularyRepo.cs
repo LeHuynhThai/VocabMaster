@@ -4,11 +4,11 @@ using Repository.Interfaces;
 
 namespace Repository.Implementation
 {
-    public class VocabRepo : IVocabularyRepo
+    public class VocabularyRepo : IVocabularyRepo
     {
         private readonly AppDbContext _context;
 
-        public VocabRepo(AppDbContext context)
+        public VocabularyRepo(AppDbContext context)
         {
             _context = context;
         }
@@ -45,6 +45,16 @@ namespace Repository.Implementation
             existingVocabulary.Vietnamese = vocabulary.Vietnamese;
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        // Get learned words
+        public async Task<List<LearnedWord>> GetLearnedWords(int userId)
+        {
+            var learnedWords = await _context.LearnedVocabularies
+                .Where(lw => lw.UserId == userId)
+                .ToListAsync();
+
+            return learnedWords;
         }
     }
 }
