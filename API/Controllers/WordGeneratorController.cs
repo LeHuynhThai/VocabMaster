@@ -22,7 +22,7 @@ namespace VocabMaster.API.Controllers
             _cache = cache;
         }
 
-        [HttpGet("newrandomword")]
+        [HttpGet("random-word")]
         public async Task<IActionResult> GetRandomWordExcludeLearned()
         {
             try
@@ -48,7 +48,7 @@ namespace VocabMaster.API.Controllers
                         message = "Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống."
                     });
                 }
-                return null;
+                return Ok(randomWord);
             }
             catch (Exception ex)
             {

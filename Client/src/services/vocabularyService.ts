@@ -41,29 +41,10 @@ const vocabularyService = {
    * @returns Random word data
    */
   getNewRandomWord: async (): Promise<Vocabulary> => {
-    const response = await api.get(API_ENDPOINTS.NEW_RANDOM_WORD);
+    const response = await api.get(API_ENDPOINTS.RANDOM_WORD);
     return response.data;
   },
 
-  /**
-   * Looks up a word definition
-   * @param word - Word to look up
-   * @returns Word definition
-   */
-  lookup: async (word: string): Promise<Vocabulary> => {
-    const response = await api.get(`${API_ENDPOINTS.LOOKUP_WORD}/${encodeURIComponent(word)}`);
-    return response.data;
-  },
-
-  /**
-   * Checks if a word is learned
-   * @param word - Word to check
-   * @returns Whether the word is learned
-   */
-  isLearned: async (word: string): Promise<boolean> => {
-    const response = await api.get(`${API_ENDPOINTS.IS_LEARNED}/${encodeURIComponent(word)}`);
-    return response.data.isLearned;
-  },
 
   /**
    * Gets user's learned words

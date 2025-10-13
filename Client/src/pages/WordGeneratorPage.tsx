@@ -7,7 +7,6 @@ import vocabularyService from '../services/vocabularyService';
 import './WordGeneratorPage.css';
 import { ROUTES } from '../utils/constants';
 
-// Hàm lấy class CSS dựa trên loại từ
 const getPartOfSpeechClass = (partOfSpeech: string): string => {
   const pos = partOfSpeech.toLowerCase();
   
