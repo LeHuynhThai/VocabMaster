@@ -56,12 +56,18 @@ const LearnedWordsPage: React.FC = () => {
     setError(null);
     
     try {
-      const response: PaginatedResponse<LearnedWord> = await vocabularyService.getPaginatedLearnedWords(page, pageSize);
-      setWords(response.items);
-      setFilteredWords(response.items);
-      setTotalItems(response.pageInfo.totalItems);
-      setTotalPages(response.pageInfo.totalPages);
-      setCurrentPage(response.pageInfo.currentPage);
+      // Use non-paginated endpoint and compute pagination client-side
+      const all = await vocabularyService.getLearnedWords();
+      const totalItemsLocal = all.length;
+      const totalPagesLocal = Math.max(1, Math.ceil(totalItemsLocal / pageSize));
+      const start = (page - 1) * pageSize;
+      const items = all.slice(start, start + pageSize);
+
+      setWords(items);
+      setFilteredWords(items);
+      setTotalItems(totalItemsLocal);
+      setTotalPages(totalPagesLocal);
+      setCurrentPage(page);
     } catch (err) {
       setError('Không thể tải danh sách các từ đã học. Vui lòng thử lại sau.');
       console.error('Error fetching learned words:', err);

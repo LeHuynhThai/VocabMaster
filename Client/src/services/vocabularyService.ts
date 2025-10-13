@@ -57,38 +57,14 @@ const vocabularyService = {
       const response = await api.get(url);
       return response.data || [];
     } catch (error: any) {
-      console.error('Error fetching learned words:', error);
-      // return empty array if error
+      // Gracefully handle missing endpoint or auth issues by returning an empty list
+      // to keep the UI functional without spamming console errors.
+      console.warn('Learned words endpoint unavailable, returning empty list.');
       return [];
     }
   },
   
-  /**
-   * Gets paginated learned words
-   * @param pageNumber - Page number (1-based)
-   * @param pageSize - Number of items per page
-   * @returns Paginated response with learned words
-   */
-  getPaginatedLearnedWords: async (pageNumber: number = 1, pageSize: number = 10): Promise<PaginatedResponse<LearnedWord>> => {
-    try {
-      const response = await api.get(API_ENDPOINTS.LEARNED_WORDS_PAGINATED, {
-        params: { pageNumber, pageSize }
-      });
-      return response.data;
-    } catch (error: any) {
-      console.error('Error fetching paginated learned words:', error);
-      // Return empty paginated response if error
-      return {
-        items: [],
-        pageInfo: {
-          currentPage: pageNumber,
-          pageSize: pageSize,
-          totalItems: 0,
-          totalPages: 0
-        }
-      };
-    }
-  },
+
 
   /**
    * Marks a word as learned
