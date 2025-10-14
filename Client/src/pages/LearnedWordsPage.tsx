@@ -75,7 +75,12 @@ const LearnedWordsPage: React.FC = () => {
   /**
    * Remove a word from the learned words list
    */
-  const removeWord = async (id: number) => {
+  const removeWord = async (id: number, word: string) => {
+    // Show confirmation dialog
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa từ "${word}" khỏi danh sách đã học?`)) {
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -85,10 +90,10 @@ const LearnedWordsPage: React.FC = () => {
         // Reload the current page to reflect changes
         fetchLearnedWords(currentPage);
       } else {
-        setError('Không thể xóa từ này. Vui lòng thử lại sau.');
+        showToast('Không thể xóa từ này. Vui lòng thử lại sau.', 'danger');
       }
     } catch (err) {
-      setError('Không thể xóa từ này. Vui lòng thử lại sau.');
+      showToast('Không thể xóa từ này. Vui lòng thử lại sau.', 'danger');
       console.error('Error removing word:', err);
     } finally {
       setIsLoading(false);
@@ -190,7 +195,7 @@ const LearnedWordsPage: React.FC = () => {
                           <Button 
                             variant="outline-danger" 
                             size="sm"
-                            onClick={() => removeWord(word.id)}
+                            onClick={() => removeWord(word.id, word.word)}
                             disabled={isLoading}
                             title="Xóa từ vựng"
                           >

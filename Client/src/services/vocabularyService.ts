@@ -88,8 +88,8 @@ const vocabularyService = {
    */
   removeLearnedWord: async (id: number): Promise<boolean> => {
     try {
-      await api.delete(`${API_ENDPOINTS.LEARNED_WORDS}/${id}`);
-      return true;
+      const response = await api.delete(`${API_ENDPOINTS.LEARNED_WORDS}/${id}`);
+      return response.data && response.data.success;
     } catch (error: any) {
       console.error('Error removing learned word:', error);
       return false;
