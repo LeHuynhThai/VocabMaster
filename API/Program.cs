@@ -148,6 +148,7 @@ using (var scope = app.Services.CreateScope())
 
         await SeedUser.Initialize(services);
         await SeedVocabulary.Initialize(services);
+        await SeedQuizQuestion.Initialize(services);
     }
     catch (Exception ex)
     {
