@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Table, Button, Alert, Spinner } from 'react-bootstrap';
+import { Container, Card, Table, Button, Alert, Spinner, Form, InputGroup } from 'react-bootstrap';
 import vocabularyService, { LearnedWord } from '../services/vocabularyService';
 import { useAuth } from '../contexts/AuthContext';
 import Pagination from '../components/ui/Pagination';
@@ -33,6 +33,7 @@ const LearnedWordsPage: React.FC = () => {
   const [filteredWords, setFilteredWords] = useState<LearnedWord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10); // Fixed page size of 10
   const [totalItems, setTotalItems] = useState(0);
@@ -100,14 +101,49 @@ const LearnedWordsPage: React.FC = () => {
     }
   };
 
-  // Search is removed
+  /**
+   * Handle search input change
+   */
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    
+    if (!query.trim()) {
+      setFilteredWords(words);
+      setTotalItems(words.length);
+      setTotalPages(Math.max(1, Math.ceil(words.length / pageSize)));
+    } else {
+      const filtered = words.filter(word => 
+        word.word.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredWords(filtered);
+      setTotalItems(filtered.length);
+      setTotalPages(Math.max(1, Math.ceil(filtered.length / pageSize)));
+    }
+    
+    // Reset to page 1 when searching
+    setCurrentPage(1);
+  };
 
   /**
    * Handle page change
    */
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    fetchLearnedWords(page);
+    
+    // If searching, paginate filtered results
+    if (searchQuery.trim()) {
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
+      const paginatedFiltered = words
+        .filter(word => word.word.toLowerCase().includes(searchQuery.toLowerCase()))
+        .slice(start, end);
+      setFilteredWords(paginatedFiltered);
+    } else {
+      // If not searching, fetch from server
+      fetchLearnedWords(page);
+    }
+    
     // Scroll to top when changing page
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -150,6 +186,21 @@ const LearnedWordsPage: React.FC = () => {
           <i className="bi bi-arrow-clockwise me-2"></i>
           Làm mới
         </Button>
+        
+        <div className="search-container" style={{ width: '40%' }}>
+          <InputGroup>
+            <Form.Control
+              type="text"
+              placeholder="Tìm kiếm từ vựng đã học..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              disabled={isLoading}
+            />
+            <InputGroup.Text>
+              <i className="bi bi-search"></i>
+            </InputGroup.Text>
+          </InputGroup>
+        </div>
       </div>
       
       {error && (
@@ -171,7 +222,11 @@ const LearnedWordsPage: React.FC = () => {
             </div>
           ) : filteredWords.length === 0 ? (
             <div className="text-center py-5">
-              <p className="text-muted mb-4">Bạn chưa lưu từ vựng nào.</p>
+              {searchQuery.trim() ? (
+                <p className="text-muted mb-4">Không tìm thấy từ vựng nào phù hợp với "{searchQuery}".</p>
+              ) : (
+                <p className="text-muted mb-4">Bạn chưa lưu từ vựng nào.</p>
+              )}
             </div>
           ) : (
             <>
