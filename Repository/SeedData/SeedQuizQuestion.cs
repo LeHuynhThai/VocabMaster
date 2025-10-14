@@ -1,5 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Repository.Entities;
+using Microsoft.EntityFrameworkCore;
+using Repository;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Repository.SeedData
 {
@@ -7,13 +13,27 @@ namespace Repository.SeedData
     {
         public static async Task Initialize(IServiceProvider serviceProvider)
         {
-            using var context = new AppDbContext(
-                serviceProvider.GetRequiredService<DbContextOptions<AppDbContext>>());
-
-            // Check if data already exists
-            if (context.QuizQuestions.Any())
+            using var scope = serviceProvider.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            try
             {
-                return; // Data already seeded
+                await context.Database.EnsureCreatedAsync();
+
+                await SeedQuizQuestionData(context);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        private static async Task SeedQuizQuestionData(AppDbContext context)
+        {
+            if (await context.QuizQuestions.AnyAsync())
+            {
+                Console.WriteLine("Quiz questions already seeded");
+                return;
             }
 
             var quizQuestions = new List<QuizQuestion>
@@ -181,7 +201,7 @@ namespace Repository.SeedData
             };
 
             context.QuizQuestions.AddRange(quizQuestions);
-            await context.SaveChangesAsync();
+            Console.WriteLine($"Seeded {quizQuestions.Count} quiz questions successfully");
         }
     }
 }

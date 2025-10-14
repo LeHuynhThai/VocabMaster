@@ -29,7 +29,7 @@ export const API_ENDPOINTS = {
   TRANSLATE: '/api/translation/translate',
   // Quiz endpoints
   QUIZ_RANDOM: '/api/quiz/random',
-  QUIZ_RANDOM_UNCOMPLETED: '/api/quiz/uncompleted',
+  QUIZ_RANDOM_UNCOMPLETED: '/api/quizz/random-question',
   QUIZ_CHECK_ANSWER: '/api/quiz/check',
   QUIZ_CHECK_ANSWER_COMPLETE: '/api/quiz/check-complete',
   QUIZ_COMPLETED: '/api/quiz/completed',

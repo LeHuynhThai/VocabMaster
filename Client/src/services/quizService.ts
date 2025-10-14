@@ -80,7 +80,24 @@ const quizService = {
   getRandomUncompletedQuestion: async (): Promise<QuizQuestionResponse> => {
     try {
       const response = await api.get(API_ENDPOINTS.QUIZ_RANDOM_UNCOMPLETED);
-      return response.data;
+      
+      // Check if response indicates all questions are completed
+      if (response.data.completed) {
+        return {
+          allCompleted: true,
+          message: response.data.message,
+          stats: {
+            totalQuestions: 0,
+            completedQuestions: 0,
+            correctAnswers: 0,
+            completionPercentage: 100,
+            correctPercentage: 0
+          }
+        } as AllCompletedResponse;
+      }
+      
+      // Return the question data
+      return response.data as QuizQuestion;
     } catch (error: any) {
       console.error('Error getting random uncompleted quiz question:', error);
       throw error;
