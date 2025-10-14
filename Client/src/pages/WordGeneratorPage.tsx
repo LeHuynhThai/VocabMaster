@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Row, Col, Button, Form, InputGroup, Spinner } from 'react-bootstrap';
+import { Container, Button, Spinner } from 'react-bootstrap';
 import { useToast } from '../contexts/ToastContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Vocabulary, Pronunciation, Meaning } from '../types';
@@ -25,8 +25,6 @@ const getPartOfSpeechClass = (partOfSpeech: string): string => {
 const WordGeneratorPage: React.FC = () => {
   const [word, setWord] = useState<Vocabulary | null>(null);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
   const { addToast } = useToast();
   const location = useLocation();
@@ -104,21 +102,6 @@ const WordGeneratorPage: React.FC = () => {
   }, [addToast, navigate]);
 
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchTerm.trim()) return;
-    
-    setSearching(true);
-    try {
-      // Search functionality removed - lookup method no longer available
-      addToast({
-        type: 'info',
-        message: 'Chức năng tìm kiếm từ vựng tạm thời không khả dụng'
-      });
-    } finally {
-      setSearching(false);
-    }
-  };
 
   const handleSaveWord = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -185,32 +168,6 @@ const WordGeneratorPage: React.FC = () => {
 
   return (
     <Container className="py-4 word-generator-page">
-      <Row>
-        <Col lg={8} className="mx-auto">
-          <Form onSubmit={handleSearch} className="mb-4">
-            <InputGroup>
-              <Form.Control
-                type="text"
-                placeholder="Nhập từ bạn muốn tra cứu..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                disabled={searching || loading}
-              />
-              <Button 
-                type="submit" 
-                variant="outline-primary"
-                disabled={searching || loading || !searchTerm.trim()}
-              >
-                {searching ? (
-                  <Spinner animation="border" size="sm" />
-                ) : (
-                  <i className="bi bi-search"></i>
-                )}
-              </Button>
-            </InputGroup>
-          </Form>
-        </Col>
-      </Row>
 
       {loading ? (
         <div className="text-center my-5">
