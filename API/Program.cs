@@ -41,6 +41,7 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 // Add Repositories
 builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IVocabularyRepo, VocabularyRepo>();
+builder.Services.AddScoped<IQuizzQuestionRepo, QuizzQuestionRepo>();
 
 
 // services for authentication
@@ -48,6 +49,9 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 // Add vocabulary service  
 builder.Services.AddScoped<IVocabularyService, VocabularyService>();
+
+// Add quiz service
+builder.Services.AddScoped<IQuizzQuestionService, QuizzQuestionService>();
 
 // Add HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
