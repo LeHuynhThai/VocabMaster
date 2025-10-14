@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Table, Button, Alert, Spinner, Form, InputGroup } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import vocabularyService, { LearnedWord } from '../services/vocabularyService';
 import { useAuth } from '../contexts/AuthContext';
 import Pagination from '../components/ui/Pagination';
@@ -39,6 +40,7 @@ const LearnedWordsPage: React.FC = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const { showToast } = useToast();
 
   /**
@@ -148,6 +150,10 @@ const LearnedWordsPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const viewWordDetail = (word: string) => {
+    navigate(`/word-detail/${encodeURIComponent(word)}`);
+  };
+
   // load learned words when component mounts or authentication changes
   useEffect(() => {
     if (isAuthenticated) {
@@ -247,6 +253,15 @@ const LearnedWordsPage: React.FC = () => {
                         <td>{word.word}</td>
                         <td>{word.learnedAt ? formatDate(word.learnedAt) : '-'}</td>
                         <td className="text-end">
+                          <Button 
+                            variant="outline-info" 
+                            size="sm"
+                            className="me-2"
+                            onClick={() => viewWordDetail(word.word)}
+                            title="Xem chi tiết từ vựng"
+                          >
+                            <i className="bi bi-eye"></i>
+                          </Button>
                           <Button 
                             variant="outline-danger" 
                             size="sm"

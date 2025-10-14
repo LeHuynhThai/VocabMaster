@@ -77,6 +77,13 @@ namespace Repository.Implementation
             await _context.SaveChangesAsync();
             return true;
         }
+
+        // Get vocabulary by word
+        public async Task<Vocabulary?> GetVocabularyByWord(string word)
+        {
+            return await _context.Vocabularies
+                .FirstOrDefaultAsync(v => v.Word == word);
+        }
     }
 }
 

@@ -7,5 +7,6 @@ namespace Service.Interfaces
         Task<List<LearnedWord>> GetLearnedWords(int userId);
         Task<LearnedWord> AddLearnedWord(LearnedWord learnedWord);
         Task<bool> RemoveLearnedWord(int learnedWordId);
+        Task<Vocabulary?> GetVocabularyByWord(string word);
     }
 }

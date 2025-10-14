@@ -22,6 +22,7 @@ import QuizPage from './pages/QuizPage';
 import QuizStatsPage from './pages/QuizStatsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { ROUTES } from './utils/constants';
+import WordDetailPage from './pages/WordDetailPage';
 
 // Styles
 import './App.css';
@@ -52,6 +53,12 @@ function App() {
                       path={ROUTES.WORD_GENERATOR} 
                       element={
                         <ProtectedRoute element={<WordGeneratorPage />} />
+                      } 
+                    />
+                    <Route 
+                      path="/word-detail/:word" 
+                      element={
+                        <ProtectedRoute element={<WordDetailPage />} />
                       } 
                     />
                     <Route 

@@ -49,5 +49,10 @@ namespace Service.Implementation
         {
             return await _vocab.RemoveLearnedWord(learnedWordId);
         }
+
+        public async Task<Vocabulary?> GetVocabularyByWord(string word)
+        {
+            return await _vocab.GetVocabularyByWord(word);
+        }
     }
 }

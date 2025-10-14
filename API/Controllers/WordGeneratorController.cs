@@ -23,6 +23,24 @@ namespace VocabMaster.API.Controllers
             _cache = cache;
         }
 
+        [HttpGet("word-detail/{word}")]
+        public async Task<IActionResult> GetWordDetail(string word)
+        {
+            try
+            {
+                var vocabulary = await _vocabularyService.GetVocabularyByWord(word);
+                if (vocabulary == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy từ vựng" });
+                }
+                return Ok(vocabulary);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server", details = ex.Message });
+            }
+        }
+
         [HttpGet("random-word")]
         public async Task<IActionResult> GetRandomWordExcludeLearned()
         {
