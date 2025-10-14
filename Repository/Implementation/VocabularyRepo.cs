@@ -64,6 +64,19 @@ namespace Repository.Implementation
             await _context.SaveChangesAsync();
             return learnedWord;
         }
+
+        // Remove learned word
+        public async Task<bool> RemoveLearnedWord(int learnedWordId)
+        {
+            var learnedWord = await _context.LearnedVocabularies.FindAsync(learnedWordId);
+            if (learnedWord == null)
+            {
+                return false;
+            }
+            _context.LearnedVocabularies.Remove(learnedWord);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }
 

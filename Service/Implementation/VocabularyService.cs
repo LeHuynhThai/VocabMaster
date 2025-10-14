@@ -43,5 +43,11 @@ namespace Service.Implementation
         {
             return await _vocab.AddLearnedWord(learnedWord);
         }
+
+        // Remove learned word
+        public async Task<bool> RemoveLearnedWord(int learnedWordId)
+        {
+            return await _vocab.RemoveLearnedWord(learnedWordId);
+        }
     }
 }

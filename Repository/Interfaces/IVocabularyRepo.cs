@@ -9,5 +9,6 @@ namespace Repository.Interfaces
         Task<bool> Update(Vocabulary vocabulary);
         Task<List<LearnedWord>> GetLearnedWords(int userId);
         Task<LearnedWord> AddLearnedWord(LearnedWord learnedWord);
+        Task<bool> RemoveLearnedWord(int learnedWordId);
     }
 }

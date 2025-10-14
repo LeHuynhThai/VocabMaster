@@ -46,6 +46,42 @@ namespace API.Controllers
             }
         }
 
+        [HttpDelete("learned-word/{id}")]
+        public async Task<IActionResult> RemoveLearnedWord(int id)
+        {
+            try
+            {
+                var result = await _vocabularyService.RemoveLearnedWord(id);
+                
+                if (result)
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Xóa từ vựng đã học thành công"
+                    });
+                }
+                else
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Không tìm thấy từ vựng đã học"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    error = "server_error",
+                    message = "Đã xảy ra lỗi khi xóa từ vựng đã học",
+                    details = ex.Message
+                });
+            }
+        }
+
         private int GetUserIdFromClaims()
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)
