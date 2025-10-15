@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Button, Modal, Form, Alert, Spinner, Table } from 'react-bootstrap';
+import { Container, Card, Button, Modal, Form, Alert, Spinner, Table, InputGroup } from 'react-bootstrap';
 import Pagination from '../components/ui/Pagination';
 import adminService, { AddVocabularyRequest, VocabularyResponse } from '../services/adminService';
 import useToast from '../hooks/useToast';
@@ -15,6 +15,7 @@ const AdminVocabularyPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState('');
 
   const [formData, setFormData] = useState<AddVocabularyRequest>({
     word: '',
@@ -79,7 +80,8 @@ const AdminVocabularyPage: React.FC = () => {
     try {
       const list = await adminService.getVocabularies();
       setVocabularies(list);
-      const pages = Math.max(1, Math.ceil(list.length / pageSize));
+      const filtered = filterList(list, search);
+      const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
       setTotalPages(pages);
       if (currentPage > pages) setCurrentPage(1);
     } catch (error) {
@@ -92,6 +94,16 @@ const AdminVocabularyPage: React.FC = () => {
   useEffect(() => {
     loadVocabularies();
   }, []);
+
+  const filterList = (list: VocabularyResponse[], keyword: string) => {
+    const q = keyword.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(v =>
+      v.word.toLowerCase().includes(q) || (v.vietnamese || '').toLowerCase().includes(q)
+    );
+  };
+
+  const filteredVocabularies = filterList(vocabularies, search);
 
   return (
     <Container className="py-4 admin-vocabulary-page">
@@ -120,16 +132,29 @@ const AdminVocabularyPage: React.FC = () => {
         <Card.Body>
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="mb-0">Danh sách</h5>
-            <Button variant="outline-primary" size="sm" onClick={loadVocabularies} disabled={loadingList}>
-              <i className="bi bi-arrow-clockwise me-1"></i>
-              Làm mới
-            </Button>
+            <div className="d-flex align-items-center" style={{ gap: '12px' }}>
+              <InputGroup style={{ maxWidth: 280 }}>
+                <Form.Control
+                  placeholder="Tìm kiếm từ hoặc nghĩa..."
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                  disabled={loadingList}
+                />
+                <InputGroup.Text>
+                  <i className="bi bi-search" />
+                </InputGroup.Text>
+              </InputGroup>
+              <Button variant="outline-primary" size="sm" onClick={loadVocabularies} disabled={loadingList}>
+                <i className="bi bi-arrow-clockwise me-1"></i>
+                Làm mới
+              </Button>
+            </div>
           </div>
           {loadingList ? (
             <div className="text-center py-4">
               <Spinner animation="border" role="status" />
             </div>
-          ) : vocabularies.length === 0 ? (
+          ) : filteredVocabularies.length === 0 ? (
             <div className="text-center py-4 text-muted">Chưa có từ vựng</div>
           ) : (
             <div className="table-responsive">
@@ -143,7 +168,7 @@ const AdminVocabularyPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {vocabularies
+                  {filteredVocabularies
                     .slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize)
                     .map((v, idx) => (
                     <tr key={v.id}>
