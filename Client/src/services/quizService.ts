@@ -35,6 +35,7 @@ export interface CompletedQuiz {
   id: number;
   quizQuestionId: number;
   word: string;
+  correctAnswer: string;
   completedAt: string;
   wasCorrect: boolean;
 }
@@ -43,8 +44,7 @@ export interface QuizStats {
   totalQuestions: number;
   completedQuestions: number;
   correctAnswers: number;
-  completionPercentage: number;
-  correctPercentage: number;
+  accuracyRate: number;
 }
 
 export interface PageInfo {
@@ -95,8 +95,7 @@ const quizService = {
             totalQuestions: 0,
             completedQuestions: 0,
             correctAnswers: 0,
-            completionPercentage: 100,
-            correctPercentage: 0
+            accuracyRate: 0
           }
         } as AllCompletedResponse;
       }
@@ -238,6 +237,23 @@ const quizService = {
       return response.data;
     } catch (error: any) {
       console.error('Error getting quiz stats:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Gets correct answers list
+   * @returns List of correct answers
+   */
+  getCorrectAnswers: async (): Promise<CompletedQuiz[]> => {
+    try {
+      console.log('Calling getCorrectAnswers with endpoint:', API_ENDPOINTS.QUIZ_CORRECT_ANSWERS);
+      const response = await api.get(API_ENDPOINTS.QUIZ_CORRECT_ANSWERS);
+      console.log('getCorrectAnswers response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error getting correct answers:', error);
+      console.error('Error details:', error.response?.data);
       throw error;
     }
   }

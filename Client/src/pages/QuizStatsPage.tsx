@@ -1,244 +1,201 @@
-import React, { useEffect, useState } from 'react';
-import quizService, { QuizStats, CompletedQuiz, PaginatedResponse } from '../services/quizService';
-import { useQuizStats } from '../contexts/QuizStatsContext';
+import React, { useState, useEffect } from 'react';
+import { Container, Card, Row, Col, ProgressBar, ListGroup, Alert, Spinner } from 'react-bootstrap';
+import quizService, { QuizStats, CompletedQuiz } from '../services/quizService';
 import useToast from '../hooks/useToast';
-import '../components/ui/QuizStats.css';
 import './QuizStatsPage.css';
-import Pagination from '../components/ui/Pagination';
 
-/**
- * Quiz Statistics Page
- * Shows detailed statistics about user's quiz performance
- */
 const QuizStatsPage: React.FC = () => {
   const [stats, setStats] = useState<QuizStats | null>(null);
-  const [correctQuizzes, setCorrectQuizzes] = useState<CompletedQuiz[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const { lastRefresh } = useQuizStats();
+  const [correctAnswers, setCorrectAnswers] = useState<CompletedQuiz[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
   const { showToast } = useToast();
-  
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const pageSize = 10;
-
-  // Fetch quiz stats
-  const fetchStats = async () => {
-    try {
-      const statsData = await quizService.getQuizStats();
-      setStats(statsData);
-      return true;
-    } catch (err) {
-      console.error('Error fetching quiz statistics:', err);
-      return false;
-    }
-  };
-
-  // Fetch paginated correct quizzes
-  const fetchPaginatedCorrectQuizzes = async (page: number = currentPage) => {
-    try {
-      // always use pageSize = 10
-      console.log(`Fetching page ${page} of correct quizzes`);
-      const response: PaginatedResponse<CompletedQuiz> = await quizService.getPaginatedCorrectQuizzes(page);
-      console.log('API response:', response);
-      
-      // Check if response.items is null or undefined
-      if (!response?.items) {
-        console.error('API returned invalid response: items is null or undefined');
-        setCorrectQuizzes([]);
-        setTotalPages(0);
-        setCurrentPage(1);
-        return false;
-      }
-      
-      // Ensure each item has a valid value
-      const validItems = response.items.map(item => ({
-        ...item,
-        word: item.word || 'N/A',
-        completedAt: item.completedAt || new Date().toISOString()
-      }));
-      
-      setCorrectQuizzes(validItems);
-      setTotalPages(response.pageInfo?.totalPages || 0);
-      setCurrentPage(response.pageInfo?.currentPage || 1);
-      console.log(`Set correctQuizzes:`, validItems);
-      console.log(`Total pages: ${response.pageInfo?.totalPages || 0}, Current page: ${response.pageInfo?.currentPage || 1}`);
-      return true;
-    } catch (err) {
-      console.error('Error fetching paginated correct quizzes:', err);
-      // Show error message
-      showToast('Không thể tải danh sách câu hỏi đã hoàn thành. Vui lòng thử lại sau.', 'danger');
-      setCorrectQuizzes([]);
-      return false;
-    }
-  };
 
   useEffect(() => {
-    const fetchData = async () => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      // Load stats first
+      const statsData = await quizService.getQuizStats();
+      setStats(statsData);
+      
+      // Then load correct answers (separate try-catch to avoid blocking stats)
       try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch stats and paginated correct quizzes
-        const statsSuccess = await fetchStats();
-        const quizzesSuccess = await fetchPaginatedCorrectQuizzes(1); // Start with page 1
-        
-        if (!statsSuccess && !quizzesSuccess) {
-          setError('Không thể tải thống kê. Vui lòng thử lại sau.');
-        }
-      } catch (err) {
-        console.error('Error in fetchData:', err);
-        setError('Không thể tải thống kê. Vui lòng thử lại sau.');
-      } finally {
-        setLoading(false);
+        const correctAnswersData = await quizService.getCorrectAnswers();
+        setCorrectAnswers(correctAnswersData);
+      } catch (correctAnswersError: any) {
+        console.error('Error loading correct answers:', correctAnswersError);
+        // Don't show error toast for correct answers, just log it
+        setCorrectAnswers([]);
       }
-    };
-
-    fetchData();
-  }, [lastRefresh]);
-
-  // Handle page change
-  const handlePageChange = (page: number) => {
-    fetchPaginatedCorrectQuizzes(page);
-    // Scroll to top when changing page
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err: any) {
+      console.error('Error loading quiz stats:', err);
+      const errorMessage = err.response?.data?.message || 'Không thể tải thống kê. Vui lòng thử lại sau.';
+      setError(errorMessage);
+      showToast(errorMessage, 'danger');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('vi-VN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (err) {
-      return dateString;
-    }
+  const formatPercentage = (value: number): string => {
+    return value.toFixed(1) + '%';
+  };
+
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getCompletionPercentage = (): number => {
+    if (!stats || stats.totalQuestions === 0) return 0;
+    return (stats.completedQuestions / stats.totalQuestions) * 100;
   };
 
   if (loading) {
     return (
-      <div className="quiz-stats-page">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Đang tải thống kê...</p>
+      <Container className="py-4">
+        <div className="text-center py-5">
+          <Spinner animation="border" role="status" variant="primary">
+            <span className="visually-hidden">Đang tải...</span>
+          </Spinner>
+          <p className="mt-3">Đang tải thống kê...</p>
         </div>
-      </div>
+      </Container>
     );
   }
 
-  // Even if there's an error, we'll try to display whatever data we have
-  // Only show error page if we have absolutely no data
-  if (error && !stats) {
+  if (error) {
     return (
-      <div className="quiz-stats-page">
-        <div className="error-container">
+      <Container className="py-4">
+        <Alert variant="danger">
+          <Alert.Heading>Lỗi</Alert.Heading>
           <p>{error}</p>
-        </div>
-      </div>
+          <button className="btn btn-outline-danger" onClick={loadData}>
+            Thử lại
+          </button>
+        </Alert>
+      </Container>
     );
   }
-
-  // Make sure stats is defined
-  const displayStats = stats || {
-    totalQuestions: 0,
-    completedQuestions: 0,
-    correctAnswers: 0,
-    completionPercentage: 0,
-    correctPercentage: 0
-  };
 
   return (
-    <div className="quiz-stats-page">
-      {/* Summary cards */}
-      <div className="stats-summary">
-        <div className="stats-card">
-          <div className="stats-card-value">{displayStats.totalQuestions}</div>
-          <div className="stats-card-label">Tổng số câu hỏi</div>
-        </div>
-        
-        <div className="stats-card">
-          <div className="stats-card-value">{displayStats.completedQuestions}</div>
-          <div className="stats-card-label">Đã hoàn thành</div>
-        </div>
-        
-        <div className="stats-card">
-          <div className="stats-card-value">{displayStats.correctAnswers}</div>
-          <div className="stats-card-label">Trả lời đúng</div>
-        </div>
-        
-        <div className="stats-card">
-          <div className="stats-card-value">{Math.round(displayStats.correctPercentage)}%</div>
-          <div className="stats-card-label">Tỷ lệ chính xác</div>
-        </div>
+    <Container className="py-4 quiz-stats-page">
+      <div className="mb-4">
+        <h1 className="page-title">Thống kê trắc nghiệm</h1>
+        <p className="text-muted">Theo dõi tiến độ học tập của bạn</p>
       </div>
 
-      {/* Progress section */}
-      <div className="stats-progress-section">
-        <h2>Tiến độ hoàn thành</h2>
-        <div className="stats-progress-container">
-          <div className="stats-progress-bar">
-            <div 
-              className="stats-progress-fill" 
-              style={{ width: `${displayStats.completionPercentage}%` }}
-            ></div>
-          </div>
-          <div className="stats-progress-text">
-            {Math.round(displayStats.completionPercentage)}% ({displayStats.completedQuestions}/{displayStats.totalQuestions})
-          </div>
-        </div>
-      </div>
+      {/* Summary Cards */}
+      <Row className="mb-4">
+        <Col md={3} className="mb-3">
+          <Card className="stats-card">
+            <Card.Body className="text-center">
+              <div className="stats-number">{stats?.totalQuestions || 0}</div>
+              <div className="stats-label">Tổng số câu hỏi</div>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3} className="mb-3">
+          <Card className="stats-card">
+            <Card.Body className="text-center">
+              <div className="stats-number">{stats?.completedQuestions || 0}</div>
+              <div className="stats-label">Đã hoàn thành</div>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3} className="mb-3">
+          <Card className="stats-card">
+            <Card.Body className="text-center">
+              <div className="stats-number">{stats?.correctAnswers || 0}</div>
+              <div className="stats-label">Trả lời đúng</div>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3} className="mb-3">
+          <Card className="stats-card">
+            <Card.Body className="text-center">
+              <div className="stats-number">{formatPercentage(stats?.accuracyRate || 0)}</div>
+              <div className="stats-label">Tỷ lệ chính xác</div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
-      {/* Correct quizzes section */}
-      <div className="completed-quizzes-section">
-        <h2>Danh sách các câu trả lời đúng</h2>
-        {correctQuizzes.length === 0 ? (
-          <p className="no-data-message">Bạn chưa trả lời đúng câu hỏi nào.</p>
-        ) : (
-          <>
-            <div className="completed-quizzes-table-container">
-              <table className="completed-quizzes-table">
-                <thead>
-                  <tr>
-                    <th>STT</th>
-                    <th>ID câu hỏi</th>
-                    <th>Từ vựng</th>
-                    <th>Thời gian</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {correctQuizzes.map((quiz, index) => (
-                    <tr key={quiz.id}>
-                      <td>{(currentPage - 1) * pageSize + index + 1}</td>
-                      <td>{quiz.quizQuestionId}</td>
-                      <td className="stats-quiz-word">{quiz.word || 'N/A'}</td>
-                      <td>{formatDate(quiz.completedAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      {/* Progress Section */}
+      <Card className="mb-4">
+        <Card.Body>
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <h5 className="mb-0">Tiến độ hoàn thành</h5>
+            <span className="text-muted">
+              {formatPercentage(getCompletionPercentage())} ({stats?.completedQuestions || 0}/{stats?.totalQuestions || 0})
+            </span>
+          </div>
+          <ProgressBar 
+            now={getCompletionPercentage()} 
+            variant="primary" 
+            className="progress-custom"
+          />
+        </Card.Body>
+      </Card>
+
+      {/* Correct Answers List */}
+      <Card>
+        <Card.Body>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="mb-0">Danh sách các câu trả lời đúng</h5>
+            <button 
+              className="btn btn-outline-primary btn-sm" 
+              onClick={loadData}
+              disabled={loading}
+            >
+              <i className="bi bi-arrow-clockwise me-1"></i>
+              Làm mới
+            </button>
+          </div>
+          
+          {correctAnswers.length === 0 ? (
+            <div className="text-center py-4">
+              <i className="bi bi-inbox display-4 text-muted mb-3"></i>
+              <p className="text-muted">Bạn chưa trả lời đúng câu hỏi nào.</p>
             </div>
-            
-            {/* Pagination component */}
-            {totalPages > 1 && (
-              <div className="quiz-stats-pagination">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+          ) : (
+            <ListGroup variant="flush">
+              {correctAnswers.map((answer, index) => (
+                <ListGroup.Item key={answer.id} className="correct-answer-item">
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div className="flex-grow-1">
+                      <div className="d-flex align-items-center mb-1">
+                        <span className="badge bg-success me-2">#{index + 1}</span>
+                        <strong className="word-text">{answer.word}</strong>
+                      </div>
+                      <div className="answer-text">
+                        <i className="bi bi-check-circle-fill text-success me-1"></i>
+                        {answer.correctAnswer}
+                      </div>
+                    </div>
+                    <div className="text-muted small">
+                      {formatDate(answer.completedAt)}
+                    </div>
+                  </div>
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+          )}
+        </Card.Body>
+      </Card>
+    </Container>
   );
 };
 
-export default QuizStatsPage; 
+export default QuizStatsPage;

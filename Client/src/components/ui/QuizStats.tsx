@@ -76,12 +76,12 @@ const QuizStatsComponent: React.FC = () => {
           <div className="progress-item">
             <div className="progress-label">
               <span>Tiến độ hoàn thành</span>
-              <span>{Math.round(stats.completionPercentage)}%</span>
+              <span>{Math.round(stats.totalQuestions > 0 ? (stats.completedQuestions / stats.totalQuestions) * 100 : 0)}%</span>
             </div>
             <div className="progress-bar">
               <div 
                 className="progress-fill" 
-                style={{ width: `${stats.completionPercentage}%` }}
+                style={{ width: `${stats.totalQuestions > 0 ? (stats.completedQuestions / stats.totalQuestions) * 100 : 0}%` }}
               ></div>
             </div>
           </div>
@@ -90,12 +90,12 @@ const QuizStatsComponent: React.FC = () => {
           <div className="progress-item">
             <div className="progress-label">
               <span>Tỷ lệ chính xác</span>
-              <span>{Math.round(stats.correctPercentage)}%</span>
+              <span>{Math.round(stats.accuracyRate)}%</span>
             </div>
             <div className="progress-bar">
               <div 
                 className="progress-fill accuracy" 
-                style={{ width: `${stats.correctPercentage}%` }}
+                style={{ width: `${stats.accuracyRate}%` }}
               ></div>
             </div>
           </div>

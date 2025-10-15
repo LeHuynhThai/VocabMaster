@@ -174,7 +174,7 @@ const QuizPage: React.FC = () => {
                 </div>
                 <div className="stats-item">
                   <span className="stats-label">Tỷ lệ chính xác:</span>
-                  <span className="stats-value">{formatPercentage(stats.correctPercentage)}</span>
+                  <span className="stats-value">{formatPercentage(stats.accuracyRate)}</span>
                 </div>
               </div>
             )}
