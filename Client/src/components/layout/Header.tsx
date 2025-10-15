@@ -52,7 +52,7 @@ const Header: React.FC = () => {
               <div className="user-info-horizontal">
                 <span className="user-name-highlight">{user?.name}</span>
                 {user?.role === 'Admin' && (
-                  <Link to={ROUTES.ADMIN_DASHBOARD} className="admin-link">
+                  <Link to={ROUTES.ADMIN_VOCABULARY} className="admin-link">
                     <i className="bi bi-shield-check me-1"></i>
                     <span>Admin</span>
                   </Link>

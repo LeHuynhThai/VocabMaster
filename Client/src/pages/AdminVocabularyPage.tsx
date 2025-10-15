@@ -95,11 +95,6 @@ const AdminVocabularyPage: React.FC = () => {
 
   return (
     <Container className="py-4 admin-vocabulary-page">
-      <div className="mb-4">
-        <h1 className="page-title">Quản lý từ vựng</h1>
-        <p className="text-muted">Thêm và quản lý từ vựng trong hệ thống</p>
-      </div>
-
       {/* Action Buttons */}
       <Card className="mb-4">
         <Card.Body>

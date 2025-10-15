@@ -82,12 +82,6 @@ function App() {
                       } 
                     />
                     <Route 
-                      path={ROUTES.ADMIN_DASHBOARD} 
-                      element={
-                        <ProtectedRoute element={<AdminDashboardPage />} />
-                      } 
-                    />
-                    <Route 
                       path={ROUTES.ADMIN_VOCABULARY} 
                       element={
                         <ProtectedRoute element={<AdminVocabularyPage />} />
