@@ -27,13 +27,5 @@ namespace Repository.Implementation
                 .ToListAsync();
         }
 
-        public async Task<List<CompletedQuiz>> GetCorrectAnswers(int userId)
-        {
-            return await _context.CompletedQuizzes
-                .Where(cq => cq.UserId == userId && cq.WasCorrect)
-                .Include(cq => cq.QuizQuestion)
-                .OrderByDescending(cq => cq.CompletedAt)
-                .ToListAsync();
-        }
     }
 }

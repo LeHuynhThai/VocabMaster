@@ -6,6 +6,5 @@ namespace Repository.Interfaces
     {
         Task<int> GetTotalQuestions();
         Task<List<CompletedQuiz>> GetCompletedQuizzes(int userId);
-        Task<List<CompletedQuiz>> GetCorrectAnswers(int userId);
     }
 }

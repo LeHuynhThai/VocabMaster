@@ -22,10 +22,5 @@ namespace Service.Implementation
         {
             return await _quizzStatRepo.GetCompletedQuizzes(userId);
         }
-
-        public async Task<List<CompletedQuiz>> GetCorrectAnswers(int userId)
-        {
-            return await _quizzStatRepo.GetCorrectAnswers(userId);
-        }
     }
 }

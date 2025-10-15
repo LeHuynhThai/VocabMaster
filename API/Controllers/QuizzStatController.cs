@@ -25,10 +25,6 @@ namespace API.Controllers
             try
             {
                 var userId = GetUserIdFromClaims();
-                if (userId <= 0)
-                {
-                    return Unauthorized(new { message = "Invalid user token" });
-                }
 
                 var totalQuestions = await _quizzStatService.GetTotalQuestions();
                 var completedQuizzes = await _quizzStatService.GetCompletedQuizzes(userId);
@@ -58,29 +54,26 @@ namespace API.Controllers
             }
         }
 
-        [HttpGet("correct-answers")]
-        public async Task<IActionResult> GetCorrectAnswers()
+        [HttpGet("completed-answers")]
+        public async Task<IActionResult> GetCompletedAnswers()
         {
             try
             {
                 var userId = GetUserIdFromClaims();
-                if (userId <= 0)
-                {
-                    return Unauthorized(new { message = "Invalid user token" });
-                }
 
-                var correctQuizzes = await _quizzStatService.GetCorrectAnswers(userId);
+                var completedQuizzes = await _quizzStatService.GetCompletedQuizzes(userId);
 
-                var correctAnswers = correctQuizzes.Select(cq => new CompletedQuizDto
+                var completedAnswers = completedQuizzes.Select(cq => new CompletedQuizDto
                 {
                     Id = cq.Id,
                     QuizQuestionId = cq.QuizQuestionId,
                     Word = cq.QuizQuestion.Word,
                     CorrectAnswer = cq.QuizQuestion.CorrectAnswer,
-                    CompletedAt = cq.CompletedAt
+                    CompletedAt = cq.CompletedAt,
+                    WasCorrect = cq.WasCorrect
                 }).ToList();
 
-                return Ok(correctAnswers);
+                return Ok(completedAnswers);
             }
             catch (Exception ex)
             {

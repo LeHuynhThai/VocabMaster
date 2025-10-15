@@ -24,13 +24,13 @@ const QuizStatsPage: React.FC = () => {
       const statsData = await quizService.getQuizStats();
       setStats(statsData);
       
-      // Then load correct answers (separate try-catch to avoid blocking stats)
+      // Then load completed answers (separate try-catch to avoid blocking stats)
       try {
-        const correctAnswersData = await quizService.getCorrectAnswers();
-        setCorrectAnswers(correctAnswersData);
-      } catch (correctAnswersError: any) {
-        console.error('Error loading correct answers:', correctAnswersError);
-        // Don't show error toast for correct answers, just log it
+        const completedAnswersData = await quizService.getCompletedAnswers();
+        setCorrectAnswers(completedAnswersData);
+      } catch (completedAnswersError: any) {
+        console.error('Error loading completed answers:', completedAnswersError);
+        // Don't show error toast for completed answers, just log it
         setCorrectAnswers([]);
       }
     } catch (err: any) {
@@ -153,7 +153,7 @@ const QuizStatsPage: React.FC = () => {
       <Card>
         <Card.Body>
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="mb-0">Danh sách các câu trả lời đúng</h5>
+            <h5 className="mb-0">Danh sách các câu đã hoàn thành</h5>
             <button 
               className="btn btn-outline-primary btn-sm" 
               onClick={loadData}
@@ -167,7 +167,7 @@ const QuizStatsPage: React.FC = () => {
           {correctAnswers.length === 0 ? (
             <div className="text-center py-4">
               <i className="bi bi-inbox display-4 text-muted mb-3"></i>
-              <p className="text-muted">Bạn chưa trả lời đúng câu hỏi nào.</p>
+              <p className="text-muted">Bạn chưa hoàn thành câu hỏi nào.</p>
             </div>
           ) : (
             <ListGroup variant="flush">
@@ -176,11 +176,13 @@ const QuizStatsPage: React.FC = () => {
                   <div className="d-flex justify-content-between align-items-start">
                     <div className="flex-grow-1">
                       <div className="d-flex align-items-center mb-1">
-                        <span className="badge bg-success me-2">#{index + 1}</span>
+                        <span className={`badge me-2 ${answer.wasCorrect ? 'bg-success' : 'bg-danger'}`}>
+                          #{index + 1}
+                        </span>
                         <strong className="word-text">{answer.word}</strong>
                       </div>
-                      <div className="answer-text">
-                        <i className="bi bi-check-circle-fill text-success me-1"></i>
+                      <div className={`answer-text ${answer.wasCorrect ? 'text-success' : 'text-danger'}`}>
+                        <i className={`bi me-1 ${answer.wasCorrect ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}`}></i>
                         {answer.correctAnswer}
                       </div>
                     </div>

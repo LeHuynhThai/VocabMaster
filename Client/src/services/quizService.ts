@@ -242,17 +242,17 @@ const quizService = {
   },
 
   /**
-   * Gets correct answers list
-   * @returns List of correct answers
+   * Gets completed answers list
+   * @returns List of completed answers
    */
-  getCorrectAnswers: async (): Promise<CompletedQuiz[]> => {
+  getCompletedAnswers: async (): Promise<CompletedQuiz[]> => {
     try {
-      console.log('Calling getCorrectAnswers with endpoint:', API_ENDPOINTS.QUIZ_CORRECT_ANSWERS);
-      const response = await api.get(API_ENDPOINTS.QUIZ_CORRECT_ANSWERS);
-      console.log('getCorrectAnswers response:', response.data);
+      console.log('Calling getCompletedAnswers with endpoint:', API_ENDPOINTS.QUIZ_COMPLETED_ANSWERS);
+      const response = await api.get(API_ENDPOINTS.QUIZ_COMPLETED_ANSWERS);
+      console.log('getCompletedAnswers response:', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('Error getting correct answers:', error);
+      console.error('Error getting completed answers:', error);
       console.error('Error details:', error.response?.data);
       throw error;
     }
