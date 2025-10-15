@@ -55,7 +55,8 @@ const QuizPage: React.FC = () => {
       if ('allCompleted' in response && response.allCompleted) {
         setAllCompleted(true);
         setCompletionMessage(response.message);
-        setStats(response.stats);
+        // Load fresh stats when all completed
+        await loadStats();
         setQuestion(null);
       } else {
         // It's a regular question
@@ -162,11 +163,15 @@ const QuizPage: React.FC = () => {
             </div>
             <h2 className="quiz-completed-title">{completionMessage}</h2>
             
-            {stats && (
+            {stats ? (
               <div className="quiz-completed-stats">
                 <div className="stats-item">
                   <span className="stats-label">Tổng số câu hỏi:</span>
                   <span className="stats-value">{stats.totalQuestions}</span>
+                </div>
+                <div className="stats-item">
+                  <span className="stats-label">Đã hoàn thành:</span>
+                  <span className="stats-value">{stats.completedQuestions}</span>
                 </div>
                 <div className="stats-item">
                   <span className="stats-label">Câu trả lời đúng:</span>
@@ -175,6 +180,12 @@ const QuizPage: React.FC = () => {
                 <div className="stats-item">
                   <span className="stats-label">Tỷ lệ chính xác:</span>
                   <span className="stats-value">{formatPercentage(stats.accuracyRate)}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="quiz-completed-stats">
+                <div className="stats-item">
+                  <span className="stats-label">Đang tải thống kê...</span>
                 </div>
               </div>
             )}

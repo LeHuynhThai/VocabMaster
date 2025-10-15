@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Container, Card, Row, Col, ProgressBar, ListGroup, Alert, Spinner } from 'react-bootstrap';
 import quizService, { QuizStats, CompletedQuiz } from '../services/quizService';
 import useToast from '../hooks/useToast';
+import Pagination from '../components/ui/Pagination';
 import './QuizStatsPage.css';
 
 const QuizStatsPage: React.FC = () => {
   const [stats, setStats] = useState<QuizStats | null>(null);
-  const [correctAnswers, setCorrectAnswers] = useState<CompletedQuiz[]>([]);
+  const [allCompletedAnswers, setAllCompletedAnswers] = useState<CompletedQuiz[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const { showToast } = useToast();
@@ -24,15 +27,15 @@ const QuizStatsPage: React.FC = () => {
       const statsData = await quizService.getQuizStats();
       setStats(statsData);
       
-      // Then load completed answers (separate try-catch to avoid blocking stats)
-      try {
-        const completedAnswersData = await quizService.getCompletedAnswers();
-        setCorrectAnswers(completedAnswersData);
-      } catch (completedAnswersError: any) {
-        console.error('Error loading completed answers:', completedAnswersError);
-        // Don't show error toast for completed answers, just log it
-        setCorrectAnswers([]);
-      }
+       // Then load completed answers (separate try-catch to avoid blocking stats)
+       try {
+         const completedAnswersData = await quizService.getCompletedAnswers();
+         setAllCompletedAnswers(completedAnswersData);
+       } catch (completedAnswersError: any) {
+         console.error('Error loading completed answers:', completedAnswersError);
+         // Don't show error toast for completed answers, just log it
+         setAllCompletedAnswers([]);
+       }
     } catch (err: any) {
       console.error('Error loading quiz stats:', err);
       const errorMessage = err.response?.data?.message || 'Không thể tải thống kê. Vui lòng thử lại sau.';
@@ -60,6 +63,17 @@ const QuizStatsPage: React.FC = () => {
   const getCompletionPercentage = (): number => {
     if (!stats || stats.totalQuestions === 0) return 0;
     return (stats.completedQuestions / stats.totalQuestions) * 100;
+  };
+
+  // Pagination logic
+  const totalPages = Math.ceil(allCompletedAnswers.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const currentPageAnswers = allCompletedAnswers.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (loading) {
@@ -153,7 +167,14 @@ const QuizStatsPage: React.FC = () => {
       <Card>
         <Card.Body>
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="mb-0">Danh sách các câu đã hoàn thành</h5>
+            <div>
+              <h5 className="mb-0">Danh sách các câu đã hoàn thành</h5>
+              {allCompletedAnswers.length > 0 && (
+                <small className="text-muted">
+                  Hiển thị {startIndex + 1}-{Math.min(endIndex, allCompletedAnswers.length)} trong tổng số {allCompletedAnswers.length} câu
+                </small>
+              )}
+            </div>
             <button 
               className="btn btn-outline-primary btn-sm" 
               onClick={loadData}
@@ -164,35 +185,48 @@ const QuizStatsPage: React.FC = () => {
             </button>
           </div>
           
-          {correctAnswers.length === 0 ? (
+          {allCompletedAnswers.length === 0 ? (
             <div className="text-center py-4">
               <i className="bi bi-inbox display-4 text-muted mb-3"></i>
               <p className="text-muted">Bạn chưa hoàn thành câu hỏi nào.</p>
             </div>
           ) : (
-            <ListGroup variant="flush">
-              {correctAnswers.map((answer, index) => (
-                <ListGroup.Item key={answer.id} className="correct-answer-item">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div className="flex-grow-1">
-                      <div className="d-flex align-items-center mb-1">
-                        <span className={`badge me-2 ${answer.wasCorrect ? 'bg-success' : 'bg-danger'}`}>
-                          #{index + 1}
-                        </span>
-                        <strong className="word-text">{answer.word}</strong>
+            <>
+              <ListGroup variant="flush">
+                {currentPageAnswers.map((answer, index) => (
+                  <ListGroup.Item key={answer.id} className="correct-answer-item">
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div className="flex-grow-1">
+                        <div className="d-flex align-items-center mb-1">
+                          <span className={`badge me-2 ${answer.wasCorrect ? 'bg-success' : 'bg-danger'}`}>
+                            #{startIndex + index + 1}
+                          </span>
+                          <strong className="word-text">{answer.word}</strong>
+                        </div>
+                        <div className={`answer-text ${answer.wasCorrect ? 'text-success' : 'text-danger'}`}>
+                          <i className={`bi me-1 ${answer.wasCorrect ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}`}></i>
+                          {answer.correctAnswer}
+                        </div>
                       </div>
-                      <div className={`answer-text ${answer.wasCorrect ? 'text-success' : 'text-danger'}`}>
-                        <i className={`bi me-1 ${answer.wasCorrect ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}`}></i>
-                        {answer.correctAnswer}
+                      <div className="text-muted small">
+                        {formatDate(answer.completedAt)}
                       </div>
                     </div>
-                    <div className="text-muted small">
-                      {formatDate(answer.completedAt)}
-                    </div>
-                  </div>
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
+                  </ListGroup.Item>
+                ))}
+              </ListGroup>
+              
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="d-flex justify-content-center mt-4">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              )}
+            </>
           )}
         </Card.Body>
       </Card>
