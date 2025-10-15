@@ -63,6 +63,19 @@ const adminService = {
       console.error('Error fetching vocabularies:', error);
       throw error;
     }
+  },
+
+  /**
+   * Crawl from external APIs and save
+   */
+  crawlFromApi: async (word: string): Promise<VocabularyResponse> => {
+    try {
+      const response = await api.post(`${API_ENDPOINTS.ADMIN_ADD_VOCABULARY}/crawl`, { word });
+      return response.data?.data as VocabularyResponse;
+    } catch (error: any) {
+      console.error('Error crawling word:', error?.response?.data || error);
+      throw error;
+    }
   }
 };
 

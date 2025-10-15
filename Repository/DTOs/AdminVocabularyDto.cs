@@ -15,6 +15,12 @@ namespace Repository.DTOs
         public string PronunciationsJson { get; set; } = "[]";
     }
 
+    public class CrawlVocabularyRequestDto
+    {
+        [Required]
+        public string Word { get; set; } = string.Empty;
+    }
+
     public class AdminVocabularyResponseDto
     {
         public int Id { get; set; }

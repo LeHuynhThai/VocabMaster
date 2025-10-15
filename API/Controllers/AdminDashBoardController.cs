@@ -19,6 +19,35 @@ namespace API.Controllers
             _adminDashBoardService = adminDashBoardService;
         }
 
+        [HttpPost("vocabulary/crawl")]
+        public async Task<IActionResult> CrawFromApi([FromBody] CrawlVocabularyRequestDto request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request?.Word))
+                {
+                    return BadRequest(new { message = "Word is required" });
+                }
+
+                var result = await _adminDashBoardService.CrawFromApi(request.Word);
+
+                var response = new AdminVocabularyResponseDto
+                {
+                    Id = result.Id,
+                    Word = result.Word,
+                    Vietnamese = result.Vietnamese,
+                    MeaningsJson = result.MeaningsJson,
+                    PronunciationsJson = result.PhoneticsJson
+                };
+
+                return Ok(new { message = "Đã lấy dữ liệu và lưu", data = response });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error" });
+            }
+        }
+
         [HttpGet("vocabulary")]
         public async Task<IActionResult> GetVocabularies()
         {

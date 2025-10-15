@@ -117,12 +117,19 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 
-// Add HttpClient for Google API
-builder.Services.AddHttpClient("GoogleApi", client =>
+// HttpClients used by services
+builder.Services.AddHttpClient("DictionaryApi", client =>
 {
-    client.BaseAddress = new Uri("https://www.googleapis.com/");
+    client.BaseAddress = new Uri("https://api.dictionaryapi.dev/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.Timeout = TimeSpan.FromSeconds(30);
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+
+builder.Services.AddHttpClient("GoogleTranslate", client =>
+{
+    client.BaseAddress = new Uri("https://translate.google.so/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(15);
 });
 
 // Add memory caching

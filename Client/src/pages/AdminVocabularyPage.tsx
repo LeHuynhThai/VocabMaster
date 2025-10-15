@@ -34,7 +34,8 @@ const AdminVocabularyPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.word.trim()) {
+    const cleaned = formData.word.trim().toLowerCase();
+    if (!cleaned) {
       setError('Vui lòng nhập từ tiếng Anh');
       return;
     }
@@ -44,19 +45,13 @@ const AdminVocabularyPage: React.FC = () => {
 
     try {
       // Tạm thời tự điền các trường còn lại để lưu nhanh
-      const payload: AddVocabularyRequest = {
-        word: formData.word.trim(),
-        vietnamese: formData.vietnamese?.trim() || formData.word.trim(),
-        meaningsJson: '[]',
-        pronunciationsJson: '[]'
-      };
-
-      await adminService.addVocabulary(payload);
-      showToast('Thêm từ vựng thành công!', 'success');
+      await adminService.crawlFromApi(cleaned);
+      showToast('Đã lấy dữ liệu và lưu!', 'success');
       setShowAddModal(false);
       resetForm();
+      await loadVocabularies();
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Có lỗi xảy ra khi thêm từ vựng';
+      const errorMessage = err.response?.data?.message || 'Có lỗi xảy ra khi lấy dữ liệu';
       setError(errorMessage);
       showToast(errorMessage, 'danger');
     } finally {
