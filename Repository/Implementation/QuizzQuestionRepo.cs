@@ -32,5 +32,26 @@ namespace Repository.Implementation
 
             return randomQuestion;
         }
+
+        public async Task<QuizQuestion?> GetQuestionById(int questionId)
+        {
+            return await _context.QuizQuestions
+                .FirstOrDefaultAsync(q => q.Id == questionId);
+        }
+
+        public async Task<bool> SaveCompletedQuiz(int userId, int quizQuestionId, bool wasCorrect)
+        {
+            var completedQuiz = new CompletedQuiz
+            {
+                UserId = userId,
+                QuizQuestionId = quizQuestionId,
+                WasCorrect = wasCorrect,
+                CompletedAt = DateTime.UtcNow
+            };
+
+            _context.CompletedQuizzes.Add(completedQuiz);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

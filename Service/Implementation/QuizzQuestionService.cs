@@ -17,5 +17,17 @@ namespace Service.Implementation
         {
             return await _quizzQuestionRepo.GetRandomUncompletedQuestion(userId);
         }
+
+        public async Task<bool> SubmitQuizAnswer(int userId, int quizQuestionId, string selectedAnswer)
+        {
+            var question = await _quizzQuestionRepo.GetQuestionById(quizQuestionId);
+            if (question == null)
+            {
+                return false;
+            }
+            bool isCorrect = selectedAnswer.Equals(question.CorrectAnswer, StringComparison.OrdinalIgnoreCase);
+            await _quizzQuestionRepo.SaveCompletedQuiz(userId, quizQuestionId, isCorrect);
+            return isCorrect;
+        }
     }
 }

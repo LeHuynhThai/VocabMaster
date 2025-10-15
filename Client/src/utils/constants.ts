@@ -30,6 +30,7 @@ export const API_ENDPOINTS = {
   // Quiz endpoints
   QUIZ_RANDOM: '/api/quiz/random',
   QUIZ_RANDOM_UNCOMPLETED: '/api/quizz/random-question',
+  QUIZ_SUBMIT_ANSWER: '/api/quizz/submit-answer',
   QUIZ_CHECK_ANSWER: '/api/quiz/check',
   QUIZ_CHECK_ANSWER_COMPLETE: '/api/quiz/check-complete',
   QUIZ_COMPLETED: '/api/quiz/completed',

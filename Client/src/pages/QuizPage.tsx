@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useToast from '../hooks/useToast';
-import quizService, { QuizQuestion, QuizResult, QuizStats, AllCompletedResponse } from '../services/quizService';
+import quizService, { QuizQuestion, QuizResult, QuizStats, AllCompletedResponse, SubmitAnswerResponse } from '../services/quizService';
 import { MESSAGES, ROUTES } from '../utils/constants';
 import { useQuizStats } from '../contexts/QuizStatsContext';
 import { Link } from 'react-router-dom';
@@ -13,7 +13,7 @@ const QuizPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
-  const [result, setResult] = useState<QuizResult | null>(null);
+  const [result, setResult] = useState<SubmitAnswerResponse | null>(null);
   const [isChecking, setIsChecking] = useState<boolean>(false);
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
   const [stats, setStats] = useState<QuizStats | null>(null);
@@ -96,15 +96,16 @@ const QuizPage: React.FC = () => {
     setIsChecking(true);
 
     try {
-      // Use the new API to mark the question as completed
-      const resultData = await quizService.checkAnswerAndComplete(question.id, selectedAnswer);
+      // Use the new submit answer API
+      const resultData = await quizService.submitAnswer(question.id, selectedAnswer);
       setResult(resultData);
       
-      // If the answer is correct, update stats and refresh the stats in sidebar
-      if (resultData.isCorrect) {
-        await loadStats(); // Update local stats
-        refreshStats(); // Trigger refresh in the sidebar component
-      }
+      // Update stats and refresh the stats in sidebar
+      await loadStats(); // Update local stats
+      refreshStats(); // Trigger refresh in the sidebar component
+      
+      // Show toast message
+      showToast(resultData.message, resultData.isCorrect ? 'success' : 'danger');
     } catch (error) {
       console.error('Error checking answer:', error);
       showToast('Đã xảy ra lỗi khi kiểm tra câu trả lời', 'danger');
@@ -122,7 +123,8 @@ const QuizPage: React.FC = () => {
       return `quiz-option ${selectedAnswer === option ? 'selected' : ''}`;
     }
 
-    if (option === result.correctAnswer) {
+    // For the new API, we need to determine correct answer from the question
+    if (option === question?.correctAnswer) {
       return 'quiz-option correct';
     }
 
@@ -210,7 +212,7 @@ const QuizPage: React.FC = () => {
             {result && (
               <div className={`quiz-feedback ${result.isCorrect ? 'correct' : 'incorrect'}`}>
                 {result.message}
-                {!result.isCorrect && <div><strong>Đáp án đúng:</strong> {result.correctAnswer}</div>}
+                {!result.isCorrect && <div><strong>Đáp án đúng:</strong> {question?.correctAnswer}</div>}
               </div>
             )}
 

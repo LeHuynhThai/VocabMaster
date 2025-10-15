@@ -26,6 +26,11 @@ export interface QuizResult {
   message: string;
 }
 
+export interface SubmitAnswerResponse {
+  isCorrect: boolean;
+  message: string;
+}
+
 export interface CompletedQuiz {
   id: number;
   quizQuestionId: number;
@@ -201,6 +206,25 @@ const quizService = {
           totalPages: 0
         }
       };
+    }
+  },
+
+  /**
+   * Submits a quiz answer
+   * @param quizQuestionId ID of the quiz question
+   * @param selectedAnswer Selected answer text
+   * @returns Result of the answer submission
+   */
+  submitAnswer: async (quizQuestionId: number, selectedAnswer: string): Promise<SubmitAnswerResponse> => {
+    try {
+      const response = await api.post(API_ENDPOINTS.QUIZ_SUBMIT_ANSWER, {
+        QuizQuestionId: quizQuestionId,
+        SelectedAnswer: selectedAnswer
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error submitting quiz answer:', error);
+      throw error;
     }
   },
 
