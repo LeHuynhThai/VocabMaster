@@ -4,21 +4,8 @@
     {
         public int Id { get; set; }
         public int QuizQuestionId { get; set; }
-        public string Word { get; set; }
+        public string Word { get; set; } = string.Empty;
+        public string CorrectAnswer { get; set; } = string.Empty;
         public DateTime CompletedAt { get; set; }
-        public bool WasCorrect { get; set; }
-    }
-
-    public class MarkQuizCompletedDto
-    {
-        public int QuizQuestionId { get; set; }
-        public bool WasCorrect { get; set; }
-    }
-
-    public class QuizCompletionResultDto
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; }
-        public CompletedQuizDto Data { get; set; }
     }
 }
