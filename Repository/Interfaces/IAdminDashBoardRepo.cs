@@ -6,5 +6,6 @@ namespace Repository.Interfaces
     {
         Task<Vocabulary> AddVocabulary(Vocabulary vocabulary);
         Task<bool> DeleteVocabulary(int vocabularyId);
+        Task<List<Vocabulary>> GetVocabularies();
     }
 }

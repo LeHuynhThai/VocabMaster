@@ -19,6 +19,30 @@ namespace API.Controllers
             _adminDashBoardService = adminDashBoardService;
         }
 
+        [HttpGet("vocabulary")]
+        public async Task<IActionResult> GetVocabularies()
+        {
+            try
+            {
+                var vocabularies = await _adminDashBoardService.GetVocabularies();
+
+                var response = vocabularies.Select(v => new AdminVocabularyResponseDto
+                {
+                    Id = v.Id,
+                    Word = v.Word,
+                    Vietnamese = v.Vietnamese,
+                    MeaningsJson = v.MeaningsJson,
+                    PronunciationsJson = v.PhoneticsJson
+                }).ToList();
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error" });
+            }
+        }
+
         [HttpPost("vocabulary")]
         public async Task<IActionResult> AddVocabulary([FromBody] AddVocabularyRequestDto request)
         {
@@ -29,18 +53,18 @@ namespace API.Controllers
                     Word = request.Word,
                     Vietnamese = request.Vietnamese,
                     MeaningsJson = request.MeaningsJson,
-                    PronunciationsJson = request.PronunciationsJson
+                    PhoneticsJson = request.PronunciationsJson
                 };
 
                 var result = await _adminDashBoardService.AddVocabulary(vocabulary);
 
-                var response = new VocabularyResponseDto
+                var response = new AdminVocabularyResponseDto
                 {
                     Id = result.Id,
                     Word = result.Word,
                     Vietnamese = result.Vietnamese,
                     MeaningsJson = result.MeaningsJson,
-                    PronunciationsJson = result.PronunciationsJson
+                    PronunciationsJson = result.PhoneticsJson
                 };
 
                 return Ok(new { 

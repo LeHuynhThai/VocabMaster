@@ -50,6 +50,19 @@ const adminService = {
       console.error('Error deleting vocabulary:', error);
       throw error;
     }
+  },
+
+  /**
+   * Get all vocabularies
+   */
+  getVocabularies: async (): Promise<VocabularyResponse[]> => {
+    try {
+      const response = await api.get(API_ENDPOINTS.ADMIN_ADD_VOCABULARY);
+      return response.data as VocabularyResponse[];
+    } catch (error: any) {
+      console.error('Error fetching vocabularies:', error);
+      throw error;
+    }
   }
 };
 

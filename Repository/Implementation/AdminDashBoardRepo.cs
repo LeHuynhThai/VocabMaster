@@ -32,5 +32,12 @@ namespace Repository.Implementation
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<List<Vocabulary>> GetVocabularies()
+        {
+            return await _context.Vocabularies
+                .OrderBy(v => v.Word)
+                .ToListAsync();
+        }
     }
 }

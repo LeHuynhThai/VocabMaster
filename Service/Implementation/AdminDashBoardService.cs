@@ -22,5 +22,10 @@ namespace Service.Implementation
         {
             return await _adminDashBoardRepo.DeleteVocabulary(vocabularyId);
         }
+
+        public async Task<List<Vocabulary>> GetVocabularies()
+        {
+            return await _adminDashBoardRepo.GetVocabularies();
+        }
     }
 }
