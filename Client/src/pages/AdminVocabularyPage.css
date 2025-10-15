@@ -1,0 +1,212 @@
+.admin-vocabulary-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 30px;
+  padding-right: 30px;
+  margin-left: 250px;
+  min-height: calc(100vh - 80px);
+  background-color: #f8f9fa;
+  border-left: 1px solid #e9ecef;
+}
+
+.page-title {
+  color: #2c3e50;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Action Buttons */
+.add-vocabulary-btn {
+  background: linear-gradient(135deg, #6f42c1, #8e44ad);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.add-vocabulary-btn:hover {
+  background: linear-gradient(135deg, #5a2d91, #7d3c98);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+}
+
+/* Cards */
+.card {
+  border: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Modal Styling */
+.modal-content {
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #6f42c1, #8e44ad);
+  color: white;
+  border-radius: 15px 15px 0 0;
+  border-bottom: none;
+}
+
+.modal-title {
+  font-weight: 600;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.modal-footer {
+  border-top: 1px solid #e9ecef;
+  padding: 1.5rem 2rem;
+  background-color: #f8f9fa;
+  border-radius: 0 0 15px 15px;
+}
+
+/* Form Styling */
+.form-label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.form-control {
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: #6f42c1;
+  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+}
+
+.form-control:disabled {
+  background-color: #f8f9fa;
+  opacity: 0.6;
+}
+
+/* Alert Styling */
+.alert {
+  border: none;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Button Styling */
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6f42c1, #8e44ad);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #5a2d91, #7d3c98);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  border: none;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  transform: none !important;
+}
+
+/* Spinner */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Empty State */
+.text-center.py-5 {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.text-center.py-5 i {
+  opacity: 0.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-vocabulary-page {
+    margin-left: 0;
+    padding-left: 15px;
+    padding-right: 15px;
+    background-color: transparent;
+    border-left: none;
+  }
+  
+  .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .modal-footer {
+    padding: 1rem 1.5rem;
+  }
+  
+  .add-vocabulary-btn {
+    width: 100%;
+    margin-top: 1rem;
+  }
+}
+
+/* Icon Styling */
+.bi {
+  font-size: 1rem;
+}
+
+.bi-plus-circle {
+  color: white;
+}
+
+.bi-check-circle {
+  color: white;
+}
+
+.bi-book {
+  color: #6c757d;
+}
+
+/* Form Text */
+.form-text {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+/* Required Field Indicator */
+.text-danger {
+  color: #dc3545 !important;
+}

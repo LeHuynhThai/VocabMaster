@@ -51,6 +51,11 @@ const Header: React.FC = () => {
               </div>
               <div className="user-info-horizontal">
                 <span className="user-name-highlight">{user?.name}</span>
+                {user?.role === 'Admin' && (
+                  <Link to={ROUTES.ADMIN_DASHBOARD} className="admin-button">
+                    <i className="bi bi-shield-check me-1"></i> Admin
+                  </Link>
+                )}
                 <button 
                   className="logout-button"
                   onClick={handleLogout}

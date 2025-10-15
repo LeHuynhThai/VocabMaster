@@ -10,6 +10,8 @@ export const ROUTES = {
   TRANSLATION: '/translation',
   QUIZ: '/quiz',
   QUIZ_STATS: '/quiz-stats',
+  ADMIN_DASHBOARD: '/admin',
+  ADMIN_VOCABULARY: '/admin/vocabulary',
   NOT_FOUND: '/not-found'
 };
 
@@ -31,13 +33,16 @@ export const API_ENDPOINTS = {
   QUIZ_RANDOM: '/api/quiz/random',
   QUIZ_RANDOM_UNCOMPLETED: '/api/quizz/random-question',
   QUIZ_SUBMIT_ANSWER: '/api/quizz/submit-answer',
+  QUIZ_STATS: '/api/quizzstat/stats',
+  QUIZ_COMPLETED_ANSWERS: '/api/quizzstat/completed-answers',
   QUIZ_CHECK_ANSWER: '/api/quiz/check',
   QUIZ_CHECK_ANSWER_COMPLETE: '/api/quiz/check-complete',
   QUIZ_COMPLETED: '/api/quiz/completed',
   QUIZ_CORRECT: '/api/quiz/correct',
   QUIZ_CORRECT_PAGINATED: '/api/quiz/correct/paginated',
-  QUIZ_STATS: '/api/quizzstat/stats',
-  QUIZ_COMPLETED_ANSWERS: '/api/quizzstat/completed-answers'
+  // Admin endpoints
+  ADMIN_ADD_VOCABULARY: '/api/admindashboard/vocabulary',
+  ADMIN_DELETE_VOCABULARY: '/api/admindashboard/vocabulary'
 };
 
 /**

@@ -1,0 +1,105 @@
+.admin-dashboard-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 24px;
+  margin-left: 250px; /* space for sidebar on desktop */
+  min-height: calc(100vh - 80px);
+  background-color: #f7f7f8; /* subtle neutral */
+  border-left: 1px solid #ececed;
+}
+
+.page-title {
+  color: #1f2937; /* gray-800 */
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Welcome Card - simple, no gradients */
+.welcome-card {
+  background: #ffffff;
+  color: #374151; /* gray-700 */
+  border: 1px solid #e5e7eb; /* gray-200 */
+  border-radius: 10px;
+}
+
+.welcome-card h4 {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.welcome-card .text-muted {
+  color: #6b7280 !important; /* gray-500 */
+}
+
+/* Feature Card - minimal */
+.feature-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: none;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  cursor: pointer;
+  width: 100%;
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.feature-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  font-size: 1.25rem;
+  color: #374151;
+  background: #f3f4f6; /* gray-100 */
+  border: 1px solid #e5e7eb;
+}
+
+.feature-title {
+  color: #111827; /* gray-900 */
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.feature-description {
+  color: #6b7280; /* gray-500 */
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+}
+
+/* Keep default Bootstrap button styles; make them slightly rounded */
+.btn {
+  border-radius: 6px;
+}
+
+/* Cards spacing */
+.card {
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.card-body {
+  padding: 16px 18px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-dashboard-page {
+    margin-left: 0;
+    padding: 12px 14px;
+    background-color: #ffffff;
+    border-left: none;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+  }
+}

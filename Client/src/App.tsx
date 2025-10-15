@@ -20,6 +20,8 @@ import WordGeneratorPage from './pages/WordGeneratorPage';
 import LearnedWordsPage from './pages/LearnedWordsPage';
 import QuizPage from './pages/QuizPage';
 import QuizStatsPage from './pages/QuizStatsPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminVocabularyPage from './pages/AdminVocabularyPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { ROUTES } from './utils/constants';
 import WordDetailPage from './pages/WordDetailPage';
@@ -77,6 +79,18 @@ function App() {
                       path={ROUTES.QUIZ_STATS} 
                       element={
                         <ProtectedRoute element={<QuizStatsPage />} />
+                      } 
+                    />
+                    <Route 
+                      path={ROUTES.ADMIN_DASHBOARD} 
+                      element={
+                        <ProtectedRoute element={<AdminDashboardPage />} />
+                      } 
+                    />
+                    <Route 
+                      path={ROUTES.ADMIN_VOCABULARY} 
+                      element={
+                        <ProtectedRoute element={<AdminVocabularyPage />} />
                       } 
                     />
                     <Route path={ROUTES.NOT_FOUND} element={<NotFoundPage />} />
