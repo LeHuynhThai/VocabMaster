@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Repository.DTOs;
+using System.Text.Json;
 using Repository.Entities;
 using Service.Interfaces;
 using System.Security.Claims;
@@ -23,6 +24,19 @@ namespace VocabMaster.API.Controllers
             _cache = cache;
         }
 
+        private static T? SafeDeserialize<T>(string json)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(json)) return default;
+                return JsonSerializer.Deserialize<T>(json);
+            }
+            catch
+            {
+                return default;
+            }
+        }
+
         [HttpGet("word-detail/{word}")]
         public async Task<IActionResult> GetWordDetail(string word)
         {
@@ -33,7 +47,18 @@ namespace VocabMaster.API.Controllers
                 {
                     return NotFound(new { message = "Không tìm thấy từ vựng" });
                 }
-                return Ok(vocabulary);
+                
+                var detailDto = new VocabularyResponseDto
+                {
+                    Id = vocabulary.Id,
+                    Word = vocabulary.Word,
+                    Vietnamese = vocabulary.Vietnamese,
+                    PhoneticsJson = vocabulary.PhoneticsJson,
+                    MeaningsJson = vocabulary.MeaningsJson,
+                    Pronunciations = SafeDeserialize<List<PronunciationDto>>(vocabulary.PhoneticsJson),
+                    Meanings = SafeDeserialize<List<MeaningDto>>(vocabulary.MeaningsJson)
+                };
+                return Ok(detailDto);
             }
             catch (Exception ex)
             {
@@ -68,7 +93,18 @@ namespace VocabMaster.API.Controllers
                         message = "Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống."
                     });
                 }
-                return Ok(randomWord);
+                var dto = new VocabularyResponseDto
+                {
+                    Id = randomWord.Id,
+                    Word = randomWord.Word,
+                    Vietnamese = randomWord.Vietnamese,
+                    PhoneticsJson = randomWord.PhoneticsJson,
+                    MeaningsJson = randomWord.MeaningsJson,
+                    Pronunciations = SafeDeserialize<List<PronunciationDto>>(randomWord.PhoneticsJson),
+                    Meanings = SafeDeserialize<List<MeaningDto>>(randomWord.MeaningsJson)
+                };
+                return Ok(dto);
+
             }
             catch (Exception ex)
             {
