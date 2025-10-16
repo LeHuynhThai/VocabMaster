@@ -142,6 +142,4 @@ build/
 dist/
 coverage/
 
-
-API/appsettings.json
 API/appsettings.json
