@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;

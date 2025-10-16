@@ -8,7 +8,7 @@ import reportWebVitals from './reportWebVitals';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 // use your own google client id if you want to use google login
-const GOOGLE_CLIENT_ID = 'your-google-client-id-here';
+const GOOGLE_CLIENT_ID = '201311652729-plsa9btlkbaf9t2pqljsdcqonlkv3ng7.apps.googleusercontent.com';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
