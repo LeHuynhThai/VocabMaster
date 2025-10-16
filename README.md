@@ -22,8 +22,8 @@ Trang web học tiếng Anh từ vựng dễ dàng.
 3. **Chạy ứng dụng:** Khởi chạy backend và frontend.
 
 ## Demo
-![alt text](Demo/image.png)
-![alt text](Demo/image-1.png)
+![alt text](DemoPhoto/image.png)
+![alt text](DemoPhoto/image-1.png)
 
 
 
