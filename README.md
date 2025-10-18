@@ -26,14 +26,15 @@ Trang web học tiếng Anh từ vựng dễ dàng.
    npm start
 
 ## Demo
+![alt text](DemoPhoto/image.png)
 ![alt text](DemoPhoto/image1.png)
 ![alt text](DemoPhoto/image2.png)
-![alt text](image.png)
-![alt text](image-1.png)
-![alt text](image-2.png)
-![alt text](image-3.png)
-![alt text](image-4.png)
-![alt text](image-5.png)
+![alt text](DemoPhoto/image3.png)
+![alt text](DemoPhoto/image4.png)
+![alt text](DemoPhoto/image5.png)
+![alt text](DemoPhoto/image6.png)
+![alt text](DemoPhoto/image7.png)
+![alt text](DemoPhoto/image8.png)
 
 
 

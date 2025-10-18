@@ -45,7 +45,7 @@ namespace Service.Implementation
 
             try
             {
-                // 1) DictionaryAPI - với timeout handling tốt hơn
+                // 1) DictionaryAPI
                 var dictClient = _httpClientFactory.CreateClient("DictionaryApi");
                 using var dictRes = await dictClient.GetAsync($"api/v2/entries/en/{Uri.EscapeDataString(word)}");
 
@@ -91,7 +91,7 @@ namespace Service.Implementation
 
             try
             {
-                // 2) Google Translate - với error handling tốt hơn
+                // 2) Google Translate
                 var transClient = _httpClientFactory.CreateClient("GoogleTranslate");
                 var url = $"translate_a/t?client=any_client_id_works&sl=auto&tl=vi&q={Uri.EscapeDataString(word)}&tbb=1&ie=UTF-8&oe=UTF-8";
                 using var transRes = await transClient.GetAsync(url);
