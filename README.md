@@ -34,7 +34,7 @@ Trang web học tiếng Anh từ vựng dễ dàng.
 ![alt text](DemoPhoto/image5.png)
 ![alt text](DemoPhoto/image6.png)
 ![alt text](DemoPhoto/image7.png)
-![alt text](image-1.png)
+![alt text](DemoPhoto/image8.png)
 
 
 
