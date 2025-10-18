@@ -101,8 +101,6 @@ VocabMaster.Client/src/index.tsx
 # Ignore Visual Studio user settings
 *.csproj.user
 
-# ASP.NET Secrets
-secrets.json
 
 # Publish
 publish/
@@ -141,5 +139,3 @@ package-lock.json
 build/
 dist/
 coverage/
-
-API/appsettings.json

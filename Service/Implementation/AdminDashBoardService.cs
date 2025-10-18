@@ -47,7 +47,7 @@ namespace Service.Implementation
             {
                 // 1) DictionaryAPI
                 var dictClient = _httpClientFactory.CreateClient("DictionaryApi");
-                using var dictRes = await dictClient.GetAsync($"api/v2/entries/en/{Uri.EscapeDataString(word)}");
+                using var dictRes = await dictClient.GetAsync($"api/v1/entries/en/{Uri.EscapeDataString(word)}");
 
                 if (dictRes.IsSuccessStatusCode)
                 {

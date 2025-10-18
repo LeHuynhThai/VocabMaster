@@ -10,7 +10,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 120000, // 120 seconds timeout
+  timeout: 60000, // 60 seconds timeout
   withCredentials: true, // Allow sending cookies when cross-domain request
 });
 

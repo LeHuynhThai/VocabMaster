@@ -120,16 +120,20 @@ builder.Services.AddAuthorization();
 // HttpClients used by services
 builder.Services.AddHttpClient("DictionaryApi", client =>
 {
-    client.BaseAddress = new Uri("https://api.dictionaryapi.dev/");
+    client.BaseAddress = new Uri("https://freedictionaryapi.com/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.Timeout = TimeSpan.FromSeconds(120);
+    client.Timeout = TimeSpan.FromSeconds(30);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true
 });
 
 builder.Services.AddHttpClient("GoogleTranslate", client =>
 {
     client.BaseAddress = new Uri("https://translate.google.so/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.Timeout = TimeSpan.FromSeconds(120);
+    client.Timeout = TimeSpan.FromSeconds(15);
 });
 
 // Add memory caching
