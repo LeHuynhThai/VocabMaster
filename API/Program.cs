@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -122,14 +122,14 @@ builder.Services.AddHttpClient("DictionaryApi", client =>
 {
     client.BaseAddress = new Uri("https://api.dictionaryapi.dev/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.Timeout = TimeSpan.FromSeconds(15);
+    client.Timeout = TimeSpan.FromSeconds(120);
 });
 
 builder.Services.AddHttpClient("GoogleTranslate", client =>
 {
     client.BaseAddress = new Uri("https://translate.google.so/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.Timeout = TimeSpan.FromSeconds(15);
+    client.Timeout = TimeSpan.FromSeconds(120);
 });
 
 // Add memory caching
