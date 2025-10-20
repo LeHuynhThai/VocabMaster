@@ -16,14 +16,14 @@ Trang web học tiếng Anh từ vựng dễ dàng.
 1. **Tạo cơ sở dữ liệu:** Tạo một database mới tên là "VocabMaster" trong SQL Server (sử dụng SQL Server Management Studio hoặc lệnh SQL). Đảm bảo kết nối với server phù hợp (ví dụ: localhost\SQLEXPRESS).'
 
 2. **Cài đặt dependencies cho Client:**
-   - cd Client
-   - npm install
+- cd Client
+- npm install
 
 3. **Chạy ứng dụng:** Khởi chạy backend và frontend. 
-   - cd API
-   - dotnet run
-   - cd Client
-   - npm start
+- cd API
+- dotnet run
+- cd Client
+- npm start
 
 ## Demo
 ![alt text](DemoPhoto/image.png)
