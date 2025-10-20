@@ -120,7 +120,7 @@ builder.Services.AddAuthorization();
 // HttpClients used by services
 builder.Services.AddHttpClient("DictionaryApi", client =>
 {
-    client.BaseAddress = new Uri("https://freedictionaryapi.com/");
+    client.BaseAddress = new Uri("https://api.dictionaryapi.dev/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
     client.Timeout = TimeSpan.FromSeconds(30);
 })
