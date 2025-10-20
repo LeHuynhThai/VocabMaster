@@ -118,16 +118,19 @@ builder.Services.AddAuthorization();
 
 
 // HttpClients used by services
-builder.Services.AddHttpClient("DictionaryApi", client =>
-{
-    client.BaseAddress = new Uri("https://api.dictionaryapi.dev/");
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.Timeout = TimeSpan.FromSeconds(30);
-})
-.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-{
-    ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true
-});
+
+// ========== COMMENTED OUT: Dictionary API HttpClient ==========
+// builder.Services.AddHttpClient("DictionaryApi", client =>
+// {
+//     client.BaseAddress = new Uri("https://api.dictionaryapi.dev/");
+//     client.DefaultRequestHeaders.Add("Accept", "application/json");
+//     client.Timeout = TimeSpan.FromSeconds(30);
+// })
+// .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+// {
+//     ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true
+// });
+// ========== END COMMENTED OUT ==========
 
 builder.Services.AddHttpClient("GoogleTranslate", client =>
 {

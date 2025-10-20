@@ -43,51 +43,53 @@ namespace Service.Implementation
             string meaningsJson = "[]";
             string vietnamese = word;
 
-            try
-            {
-                // 1) DictionaryAPI
-                var dictClient = _httpClientFactory.CreateClient("DictionaryApi");
-                using var dictRes = await dictClient.GetAsync($"api/v2/entries/en/{Uri.EscapeDataString(word)}");
+            // ========== COMMENTED OUT: Dictionary API Integration ==========
+            // try
+            // {
+            //     // 1) DictionaryAPI
+            //     var dictClient = _httpClientFactory.CreateClient("DictionaryApi");
+            //     using var dictRes = await dictClient.GetAsync($"api/v2/entries/en/{Uri.EscapeDataString(word)}");
 
-                if (dictRes.IsSuccessStatusCode)
-                {
-                    var dictJson = await dictRes.Content.ReadAsStringAsync();
+            //     if (dictRes.IsSuccessStatusCode)
+            //     {
+            //         var dictJson = await dictRes.Content.ReadAsStringAsync();
 
-                    try
-                    {
-                        using var doc = JsonDocument.Parse(dictJson);
-                        var root = doc.RootElement;
-                        if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0)
-                        {
-                            var first = root[0];
-                            if (first.TryGetProperty("phonetics", out var ph))
-                                phoneticsJson = ph.GetRawText();
-                            if (first.TryGetProperty("meanings", out var me))
-                                meaningsJson = me.GetRawText();
-                        }
-                    }
-                    catch (JsonException)
-                    {
-                        Console.WriteLine($"Invalid JSON response from Dictionary API for word: {word}");
-                    }
-                }
-                else if (dictRes.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    Console.WriteLine($"Word '{word}' not found in Dictionary API");
-                }
-                else
-                {
-                    Console.WriteLine($"Dictionary API error for '{word}': {dictRes.StatusCode}");
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                Console.WriteLine($"Dictionary API request failed for '{word}': {ex.Message}");
-            }
-            catch (TaskCanceledException)
-            {
-                Console.WriteLine($"Dictionary API request timed out for '{word}'");
-            }
+            //         try
+            //         {
+            //             using var doc = JsonDocument.Parse(dictJson);
+            //             var root = doc.RootElement;
+            //             if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0)
+            //             {
+            //                 var first = root[0];
+            //                 if (first.TryGetProperty("phonetics", out var ph))
+            //                     phoneticsJson = ph.GetRawText();
+            //                 if (first.TryGetProperty("meanings", out var me))
+            //                     meaningsJson = me.GetRawText();
+            //             }
+            //         }
+            //         catch (JsonException)
+            //         {
+            //             Console.WriteLine($"Invalid JSON response from Dictionary API for word: {word}");
+            //         }
+            //     }
+            //     else if (dictRes.StatusCode == System.Net.HttpStatusCode.NotFound)
+            //     {
+            //         Console.WriteLine($"Word '{word}' not found in Dictionary API");
+            //     }
+            //     else
+            //     {
+            //         Console.WriteLine($"Dictionary API error for '{word}': {dictRes.StatusCode}");
+            //     }
+            // }
+            // catch (HttpRequestException ex)
+            // {
+            //     Console.WriteLine($"Dictionary API request failed for '{word}': {ex.Message}");
+            // }
+            // catch (TaskCanceledException)
+            // {
+            //     Console.WriteLine($"Dictionary API request timed out for '{word}'");
+            // }
+            // ========== END COMMENTED OUT ==========
 
             try
             {
