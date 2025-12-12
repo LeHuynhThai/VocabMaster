@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
-using Repository.DTOs;
 using System.Security.Claims;
 
 namespace API.Controllers
@@ -26,11 +25,11 @@ namespace API.Controllers
             {
                 var items = await _vocabularyService.GetLearnedWords(userId);
 
-                var result = items.Select(x => new LearnedWordDto
+                var result = items.Select(x => new
                 {
-                    Id = x.Id,
-                    Word = x.Word,
-                    LearnedAt = x.LearnedAt
+                    id = x.Id,
+                    word = x.Word,
+                    learnedAt = x.LearnedAt
                 }).ToList();
 
                 return Ok(result);

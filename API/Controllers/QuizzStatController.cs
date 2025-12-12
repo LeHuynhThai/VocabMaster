@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Repository.DTOs;
 using Repository.Entities;
 using Service.Interfaces;
 using System.Security.Claims;
@@ -38,15 +37,13 @@ namespace API.Controllers
                     accuracyRate = (double)correctAnswers / completedQuestions * 100;
                 }
 
-                var stats = new QuizStatsDto
+                return Ok(new
                 {
-                    TotalQuestions = totalQuestions,
-                    CompletedQuestions = completedQuestions,
-                    CorrectAnswers = correctAnswers,
-                    AccuracyRate = accuracyRate
-                };
-
-                return Ok(stats);
+                    totalQuestions = totalQuestions,
+                    completedQuestions = completedQuestions,
+                    correctAnswers = correctAnswers,
+                    accuracyRate = accuracyRate
+                });
             }
             catch (Exception ex)
             {
@@ -63,14 +60,14 @@ namespace API.Controllers
 
                 var completedQuizzes = await _quizzStatService.GetCompletedQuizzes(userId);
 
-                var completedAnswers = completedQuizzes.Select(cq => new CompletedQuizDto
+                var completedAnswers = completedQuizzes.Select(cq => new
                 {
-                    Id = cq.Id,
-                    QuizQuestionId = cq.QuizQuestionId,
-                    Word = cq.QuizQuestion.Word,
-                    CorrectAnswer = cq.QuizQuestion.CorrectAnswer,
-                    CompletedAt = cq.CompletedAt,
-                    WasCorrect = cq.WasCorrect
+                    id = cq.Id,
+                    quizQuestionId = cq.QuizQuestionId,
+                    word = cq.QuizQuestion.Word,
+                    correctAnswer = cq.QuizQuestion.CorrectAnswer,
+                    completedAt = cq.CompletedAt,
+                    wasCorrect = cq.WasCorrect
                 }).ToList();
 
                 return Ok(completedAnswers);

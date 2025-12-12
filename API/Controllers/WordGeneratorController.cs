@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Repository.DTOs;
 using System.Text.Json;
 using Repository.Entities;
 using Service.Interfaces;
@@ -47,18 +46,13 @@ namespace VocabMaster.API.Controllers
                 {
                     return NotFound(new { message = "Không tìm thấy từ vựng" });
                 }
-                
-                var detailDto = new VocabularyResponseDto
+
+                return Ok(new
                 {
-                    Id = vocabulary.Id,
-                    Word = vocabulary.Word,
-                    Vietnamese = vocabulary.Vietnamese,
-                    PhoneticsJson = vocabulary.PhoneticsJson,
-                    MeaningsJson = vocabulary.MeaningsJson,
-                    Pronunciations = SafeDeserialize<List<PronunciationDto>>(vocabulary.PhoneticsJson),
-                    Meanings = SafeDeserialize<List<MeaningDto>>(vocabulary.MeaningsJson)
-                };
-                return Ok(detailDto);
+                    id = vocabulary.Id,
+                    word = vocabulary.Word,
+                    vietnamese = vocabulary.Vietnamese
+                });
             }
             catch (Exception ex)
             {
@@ -93,17 +87,13 @@ namespace VocabMaster.API.Controllers
                         message = "Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống."
                     });
                 }
-                var dto = new VocabularyResponseDto
+
+                return Ok(new
                 {
-                    Id = randomWord.Id,
-                    Word = randomWord.Word,
-                    Vietnamese = randomWord.Vietnamese,
-                    PhoneticsJson = randomWord.PhoneticsJson,
-                    MeaningsJson = randomWord.MeaningsJson,
-                    Pronunciations = SafeDeserialize<List<PronunciationDto>>(randomWord.PhoneticsJson),
-                    Meanings = SafeDeserialize<List<MeaningDto>>(randomWord.MeaningsJson)
-                };
-                return Ok(dto);
+                    id = randomWord.Id,
+                    word = randomWord.Word,
+                    vietnamese = randomWord.Vietnamese
+                });
 
             }
             catch (Exception ex)
@@ -118,7 +108,7 @@ namespace VocabMaster.API.Controllers
         }
 
         [HttpPost("learned-word")]
-        public async Task<IActionResult> AddLearnedWord([FromBody] AddLearnedWordDto dto)
+        public async Task<IActionResult> AddLearnedWord([FromBody] Dictionary<string, string> dto)
         {
             try
             {
@@ -128,6 +118,11 @@ namespace VocabMaster.API.Controllers
                     return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
                 }
 
+                if (dto == null || !dto.TryGetValue("word", out var word) || string.IsNullOrWhiteSpace(word))
+                {
+                    return BadRequest(new { error = "validation_error", message = "Dữ liệu không hợp lệ" });
+                }
+
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(new { error = "validation_error", message = "Dữ liệu không hợp lệ", details = ModelState });
@@ -135,7 +130,7 @@ namespace VocabMaster.API.Controllers
 
                 var learnedWord = new LearnedWord
                 {
-                    Word = dto.Word,
+                    Word = word,
                     UserId = userId,
                     LearnedAt = DateTime.UtcNow
                 };

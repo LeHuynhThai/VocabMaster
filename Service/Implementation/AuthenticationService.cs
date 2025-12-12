@@ -5,7 +5,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using Repository.DTOs;
 using Repository.Entities;
 using Service.Interfaces;
 using Repository.Interfaces;
@@ -37,7 +36,7 @@ namespace Service.Implementation
             };
         }
 
-        public async Task<TokenResponseDto> Login(string name, string password)
+        public async Task<Dictionary<string, object>?> Login(string name, string password)
         {
             var user = await _userRepository.ValidateUser(name, password);
             return user != null ? await GenerateJwtToken(user) : null;
@@ -77,28 +76,30 @@ namespace Service.Implementation
             return await _userRepository.GetById(id);
         }
 
-        public async Task<TokenResponseDto> AuthenticateGoogleUser(GoogleAuthDto googleAuth)
+        public async Task<Dictionary<string, object>?> AuthenticateGoogleUser(string accessToken)
         {
             try
             {
-                if (googleAuth == null || string.IsNullOrEmpty(googleAuth.AccessToken))
+                if (string.IsNullOrEmpty(accessToken))
                 {
-                    Console.WriteLine("GoogleAuthDto or AccessToken is null/empty");
+                    Console.WriteLine("AccessToken is null/empty");
                     return null;
                 }
 
-                Console.WriteLine($"Starting Google authentication with token length: {googleAuth.AccessToken.Length}");
+                Console.WriteLine($"Starting Google authentication with token length: {accessToken.Length}");
 
-                var googleUserInfo = await GetGoogleUserInfo(googleAuth.AccessToken);
-                if (googleUserInfo == null || string.IsNullOrEmpty(googleUserInfo.Email))
+                var googleUserInfo = await GetGoogleUserInfo(accessToken);
+                if (googleUserInfo == null || !googleUserInfo.TryGetValue("email", out var emailObj) || emailObj == null || string.IsNullOrEmpty(emailObj.ToString()))
                 {
                     Console.WriteLine("Failed to get valid Google user info or email is missing");
                     return null;
                 }
 
+                var email = emailObj.ToString();
+
                 Console.WriteLine($"Google user info received: {googleUserInfo}");
 
-                var existingUser = await _userRepository.GetByName(googleUserInfo.Email);
+                var existingUser = await _userRepository.GetByName(email);
                 Console.WriteLine($"Existing user found: {existingUser != null}");
 
                 if (existingUser == null)
@@ -117,7 +118,7 @@ namespace Service.Implementation
             }
         }
 
-        public async Task<GoogleUserInfoDto> GetGoogleUserInfo(string accessToken)
+        public async Task<Dictionary<string, object>?> GetGoogleUserInfo(string accessToken)
         {
             if (string.IsNullOrEmpty(accessToken))
             {
@@ -151,7 +152,7 @@ namespace Service.Implementation
             }
         }
 
-        private async Task<GoogleUserInfoDto> TryGetGoogleUserInfo(HttpClient httpClient, string url, bool useAuthHeader, string accessToken)
+        private async Task<Dictionary<string, object>?> TryGetGoogleUserInfo(HttpClient httpClient, string url, bool useAuthHeader, string accessToken)
         {
             try
             {
@@ -177,14 +178,14 @@ namespace Service.Implementation
                     return null;
                 }
 
-                var userInfo = JsonSerializer.Deserialize<GoogleUserInfoDto>(content, _jsonOptions);
-                if (userInfo == null)
+                var userInfo = JsonSerializer.Deserialize<Dictionary<string, object>>(content, _jsonOptions);
+                if (userInfo == null || !userInfo.TryGetValue("email", out var emailObj) || emailObj == null)
                 {
                     Console.WriteLine("Failed to deserialize Google user info");
                     return null;
                 }
 
-                Console.WriteLine($"Successfully obtained user info for: {userInfo.Email}");
+                Console.WriteLine($"Successfully obtained user info for: {emailObj}");
                 return userInfo;
             }
             catch (Exception ex)
@@ -194,18 +195,24 @@ namespace Service.Implementation
             }
         }
 
-        private async Task<User> CreateGoogleUser(GoogleUserInfoDto googleUserInfo)
+        private async Task<User> CreateGoogleUser(Dictionary<string, object> googleUserInfo)
         {
+            if (googleUserInfo == null) throw new ArgumentNullException(nameof(googleUserInfo));
+
+            googleUserInfo.TryGetValue("email", out var emailObj);
+            var email = emailObj?.ToString();
+            if (string.IsNullOrWhiteSpace(email)) return null;
+
             var newUser = new User
             {
-                Name = googleUserInfo.Email,
+                Name = email,
                 Password = HashPassword(Guid.NewGuid().ToString()),
                 Role = UserRole.User
             };
 
             Console.WriteLine($"Creating new user with email: {newUser.Name}");
             await _userRepository.Add(newUser);
-            return await _userRepository.GetByName(googleUserInfo.Email);
+            return await _userRepository.GetByName(email);
         }
 
         public string HashPassword(string password)
@@ -227,7 +234,7 @@ namespace Service.Implementation
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
 
-        public async Task<TokenResponseDto> GenerateJwtToken(User user)
+        public async Task<Dictionary<string, object>> GenerateJwtToken(User user)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
 
@@ -250,13 +257,13 @@ namespace Service.Implementation
                 signingCredentials: credentials
             );
 
-            return await Task.FromResult(new TokenResponseDto
+            return await Task.FromResult(new Dictionary<string, object>
             {
-                AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
-                ExpiresIn = (int)(tokenExpiration - DateTime.UtcNow).TotalSeconds,
-                UserId = user.Id,
-                UserName = user.Name,
-                Role = user.Role.ToString()
+                ["accessToken"] = new JwtSecurityTokenHandler().WriteToken(token),
+                ["expiresIn"] = (int)(tokenExpiration - DateTime.UtcNow).TotalSeconds,
+                ["userId"] = user.Id,
+                ["userName"] = user.Name,
+                ["role"] = user.Role.ToString()
             });
         }
 

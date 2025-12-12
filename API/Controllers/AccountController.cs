@@ -1,30 +1,24 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Repository.DTOs;
 using Repository.Entities;
 using Service.Interfaces;
 
 namespace API.Controllers;
-
 
 [ApiController]
 [Route("api/[controller]")]
 public class AccountController : ControllerBase
 {
     private readonly IAuthenticationService _authenticationService;
-    private readonly IMapper _mapper;
 
     public AccountController(
-        IAuthenticationService authenticationService,
-        IMapper mapper)
+        IAuthenticationService authenticationService)
     {
         _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
-        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequestDto model)
+    public async Task<IActionResult> Login(User model)
     {
         // validate fields login request
         if (!ModelState.IsValid)
@@ -52,7 +46,7 @@ public class AccountController : ControllerBase
 
     [HttpPost("google-login")]
     [AllowAnonymous]
-    public async Task<IActionResult> GoogleLogin(GoogleAuthDto googleAuth)
+    public async Task<IActionResult> GoogleLogin([FromBody] Dictionary<string, string> googleAuth)
     {
         try
         {
@@ -61,14 +55,14 @@ public class AccountController : ControllerBase
                 return BadRequest("Dữ liệu không hợp lệ");
             }
 
-            if (string.IsNullOrEmpty(googleAuth.AccessToken))
+            if (!googleAuth.TryGetValue("accessToken", out var accessToken) || string.IsNullOrEmpty(accessToken))
             {
                 return BadRequest("AccessToken không được cung cấp");
             }
 
             try
             {
-                var tokenResponse = await _authenticationService.AuthenticateGoogleUser(googleAuth);
+                var tokenResponse = await _authenticationService.AuthenticateGoogleUser(accessToken);
 
                 if (tokenResponse == null)
                 {
@@ -90,30 +84,36 @@ public class AccountController : ControllerBase
 
     [HttpPost("validate-google-token")]
     [AllowAnonymous]
-    public async Task<IActionResult> ValidateGoogleToken(GoogleAuthDto googleAuth)
+    public async Task<IActionResult> ValidateGoogleToken([FromBody] Dictionary<string, string> googleAuth)
     {
 
         try
         {
-            if (googleAuth == null || string.IsNullOrEmpty(googleAuth.AccessToken))
+            if (googleAuth == null || !googleAuth.TryGetValue("accessToken", out var accessToken) || string.IsNullOrEmpty(accessToken))
             {
                 return BadRequest(new { valid = false, message = "Token is missing" });
             }
 
-            var userInfo = await _authenticationService.GetGoogleUserInfo(googleAuth.AccessToken);
+            var userInfo = await _authenticationService.GetGoogleUserInfo(accessToken);
 
             if (userInfo != null)
             {
+                userInfo.TryGetValue("sub", out var id);
+                userInfo.TryGetValue("email", out var email);
+                userInfo.TryGetValue("name", out var name);
+                userInfo.TryGetValue("picture", out var picture);
+                userInfo.TryGetValue("email_verified", out var emailVerified);
+
                 return Ok(new
                 {
                     valid = true,
                     userInfo = new
                     {
-                        id = userInfo.Id,
-                        email = userInfo.Email,
-                        name = userInfo.Name,
-                        picture = userInfo.Picture,
-                        emailVerified = userInfo.EmailVerified
+                        id = id,
+                        email = email,
+                        name = name,
+                        picture = picture,
+                        emailVerified = emailVerified
                     }
                 });
             }
@@ -127,20 +127,15 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterRequestDto model)
+    public async Task<IActionResult> Register(User model)
     {
         try
         {
-            var user = new User
-            {
-                Name = model.Name,
-                Password = model.Password,
-                Role = UserRole.User
-            };
-            var result = await _authenticationService.Register(user);
+            model.Role = UserRole.User;
+            var result = await _authenticationService.Register(model);
             if (result)
             {
-             return Ok(new { success = true, message = "Đăng ký thành công" });
+                return Ok(new { success = true, message = "Đăng ký thành công" });
             }
             else
             {

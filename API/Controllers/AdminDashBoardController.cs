@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Repository.DTOs;
 using Repository.Entities;
 using Service.Interfaces;
 using System.Security.Claims;
@@ -20,27 +19,27 @@ namespace API.Controllers
         }
 
         [HttpPost("vocabulary/crawl")]
-        public async Task<IActionResult> CrawFromApi([FromBody] CrawlVocabularyRequestDto request)
+        public async Task<IActionResult> CrawFromApi([FromBody] Dictionary<string, string> request)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(request?.Word))
+                if (request == null || !request.TryGetValue("word", out var word) || string.IsNullOrWhiteSpace(word))
                 {
                     return BadRequest(new { message = "Word is required" });
                 }
 
-                var result = await _adminDashBoardService.CrawFromApi(request.Word);
+                var result = await _adminDashBoardService.CrawFromApi(word);
 
-                var response = new AdminVocabularyResponseDto
+                return Ok(new
                 {
-                    Id = result.Id,
-                    Word = result.Word,
-                    Vietnamese = result.Vietnamese,
-                    MeaningsJson = result.MeaningsJson,
-                    PronunciationsJson = result.PhoneticsJson
-                };
-
-                return Ok(new { message = "Đã lấy dữ liệu và lưu", data = response });
+                    message = "Đã lấy dữ liệu và lưu",
+                    data = new
+                    {
+                        id = result.Id,
+                        word = result.Word,
+                        vietnamese = result.Vietnamese
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -57,13 +56,11 @@ namespace API.Controllers
             {
                 var vocabularies = await _adminDashBoardService.GetVocabularies();
 
-                var response = vocabularies.Select(v => new AdminVocabularyResponseDto
+                var response = vocabularies.Select(v => new
                 {
-                    Id = v.Id,
-                    Word = v.Word,
-                    Vietnamese = v.Vietnamese,
-                    MeaningsJson = v.MeaningsJson,
-                    PronunciationsJson = v.PhoneticsJson
+                    id = v.Id,
+                    word = v.Word,
+                    vietnamese = v.Vietnamese
                 }).ToList();
 
                 return Ok(response);
@@ -77,32 +74,20 @@ namespace API.Controllers
         }
 
         [HttpPost("vocabulary")]
-        public async Task<IActionResult> AddVocabulary([FromBody] AddVocabularyRequestDto request)
+        public async Task<IActionResult> AddVocabulary([FromBody] Vocabulary request)
         {
             try
             {
-                var vocabulary = new Vocabulary
-                {
-                    Word = request.Word,
-                    Vietnamese = request.Vietnamese,
-                    MeaningsJson = request.MeaningsJson,
-                    PhoneticsJson = request.PronunciationsJson
-                };
+                var result = await _adminDashBoardService.AddVocabulary(request);
 
-                var result = await _adminDashBoardService.AddVocabulary(vocabulary);
-
-                var response = new AdminVocabularyResponseDto
-                {
-                    Id = result.Id,
-                    Word = result.Word,
-                    Vietnamese = result.Vietnamese,
-                    MeaningsJson = result.MeaningsJson,
-                    PronunciationsJson = result.PhoneticsJson
-                };
-
-                return Ok(new { 
+                return Ok(new {
                     message = "Từ vựng đã được thêm thành công",
-                    data = response 
+                    data = new
+                    {
+                        id = result.Id,
+                        word = result.Word,
+                        vietnamese = result.Vietnamese
+                    }
                 });
             }
             catch (Exception ex)

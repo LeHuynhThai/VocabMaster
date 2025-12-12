@@ -19,7 +19,9 @@ Trang web học tiếng Anh từ vựng dễ dàng.
 - cd Client
 - npm install
 
-3. **Chạy ứng dụng:** Khởi chạy backend và frontend. 
+3. **Set project API as Startup Project**
+
+4. **Chạy ứng dụng:** Khởi chạy backend và frontend. 
 - cd API
 - dotnet run
 - cd Client

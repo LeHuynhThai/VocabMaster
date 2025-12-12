@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Repository.Entities;
-using Repository.DTOs;
 using Service.Interfaces;
 using System.Security.Claims;
 
@@ -52,15 +51,28 @@ namespace API.Controllers
         }
 
         [HttpPost("submit-answer")]
-        public async Task<IActionResult> SubmitQuizAnswer([FromBody] SubmitAnswerRequest request)
+        public async Task<IActionResult> SubmitQuizAnswer([FromBody] Dictionary<string, object> request)
         {
             try
             {
                 var userId = GetUserIdFromClaims();
+
+                if (request == null ||
+                    !request.TryGetValue("quizQuestionId", out var quizQuestionIdObj) ||
+                    quizQuestionIdObj == null ||
+                    !int.TryParse(quizQuestionIdObj.ToString(), out var quizQuestionId) ||
+                    !request.TryGetValue("selectedAnswer", out var selectedAnswerObj) ||
+                    selectedAnswerObj == null ||
+                    string.IsNullOrWhiteSpace(selectedAnswerObj.ToString()))
+                {
+                    return BadRequest(new { message = "Dữ liệu không hợp lệ" });
+                }
+
+                var selectedAnswer = selectedAnswerObj.ToString();
                 var isCorrect = await _quizzQuestionService.SubmitQuizAnswer(
                     userId, 
-                    request.QuizQuestionId, 
-                    request.SelectedAnswer
+                    quizQuestionId, 
+                    selectedAnswer
                 );
 
                 return Ok(new
