@@ -139,3 +139,5 @@ package-lock.json
 build/
 dist/
 coverage/
+
+.dockerignore

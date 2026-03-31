@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
 // URL API backend
-const API_URL = window.location.hostname === 'localhost' ? 'https://localhost:64732' : '';
+const API_URL = process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'https://localhost:64732' : '');
 const TOKEN_KEY = 'vocabmaster_token';
 
 // Create axios instance with default config
