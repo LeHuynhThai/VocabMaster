@@ -1,7 +1,7 @@
 ---
 name: "Frontend Architecture & Conventions"
-description: "Use when working on the Client frontend: enforce the feature-based structure, React + TypeScript conventions, naming rules, services, hooks, and styling described below. Trigger on keywords: frontend, client, features, auth, components, services, React, TypeScript."
-applyTo: "Client/src/**"
+description: "Use when working on the frontend: enforce the feature-based structure, React + TypeScript conventions, naming rules, services, hooks, and styling described below. Trigger on keywords: frontend, client, features, auth, components, services, React, TypeScript."
+applyTo: "frontend/src/**"
 author: "assistant:agent-customization"
 version: "1.0"
 ---
@@ -10,8 +10,8 @@ version: "1.0"
 
 Purpose
 
-- Provide concise, deterministic guidance for working inside the frontend (Client) codebase.
-- Apply to files under `Client/src/**`.
+- Provide concise, deterministic guidance for working inside the frontend codebase.
+- Apply to files under `frontend/src/**`.
 
 Scope
 
@@ -19,11 +19,11 @@ Scope
 
 High-level rules (hard)
 
-- Use TypeScript for all new source files under `Client/src/`.
+- Use TypeScript for all new source files under `frontend/src/`.
 - Follow the feature-based folder layout below; add new features under `src/features/<feature>`.
 - Component and Page file names: PascalCase and match the default export (e.g., `LoginPage.tsx` exports default `LoginPage`).
 - Folder names and feature keys: lowercase (e.g., `auth`, `chat`, `users`).
-- Shared UI components: `Client/src/components/` (reusable primitives only).
+- Shared UI components: `frontend/src/components/` (reusable primitives only).
 - Do NOT add Google OAuth login flows (or other third-party auth flows) unless explicitly requested by the repo owner.
 
 Recommended folder structure (follow this pattern)
@@ -69,7 +69,7 @@ Naming & code conventions
 
 Services / API
 
-- Centralize HTTP logic in `Client/src/services/api.ts` (Axios instance) with:
+- Centralize HTTP logic in `frontend/src/services/api.ts` (Axios instance) with:
   - baseURL coming from env (`REACT_APP_API_URL` for CRA, `VITE_API_URL` for Vite)
   - request/response interceptors for auth token handling
 - Store JWT token in `localStorage` under the key `vocabmaster_token` (this repo uses that key).
@@ -102,7 +102,7 @@ Security & Privacy
 
 Pull Request checklist
 
-- Build succeeds (`npm run build` or `npm run build --prefix Client`).
+- Build succeeds (`npm run build` or `npm run build --prefix frontend`).
 - No ESLint errors and Prettier applied.
 - Manual smoke test of affected pages.
 - Remove debug `console.log` statements before merge.
@@ -134,7 +134,7 @@ Ambiguities / Questions for the repo owner
 
 Notes
 
-- This instruction deliberately scopes to `Client/src/**` via `applyTo` to avoid loading for backend work.
+- This instruction deliberately scopes to `frontend/src/**` via `applyTo` to avoid loading for backend work.
 - The repository currently had Google OAuth removed — this instruction enforces "no third-party OAuth integration" unless explicitly requested.
 
 ---

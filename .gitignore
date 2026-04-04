@@ -91,7 +91,7 @@ bld/
 
 # secrets files
 VocabMaster.API/appsettings.json
-VocabMaster.Client/src/index.tsx
+VocabMaster.frontend/src/index.tsx
 
 # Temporary files
 *.swp
