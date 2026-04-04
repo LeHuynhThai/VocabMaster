@@ -1,5 +1,4 @@
 import React from 'react';
-import './Pagination.css';
 
 interface PaginationProps {
   currentPage: number;
@@ -54,10 +53,13 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
   // Don't render pagination if only 1 page
   if (totalPages <= 1) return null;
 
+  const buttonBaseClass =
+    'flex h-10 min-w-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 transition';
+
   return (
-    <div className="pagination">
-      <button 
-        className="pagination-button" 
+    <div className="my-8 flex items-center justify-center gap-2">
+      <button
+        className={`${buttonBaseClass} disabled:cursor-not-allowed disabled:opacity-50 hover:border-slate-300 hover:bg-slate-50`}
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         aria-label="Previous page"
@@ -68,10 +70,15 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
       {getPageNumbers().map((page, index) => (
         <React.Fragment key={index}>
           {page === '...' ? (
-            <span className="pagination-ellipsis">...</span>
+            <span className="flex h-10 min-w-10 items-center justify-center text-slate-400">...</span>
           ) : (
             <button
-              className={`pagination-button ${currentPage === page ? 'active' : ''}`}
+              className={[
+                buttonBaseClass,
+                currentPage === page
+                  ? 'border-[#6a11cb] bg-[#6a11cb] text-white'
+                  : 'hover:border-slate-300 hover:bg-slate-50',
+              ].join(' ')}
               onClick={() => typeof page === 'number' && onPageChange(page)}
               aria-current={currentPage === page ? 'page' : undefined}
             >
@@ -81,8 +88,8 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
         </React.Fragment>
       ))}
       
-      <button 
-        className="pagination-button" 
+      <button
+        className={`${buttonBaseClass} disabled:cursor-not-allowed disabled:opacity-50 hover:border-slate-300 hover:bg-slate-50`}
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         aria-label="Next page"

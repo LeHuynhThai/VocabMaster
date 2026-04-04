@@ -1,10 +1,8 @@
 import React from 'react';
-import { Container } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { getAvatarText } from '../../utils/helpers';
 import { ROUTES, MESSAGES } from '../../utils/constants';
-import './Header.css';
 
 /**
  * Header component with improved design
@@ -30,35 +28,38 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="app-header">
-      <Container fluid className="header-container">
-        {/* App Logo and Brand */}
-        <div className="header-brand">
-          <Link to={ROUTES.HOME} className="navbar-brand d-flex align-items-center">
-            <div className="logo-container">
+    <header className="fixed inset-x-0 top-0 z-[1030] h-[70px] bg-[linear-gradient(135deg,#6a11cb_0%,#2575fc_100%)] shadow-md">
+      <div className="mx-auto flex h-full w-full items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center">
+          <Link to={ROUTES.HOME} className="group flex items-center gap-3 no-underline">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-2xl text-white transition duration-300 group-hover:rotate-12">
               <i className="bi bi-book-half"></i>
             </div>
-            <span className="brand-text">VocabMaster</span>
+            <span className="text-xl font-bold tracking-[0.03em] text-white sm:text-2xl">VocabMaster</span>
           </Link>
         </div>
-        
-        {/* User Authentication Section */}
-        <div className="header-auth">
+
+        <div className="ml-auto flex items-center justify-end">
           {isAuthenticated ? (
-            <div className="user-section">
-              <div className="user-avatar">
-                <i className="bi bi-person-fill"></i>
+            <div className="flex items-center rounded-full bg-white/15 px-2 py-1.5 text-white transition duration-300 hover:bg-white/25 sm:px-4">
+              <div className="mr-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/30 text-sm font-semibold uppercase text-white shadow-sm">
+                {user?.name ? getAvatarText(user.name) : <i className="bi bi-person-fill"></i>}
               </div>
-              <div className="user-info-horizontal">
-                <span className="user-name-highlight">{user?.name}</span>
+              <div className="flex items-center gap-2 sm:gap-4">
+                <span className="max-w-[120px] truncate text-sm font-semibold text-[#ffd700] sm:max-w-[180px]">
+                  {user?.name}
+                </span>
                 {user?.role === 'Admin' && (
-                  <Link to={ROUTES.ADMIN_VOCABULARY} className="admin-link">
-                    <i className="bi bi-shield-check me-1"></i>
+                  <Link
+                    to={ROUTES.ADMIN_VOCABULARY}
+                    className="hidden items-center gap-1 rounded-md px-2 py-1 text-sm text-white/90 no-underline transition hover:bg-white/10 hover:text-white sm:inline-flex"
+                  >
+                    <i className="bi bi-shield-check"></i>
                     <span>Admin</span>
                   </Link>
                 )}
-                <button 
-                  className="logout-button"
+                <button
+                  className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-500/20"
                   onClick={handleLogout}
                   type="button"
                 >
@@ -67,17 +68,23 @@ const Header: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="auth-buttons">
-              <Link to={ROUTES.LOGIN} className="login-button">
-                <i className="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Link
+                to={ROUTES.LOGIN}
+                className="inline-flex items-center gap-2 rounded-full border border-white/50 px-4 py-2 text-sm font-medium text-white no-underline transition hover:border-white hover:bg-white/10"
+              >
+                <i className="bi bi-box-arrow-in-right"></i> Đăng nhập
               </Link>
-              <Link to={ROUTES.REGISTER} className="register-button">
-                <i className="bi bi-person-plus me-1"></i> Đăng ký
+              <Link
+                to={ROUTES.REGISTER}
+                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-[#6a11cb] no-underline shadow-sm transition hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-md"
+              >
+                <i className="bi bi-person-plus"></i> Đăng ký
               </Link>
             </div>
           )}
         </div>
-      </Container>
+      </div>
     </header>
   );
 };

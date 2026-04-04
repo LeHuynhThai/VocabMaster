@@ -1,6 +1,4 @@
 import React from 'react';
-import { Card as BootstrapCard } from 'react-bootstrap';
-import './Card.css';
 
 /**
  * Card component props
@@ -37,41 +35,39 @@ const Card: React.FC<CardProps> = ({
   shadow = true,
   hover = false,
 }) => {
-  // Determine if the icon is a string (class name) or a component
-  const iconElement = typeof icon === 'string' 
-    ? <i className={`${icon} card-icon`}></i> 
+  const iconElement = typeof icon === 'string'
+    ? <i className={`${icon} text-2xl text-[#6a11cb]`}></i>
     : icon;
 
-  // Build class name
-  const cardClassName = `
-    custom-card 
-    ${shadow ? 'with-shadow' : ''} 
-    ${hover ? 'with-hover' : ''} 
-    ${className}
-  `;
+  const cardClassName = [
+    'overflow-hidden rounded-xl border border-slate-100 bg-white transition-all duration-300',
+    shadow ? 'shadow-[0_4px_20px_rgba(0,0,0,0.08)]' : '',
+    hover ? 'hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(0,0,0,0.12)]' : '',
+    className,
+  ].join(' ');
 
   return (
-    <BootstrapCard className={cardClassName}>
+    <section className={cardClassName}>
       {(title || subtitle) && (
-        <BootstrapCard.Header className="card-custom-header">
-          {icon && <div className="card-icon-container">{iconElement}</div>}
-          <div className="card-header-content">
-            {title && <BootstrapCard.Title>{title}</BootstrapCard.Title>}
-            {subtitle && <BootstrapCard.Subtitle>{subtitle}</BootstrapCard.Subtitle>}
+        <div className="flex items-center border-b border-black/5 bg-white px-6 py-5">
+          {icon && <div className="mr-4 flex items-center justify-center">{iconElement}</div>}
+          <div className="flex-1">
+            {title && <h3 className="mb-1 text-xl font-semibold text-slate-800">{title}</h3>}
+            {subtitle && <p className="m-0 text-sm text-slate-500">{subtitle}</p>}
           </div>
-        </BootstrapCard.Header>
+        </div>
       )}
-      
-      <BootstrapCard.Body>
+
+      <div className="p-6">
         {children}
-      </BootstrapCard.Body>
-      
+      </div>
+
       {footer && (
-        <BootstrapCard.Footer className="card-custom-footer">
+        <div className="border-t border-black/5 bg-slate-50 px-6 py-4">
           {footer}
-        </BootstrapCard.Footer>
+        </div>
       )}
-    </BootstrapCard>
+    </section>
   );
 };
 

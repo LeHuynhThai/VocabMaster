@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import AuthLayout from '../layouts/AuthLayout';
 
 /**
  * Login page component
@@ -46,71 +46,70 @@ const LoginPage: React.FC = () => {
   // Google login removed
 
   return (
-    <Container className="auth-page">
-      <div className="form-container">
-        <Card className="border-0 shadow">
-          <Card.Body className="p-4">
-            <div className="text-center mb-4">
-              <h2 className="fw-bold">Đăng nhập</h2>
-              <p className="text-muted">Nhập thông tin đăng nhập của bạn</p>
-            </div>
-            
-            {successMessage && (
-              <Alert variant="success" className="mb-4">
-                {successMessage}
-              </Alert>
-            )}
-            
-            {error && (
-              <Alert variant="danger" className="mb-4">
-                {error}
-              </Alert>
-            )}
-            
-            <Form onSubmit={handleSubmit}>
-              <Form.Group className="mb-3" controlId="username">
-                <Form.Label>Tên đăng nhập</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Nhập tên đăng nhập"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                />
-              </Form.Group>
-              
-              <Form.Group className="mb-4" controlId="password">
-                <Form.Label>Mật khẩu</Form.Label>
-                <Form.Control
-                  type="password"
-                  placeholder="Nhập mật khẩu"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </Form.Group>
-              
-              <Button 
-                variant="primary" 
-                type="submit" 
-                className="w-100 py-2 mb-3"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
-              </Button>
+    <AuthLayout
+      title="Đăng nhập"
+      subtitle="Nhập thông tin đăng nhập của bạn"
+      footer={
+        <p className="m-0">
+          Chưa có tài khoản?{' '}
+          <Link to="/register" className="font-semibold text-brand-primary no-underline hover:text-[#5a0cb0]">
+            Đăng ký
+          </Link>
+        </p>
+      }
+    >
+      {successMessage && (
+        <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {successMessage}
+        </div>
+      )}
 
-              {/* Google login removed */}
-            </Form>
-            
-            <div className="text-center mt-4">
-              <p className="mb-0">
-                Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
-              </p>
-            </div>
-          </Card.Body>
-        </Card>
-      </div>
-    </Container>
+      {error && (
+        <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="username" className="mb-2 block text-sm font-medium text-slate-700">
+            Tên đăng nhập
+          </label>
+          <input
+            id="username"
+            type="text"
+            placeholder="Nhập tên đăng nhập"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">
+            Mật khẩu
+          </label>
+          <input
+            id="password"
+            type="password"
+            placeholder="Nhập mật khẩu"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="w-full rounded-2xl bg-brand-gradient px-4 py-3 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+        </button>
+      </form>
+    </AuthLayout>
   );
 };
 

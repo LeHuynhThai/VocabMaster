@@ -1,16 +1,19 @@
 import React from 'react';
-import { Button as BootstrapButton, ButtonProps as BSButtonProps, Spinner } from 'react-bootstrap';
 
 /**
  * Extended button props
  */
-export interface ButtonProps extends BSButtonProps {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /** Loading state */
   isLoading?: boolean;
   /** Icon component or class name */
   icon?: React.ReactNode | string;
   /** Icon position */
   iconPosition?: 'left' | 'right';
+  /** Visual variant */
+  variant?: string;
+  /** Button size */
+  size?: 'sm' | 'lg';
 }
 
 /**
@@ -24,6 +27,8 @@ const Button: React.FC<ButtonProps> = ({
   className = '',
   disabled,
   variant,
+  size,
+  type,
   ...props
 }) => {
   const iconElement = typeof icon === 'string'
@@ -34,28 +39,36 @@ const Button: React.FC<ButtonProps> = ({
     const v = (variant as string) || '';
     if (v === 'primary') return 'bg-gradient-to-r from-[#6a11cb] to-[#2575fc] text-white border-none hover:from-[#5a0cb0] hover:to-[#1565e6]';
     if (v === 'outline-primary') return 'border border-[#6a11cb] text-[#6a11cb] hover:bg-[#f5f0ff]';
+    if (v === 'outline-danger') return 'border border-rose-300 text-rose-700 hover:bg-rose-50';
+    if (v === 'outline-info') return 'border border-sky-300 text-sky-700 hover:bg-sky-50';
+    if (v === 'secondary') return 'bg-slate-600 text-white border-none hover:bg-slate-700';
+    if (v === 'success') return 'bg-emerald-600 text-white border-none hover:bg-emerald-700';
     return '';
   })();
 
-  const classes = `inline-flex items-center justify-center px-4 py-2 font-medium rounded-md transition-all relative overflow-hidden min-h-[38px] ${variantClass} ${className}`;
+  const sizeClass = size === 'sm'
+    ? 'min-h-9 px-3 py-2 text-sm'
+    : size === 'lg'
+      ? 'min-h-12 px-5 py-3 text-base'
+      : 'min-h-[38px] px-4 py-2 text-sm';
+
+  const classes = [
+    'inline-flex items-center justify-center rounded-md font-medium transition-all relative overflow-hidden disabled:cursor-not-allowed disabled:opacity-60',
+    sizeClass,
+    variantClass,
+    className,
+  ].join(' ');
 
   return (
-    <BootstrapButton
-      variant={variant}
+    <button
+      type={type ?? 'button'}
       className={classes}
       disabled={isLoading || disabled}
       {...props}
     >
       {isLoading ? (
         <>
-          <Spinner
-            as="span"
-            animation="border"
-            size="sm"
-            role="status"
-            aria-hidden="true"
-            className="mr-2 w-4 h-4"
-          />
+          <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" aria-hidden="true" />
           <span className="sr-only">Đang tải...</span>
         </>
       ) : (
@@ -69,8 +82,8 @@ const Button: React.FC<ButtonProps> = ({
           )}
         </>
       )}
-    </BootstrapButton>
+    </button>
   );
 };
 
-export default Button; 
+export default Button;

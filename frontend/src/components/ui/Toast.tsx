@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Toast as BootstrapToast } from 'react-bootstrap';
-import './Toast.css';
 
 /**
  * Toast component props
@@ -31,6 +29,20 @@ const Toast: React.FC<ToastProps> = ({
 }) => {
   const [visible, setVisible] = useState(show);
 
+  const toneClasses = {
+    success: 'border-emerald-500 bg-emerald-50 text-emerald-900',
+    danger: 'border-rose-500 bg-rose-50 text-rose-900',
+    warning: 'border-amber-500 bg-amber-50 text-amber-900',
+    info: 'border-sky-500 bg-sky-50 text-sky-900',
+  };
+
+  const iconClasses = {
+    success: 'bi bi-check-circle-fill text-emerald-600',
+    danger: 'bi bi-exclamation-circle-fill text-rose-600',
+    warning: 'bi bi-exclamation-triangle-fill text-amber-600',
+    info: 'bi bi-info-circle-fill text-sky-600',
+  };
+
   // Handle show prop changes
   useEffect(() => {
     setVisible(show);
@@ -52,14 +64,14 @@ const Toast: React.FC<ToastProps> = ({
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <i className="bi bi-check-circle-fill me-2"></i>;
+        return <i className={`${iconClasses.success} mr-2`}></i>;
       case 'danger':
-        return <i className="bi bi-exclamation-circle-fill me-2"></i>;
+        return <i className={`${iconClasses.danger} mr-2`}></i>;
       case 'warning':
-        return <i className="bi bi-exclamation-triangle-fill me-2"></i>;
+        return <i className={`${iconClasses.warning} mr-2`}></i>;
       case 'info':
       default:
-        return <i className="bi bi-info-circle-fill me-2"></i>;
+        return <i className={`${iconClasses.info} mr-2`}></i>;
     }
   };
 
@@ -78,25 +90,37 @@ const Toast: React.FC<ToastProps> = ({
     }
   };
 
+  if (!visible) {
+    return null;
+  }
+
   return (
-    <BootstrapToast
-      show={visible}
-      onClose={() => {
-        setVisible(false);
-        onClose();
-      }}
-      className={`custom-toast toast-${type}`}
-      delay={duration}
-      autohide={duration > 0}
+    <div
+      className={[
+        'min-w-[250px] rounded-lg border-l-4 px-4 py-3 shadow-lg',
+        toneClasses[type],
+      ].join(' ')}
+      role="alert"
     >
-      <BootstrapToast.Header closeButton>
-        <strong className="me-auto">
+      <div className="mb-2 flex items-start justify-between gap-4">
+        <strong className="flex items-center text-sm font-semibold">
           {getIcon()}
           {getTitle()}
         </strong>
-      </BootstrapToast.Header>
-      <BootstrapToast.Body>{message}</BootstrapToast.Body>
-    </BootstrapToast>
+        <button
+          type="button"
+          className="text-sm opacity-60 transition hover:opacity-100"
+          onClick={() => {
+            setVisible(false);
+            onClose();
+          }}
+          aria-label="Đóng thông báo"
+        >
+          <i className="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <p className="m-0 text-sm">{message}</p>
+    </div>
   );
 };
 

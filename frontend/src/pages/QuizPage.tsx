@@ -1,46 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import useToast from '../hooks/useToast';
-import quizService, { QuizQuestion, QuizResult, QuizStats, AllCompletedResponse, SubmitAnswerResponse } from '../services/quizService';
-import { MESSAGES, ROUTES } from '../utils/constants';
-import { useQuizStats } from '../contexts/QuizStatsContext';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import './QuizPage.css';
+import { useQuizStats } from '../contexts/QuizStatsContext';
+import useToast from '../hooks/useToast';
+import quizService, { QuizQuestion, QuizStats, SubmitAnswerResponse } from '../services/quizService';
+import { MESSAGES, ROUTES } from '../utils/constants';
 
 const QuizPage: React.FC = () => {
   const { showToast } = useToast();
-  const { refreshStats } = useQuizStats(); // Use the quiz stats context
+  const { refreshStats } = useQuizStats();
   const [question, setQuestion] = useState<QuizQuestion | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
-  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [selectedAnswer, setSelectedAnswer] = useState('');
   const [result, setResult] = useState<SubmitAnswerResponse | null>(null);
-  const [isChecking, setIsChecking] = useState<boolean>(false);
+  const [isChecking, setIsChecking] = useState(false);
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
   const [stats, setStats] = useState<QuizStats | null>(null);
-  const [loadingStats, setLoadingStats] = useState<boolean>(false);
-  const [allCompleted, setAllCompleted] = useState<boolean>(false);
-  const [completionMessage, setCompletionMessage] = useState<string>('');
+  const [allCompleted, setAllCompleted] = useState(false);
+  const [completionMessage, setCompletionMessage] = useState('');
 
-  useEffect(() => {
-    loadQuestion();
-    loadStats();
+  const loadStats = useCallback(async () => {
+    try {
+      const statsData = await quizService.getQuizStats();
+      setStats(statsData);
+    } catch (loadStatsError) {
+      console.error('Error fetching quiz stats:', loadStatsError);
+    }
   }, []);
 
-  // Effect to shuffle the options when the question changes
-  useEffect(() => {
-    if (question) {
-      const options = [
-        question.wrongAnswer1,
-        question.wrongAnswer2,
-        question.wrongAnswer3,
-        question.correctAnswer
-      ];
-      // Shuffle only once and save to state
-      setShuffledOptions(options.sort(() => Math.random() - 0.5));
-    }
-  }, [question]);
-
-  const loadQuestion = async () => {
+  const loadQuestion = useCallback(async () => {
     setLoading(true);
     setError('');
     setSelectedAnswer('');
@@ -50,165 +38,190 @@ const QuizPage: React.FC = () => {
 
     try {
       const response = await quizService.getRandomUncompletedQuestion();
-      
-      // Check if response indicates all questions are completed
+
       if ('allCompleted' in response && response.allCompleted) {
         setAllCompleted(true);
         setCompletionMessage(response.message);
-        // Load fresh stats when all completed
-        await loadStats();
         setQuestion(null);
+        await loadStats();
       } else {
-        // It's a regular question
         setQuestion(response as QuizQuestion);
       }
-    } catch (error: any) {
-      console.error('Error fetching quiz question:', error);
-      // Hiển thị thông báo lỗi cụ thể hơn
-      const errorMessage = error.response?.data?.message || MESSAGES.ERROR_QUIZ_FETCH;
+    } catch (loadQuestionError: any) {
+      console.error('Error fetching quiz question:', loadQuestionError);
+      const errorMessage = loadQuestionError.response?.data?.message || MESSAGES.ERROR_QUIZ_FETCH;
       setError(errorMessage);
       showToast(errorMessage, 'danger');
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadStats, showToast]);
 
-  const loadStats = async () => {
-    setLoadingStats(true);
-    try {
-      const statsData = await quizService.getQuizStats();
-      setStats(statsData);
-    } catch (error) {
-      console.error('Error fetching quiz stats:', error);
-      // Don't show toast because this is just supplementary information
-    } finally {
-      setLoadingStats(false);
+  useEffect(() => {
+    loadQuestion();
+    loadStats();
+  }, [loadQuestion, loadStats]);
+
+  useEffect(() => {
+    if (!question) {
+      setShuffledOptions([]);
+      return;
     }
-  };
+
+    const options = [
+      question.wrongAnswer1,
+      question.wrongAnswer2,
+      question.wrongAnswer3,
+      question.correctAnswer,
+    ];
+
+    setShuffledOptions(options.sort(() => Math.random() - 0.5));
+  }, [question]);
 
   const handleOptionClick = (option: string) => {
-    if (result) return; // Prevent changing answer after result is shown
+    if (result) {
+      return;
+    }
+
     setSelectedAnswer(option);
   };
 
   const handleCheckAnswer = async () => {
-    if (!question || !selectedAnswer || isChecking) return;
+    if (!question || !selectedAnswer || isChecking) {
+      return;
+    }
 
     setIsChecking(true);
 
     try {
-      // Use the new submit answer API
       const resultData = await quizService.submitAnswer(question.id, selectedAnswer);
       setResult(resultData);
-      
-      // Update stats and refresh the stats in sidebar
-      await loadStats(); // Update local stats
-      refreshStats(); // Trigger refresh in the sidebar component
-      
-      // Show toast message
+      await loadStats();
+      refreshStats();
       showToast(resultData.message, resultData.isCorrect ? 'success' : 'danger');
-    } catch (error) {
-      console.error('Error checking answer:', error);
+    } catch (submitError) {
+      console.error('Error checking answer:', submitError);
       showToast('Đã xảy ra lỗi khi kiểm tra câu trả lời', 'danger');
     } finally {
       setIsChecking(false);
     }
   };
 
+  const getOptionClassName = (option: string) => {
+    const baseClass = 'flex min-h-[70px] items-center justify-center rounded-2xl border-2 bg-white p-6 text-center text-lg transition-all duration-200';
+
+    if (!result) {
+      return [
+        baseClass,
+        selectedAnswer === option
+          ? 'border-brand-primary bg-indigo-50 shadow-[0_0_0_2px_rgba(106,17,203,0.1)]'
+          : 'border-slate-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-slate-50 hover:shadow-sm',
+      ].join(' ');
+    }
+
+    if (option === question?.correctAnswer) {
+      return `${baseClass} border-emerald-500 bg-emerald-50 shadow-[0_0_0_2px_rgba(82,196,26,0.1)]`;
+    }
+
+    if (selectedAnswer === option && !result.isCorrect) {
+      return `${baseClass} border-rose-500 bg-rose-50 shadow-[0_0_0_2px_rgba(255,77,79,0.1)]`;
+    }
+
+    return `${baseClass} border-slate-200`;
+  };
+
   const handleNextQuestion = () => {
     loadQuestion();
   };
 
-  const getOptionClassName = (option: string) => {
-    if (!result) {
-      return `quiz-option ${selectedAnswer === option ? 'selected' : ''}`;
-    }
-
-    // For the new API, we need to determine correct answer from the question
-    if (option === question?.correctAnswer) {
-      return 'quiz-option correct';
-    }
-
-    if (selectedAnswer === option && !result.isCorrect) {
-      return 'quiz-option incorrect';
-    }
-
-    return 'quiz-option';
-  };
-
   const formatPercentage = (value: number): string => {
-    return value.toFixed(1) + '%';
+    return `${value.toFixed(1)}%`;
   };
 
   return (
-    <div className="quiz-container">
+    <div className="mx-auto flex min-h-[calc(100vh-240px)] max-w-4xl flex-col justify-center rounded-[1.5rem] bg-white px-6 py-10 shadow-[0_6px_16px_rgba(0,0,0,0.08)] sm:px-8">
       {loading ? (
-        <div className="quiz-loading">
-          <div className="spinner"></div>
-          <p>Đang tải câu hỏi...</p>
+        <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 text-lg text-slate-500">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-brand-primary"></div>
+          <p className="m-0">Đang tải câu hỏi...</p>
         </div>
       ) : error ? (
-        <div className="quiz-error">
+        <div className="flex min-h-[250px] flex-col items-center justify-center gap-6 rounded-2xl border border-rose-200 bg-rose-50 px-6 py-10 text-center text-rose-700 shadow-sm">
           <p>{error}</p>
-          <button className="btn btn-primary" onClick={loadQuestion}>Thử lại</button>
+          <button
+            type="button"
+            className="rounded-xl bg-brand-gradient px-5 py-3 font-medium text-white shadow-sm transition hover:shadow-md"
+            onClick={loadQuestion}
+          >
+            Thử lại
+          </button>
         </div>
       ) : allCompleted ? (
-        <div className="quiz-content">
-          <div className="quiz-header">
-            <h1 className="quiz-title">Trắc nghiệm từ vựng</h1>
+        <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center text-center">
+          <div className="mb-10 w-full border-b border-slate-200 pb-6 text-center">
+            <h1 className="text-4xl font-semibold text-slate-800">Trắc nghiệm từ vựng</h1>
           </div>
-          <div className="quiz-completed">
-            <div className="quiz-completed-icon">
+
+          <div className="flex flex-col items-center justify-center px-2">
+            <div className="mb-6 text-6xl text-amber-400">
               <i className="bi bi-trophy-fill"></i>
             </div>
-            <h2 className="quiz-completed-title">{completionMessage}</h2>
-            
+            <h2 className="mb-6 text-3xl font-semibold text-emerald-600">{completionMessage}</h2>
+
             {stats ? (
-              <div className="quiz-completed-stats">
-                <div className="stats-item">
-                  <span className="stats-label">Tổng số câu hỏi:</span>
-                  <span className="stats-value">{stats.totalQuestions}</span>
-                </div>
-                <div className="stats-item">
-                  <span className="stats-label">Đã hoàn thành:</span>
-                  <span className="stats-value">{stats.completedQuestions}</span>
-                </div>
-                <div className="stats-item">
-                  <span className="stats-label">Câu trả lời đúng:</span>
-                  <span className="stats-value">{stats.correctAnswers}</span>
-                </div>
-                <div className="stats-item">
-                  <span className="stats-label">Tỷ lệ chính xác:</span>
-                  <span className="stats-value">{formatPercentage(stats.accuracyRate)}</span>
+              <div className="mb-8 w-full max-w-xl rounded-[1.25rem] border border-slate-200 bg-[linear-gradient(135deg,#f8f9fa_0%,#e9ecef_100%)] p-6 shadow-[0_4px_15px_rgba(0,0,0,0.1)]">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-300 py-3 last:border-b-0">
+                    <span className="font-medium text-slate-600">Tổng số câu hỏi:</span>
+                    <span className="bg-brand-gradient bg-clip-text text-lg font-bold text-transparent">{stats.totalQuestions}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-slate-300 py-3 last:border-b-0">
+                    <span className="font-medium text-slate-600">Đã hoàn thành:</span>
+                    <span className="bg-brand-gradient bg-clip-text text-lg font-bold text-transparent">{stats.completedQuestions}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-slate-300 py-3 last:border-b-0">
+                    <span className="font-medium text-slate-600">Câu trả lời đúng:</span>
+                    <span className="bg-brand-gradient bg-clip-text text-lg font-bold text-transparent">{stats.correctAnswers}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-3">
+                    <span className="font-medium text-slate-600">Tỷ lệ chính xác:</span>
+                    <span className="bg-brand-gradient bg-clip-text text-lg font-bold text-transparent">{formatPercentage(stats.accuracyRate)}</span>
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="quiz-completed-stats">
-                <div className="stats-item">
-                  <span className="stats-label">Đang tải thống kê...</span>
+              <div className="mb-8 w-full max-w-xl rounded-[1.25rem] border border-slate-200 bg-slate-50 p-6 shadow-sm">
+                <div className="flex items-center justify-between py-3">
+                  <span className="font-medium text-slate-600">Đang tải thống kê...</span>
                 </div>
               </div>
             )}
-            
-            <div className="quiz-completed-actions">
-              <Link to={ROUTES.QUIZ_STATS} className="btn btn-primary">
-                <i className="bi bi-bar-chart-fill me-2"></i>
+
+            <div className="mt-2">
+              <Link
+                to={ROUTES.QUIZ_STATS}
+                className="inline-flex items-center rounded-xl bg-brand-gradient px-5 py-3 font-medium text-white no-underline shadow-sm transition hover:shadow-md"
+              >
+                <i className="bi bi-bar-chart-fill mr-2"></i>
                 Xem thống kê chi tiết
               </Link>
             </div>
           </div>
         </div>
       ) : question ? (
-        <div className="quiz-content">
-          <div className="quiz-header">
-            <h1 className="quiz-title">Trắc nghiệm từ vựng</h1>
+        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center">
+          <div className="mb-10 border-b border-slate-200 pb-6 text-center">
+            <h1 className="text-4xl font-semibold text-slate-800">Trắc nghiệm từ vựng</h1>
           </div>
-          <div className="quiz-question">
-            <div className="quiz-word-container">
-              <span className="quiz-word">{question.word}</span>
+
+          <div className="w-full rounded-2xl bg-slate-50 p-6">
+            <div className="mb-10 rounded-2xl bg-white p-8 text-center shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
+              <span className="inline-block border-b-[3px] border-brand-primary px-8 py-2 text-4xl font-medium tracking-[0.5px] text-slate-900 sm:text-5xl">
+                {question.word}
+              </span>
             </div>
 
-            <div className="quiz-options">
+            <div className="mb-8 grid gap-4 md:grid-cols-2">
               {shuffledOptions.map((option, index) => (
                 <div
                   key={index}
@@ -221,24 +234,37 @@ const QuizPage: React.FC = () => {
             </div>
 
             {result && (
-              <div className={`quiz-feedback ${result.isCorrect ? 'correct' : 'incorrect'}`}>
-                {result.message}
-                {!result.isCorrect && <div><strong>Đáp án đúng:</strong> {question?.correctAnswer}</div>}
+              <div
+                className={[
+                  'mb-6 rounded-2xl border px-5 py-4 text-center text-lg shadow-sm',
+                  result.isCorrect
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
+                    : 'border-rose-200 bg-rose-50 text-rose-600',
+                ].join(' ')}
+              >
+                <div>{result.message}</div>
+                {!result.isCorrect && (
+                  <div className="mt-2">
+                    <strong>Đáp án đúng:</strong> {question.correctAnswer}
+                  </div>
+                )}
               </div>
             )}
 
-            <div className="quiz-controls">
+            <div className="mt-6 flex justify-center">
               {!result ? (
-                <button 
-                  className="btn btn-primary" 
+                <button
+                  type="button"
+                  className="min-w-[180px] rounded-xl bg-brand-gradient px-6 py-3 text-lg font-medium text-white shadow-[0_4px_8px_rgba(0,0,0,0.1)] transition hover:-translate-y-0.5 hover:shadow-[0_6px_12px_rgba(0,0,0,0.15)] disabled:cursor-not-allowed disabled:opacity-70"
                   onClick={handleCheckAnswer}
                   disabled={!selectedAnswer || isChecking}
                 >
                   {isChecking ? 'Đang kiểm tra...' : 'Kiểm tra'}
                 </button>
               ) : (
-                <button 
-                  className="btn btn-primary" 
+                <button
+                  type="button"
+                  className="min-w-[180px] rounded-xl bg-brand-gradient px-6 py-3 text-lg font-medium text-white shadow-[0_4px_8px_rgba(0,0,0,0.1)] transition hover:-translate-y-0.5 hover:shadow-[0_6px_12px_rgba(0,0,0,0.15)]"
                   onClick={handleNextQuestion}
                 >
                   Câu hỏi tiếp theo
@@ -248,13 +274,19 @@ const QuizPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="quiz-error">
+        <div className="flex min-h-[250px] flex-col items-center justify-center gap-6 rounded-2xl border border-rose-200 bg-rose-50 px-6 py-10 text-center text-rose-700 shadow-sm">
           <p>Không có câu hỏi nào.</p>
-          <button className="btn btn-primary" onClick={loadQuestion}>Thử lại</button>
+          <button
+            type="button"
+            className="rounded-xl bg-brand-gradient px-5 py-3 font-medium text-white shadow-sm transition hover:shadow-md"
+            onClick={loadQuestion}
+          >
+            Thử lại
+          </button>
         </div>
       )}
     </div>
   );
 };
 
-export default QuizPage; 
+export default QuizPage;

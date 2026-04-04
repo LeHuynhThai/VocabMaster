@@ -1,26 +1,10 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Button, Spinner } from 'react-bootstrap';
-import { useToast } from '../contexts/ToastContext';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Vocabulary, Pronunciation, Meaning } from '../types';
+import { useToast } from '../contexts/ToastContext';
+import VocabularyDetailCard from '../features/vocabulary/components/VocabularyDetailCard';
 import vocabularyService from '../services/vocabularyService';
-import './WordGeneratorPage.css';
+import { Vocabulary } from '../types';
 import { ROUTES } from '../utils/constants';
-
-const getPartOfSpeechClass = (partOfSpeech: string): string => {
-  const pos = partOfSpeech.toLowerCase();
-  
-  if (pos.includes('noun')) return 'pos-noun';
-  if (pos.includes('verb')) return 'pos-verb';
-  if (pos.includes('adjective')) return 'pos-adjective';
-  if (pos.includes('adverb')) return 'pos-adverb';
-  if (pos.includes('pronoun')) return 'pos-pronoun';
-  if (pos.includes('preposition')) return 'pos-preposition';
-  if (pos.includes('conjunction')) return 'pos-conjunction';
-  if (pos.includes('interjection')) return 'pos-interjection';
-  
-  return '';
-};
 
 const WordGeneratorPage: React.FC = () => {
   const [word, setWord] = useState<Vocabulary | null>(null);
@@ -32,38 +16,32 @@ const WordGeneratorPage: React.FC = () => {
   const [allLearned, setAllLearned] = useState(false);
   const [allLearnedMessage, setAllLearnedMessage] = useState('');
 
-  // Lấy từ vựng từ URL query parameter
   const getWordFromUrl = useCallback(() => {
     const queryParams = new URLSearchParams(location.search);
-    const wordParam = queryParams.get('word');
-    return wordParam;
+    return queryParams.get('word');
   }, [location.search]);
 
   const fetchRandomWord = useCallback(async () => {
     setLoading(true);
     try {
       const data = await vocabularyService.getRandomWord();
-      console.log('Random Word Data:', data);
-      
-      // Kiểm tra nếu tất cả từ vựng đã được học hết
+
       if (data.allLearned) {
         setAllLearned(true);
         setAllLearnedMessage(data.message || 'Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống.');
         setWord(null);
       } else {
-        console.log('Vietnamese translation:', data.vietnamese);
         setWord(data);
         setAllLearned(false);
         setAllLearnedMessage('');
       }
-      
-      // Xóa tham số từ URL khi hiển thị từ ngẫu nhiên
+
       navigate(ROUTES.WORD_GENERATOR, { replace: true });
     } catch (error) {
       console.error('Error fetching random word:', error);
       addToast({
         type: 'error',
-        message: 'Bạn đã học hết tất cả từ vựng trong hệ thống.'
+        message: 'Bạn đã học hết tất cả từ vựng trong hệ thống.',
       });
     } finally {
       setLoading(false);
@@ -74,62 +52,58 @@ const WordGeneratorPage: React.FC = () => {
     setLoading(true);
     try {
       const data = await vocabularyService.getNewRandomWord();
-      console.log('New Random Word Data:', data);
-      
-      // Kiểm tra nếu tất cả từ vựng đã được học hết
+
       if (data.allLearned) {
         setAllLearned(true);
         setAllLearnedMessage(data.message || 'Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống.');
         setWord(null);
       } else {
-        console.log('Vietnamese translation:', data.vietnamese);
         setWord(data);
         setAllLearned(false);
         setAllLearnedMessage('');
       }
-      
-      // Xóa tham số từ URL khi hiển thị từ ngẫu nhiên mới
+
       navigate(ROUTES.WORD_GENERATOR, { replace: true });
     } catch (error) {
       console.error('Error fetching new random word:', error);
       addToast({
         type: 'error',
-        message: 'Bạn đã học hết tất cả từ vựng trong hệ thống.'
+        message: 'Bạn đã học hết tất cả từ vựng trong hệ thống.',
       });
     } finally {
       setLoading(false);
     }
   }, [addToast, navigate]);
 
-
-
   const handleSaveWord = async (e?: React.MouseEvent) => {
-    if (e) e.preventDefault();
-    if (!word || word.isLearned || saving) return;
-    
+    if (e) {
+      e.preventDefault();
+    }
+    if (!word || word.isLearned || saving) {
+      return;
+    }
+
     setSaving(true);
     try {
       const success = await vocabularyService.markAsLearned(word.word);
-      
+
       if (success) {
-        const updatedWord = { ...word, isLearned: true };
-        setWord(updatedWord);
-        
+        setWord({ ...word, isLearned: true });
         addToast({
           type: 'success',
-          message: `Đã lưu từ "${word.word}" vào danh sách từ vựng đã học.`
+          message: `Đã lưu từ "${word.word}" vào danh sách từ vựng đã học.`,
         });
       } else {
         addToast({
           type: 'error',
-          message: 'Không thể lưu từ vựng. Vui lòng thử lại sau.'
+          message: 'Không thể lưu từ vựng. Vui lòng thử lại sau.',
         });
       }
     } catch (error) {
       console.error('Error saving word:', error);
       addToast({
         type: 'error',
-        message: 'Không thể lưu từ vựng. Vui lòng thử lại sau.'
+        message: 'Không thể lưu từ vựng. Vui lòng thử lại sau.',
       });
     } finally {
       setSaving(false);
@@ -137,11 +111,13 @@ const WordGeneratorPage: React.FC = () => {
   };
 
   const playAudio = (audioUrl: string) => {
-    if (!audioUrl) return;
-    
+    if (!audioUrl) {
+      return;
+    }
+
     try {
       const audio = new Audio(audioUrl);
-      audio.play().catch(error => {
+      audio.play().catch((error) => {
         console.error('Error playing audio:', error);
       });
     } catch (error) {
@@ -151,14 +127,12 @@ const WordGeneratorPage: React.FC = () => {
 
   useEffect(() => {
     const wordFromUrl = getWordFromUrl();
-    
+
     if (wordFromUrl) {
-      // URL word lookup functionality removed - lookup method no longer available
       addToast({
         type: 'info',
-        message: 'Chức năng tìm kiếm từ URL tạm thời không khả dụng'
+        message: 'Chức năng tìm kiếm từ URL tạm thời không khả dụng',
       });
-      // Clear URL parameter and fetch random word instead
       navigate(ROUTES.WORD_GENERATOR, { replace: true });
       fetchRandomWord();
     } else {
@@ -167,149 +141,78 @@ const WordGeneratorPage: React.FC = () => {
   }, [getWordFromUrl, fetchRandomWord, addToast, navigate]);
 
   return (
-    <Container className="py-4 word-generator-page">
-
+    <div className="mx-auto max-w-5xl px-4 py-8">
       {loading ? (
-        <div className="text-center my-5">
-          <Spinner animation="border" role="status" variant="primary">
-            <span className="visually-hidden">Đang tải...</span>
-          </Spinner>
-          <p className="mt-3">Đang tải từ vựng...</p>
+        <div className="my-10 flex flex-col items-center justify-center gap-3 text-slate-500">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-brand-primary"></div>
+          <p className="m-0">Đang tải từ vựng...</p>
         </div>
       ) : allLearned ? (
-        <div className="text-center my-5 all-learned-container">
-          <div className="all-learned-message">
-            <i className="bi bi-trophy-fill text-warning mb-3" style={{ fontSize: '3rem' }}></i>
-            <h3 className="mb-4">{allLearnedMessage}</h3>
-            <p>Bạn đã hoàn thành việc học tất cả từ vựng có trong hệ thống.</p>
-            <p>Hãy tiếp tục ôn tập các từ đã học để củng cố kiến thức!</p>
-            <Button 
-              variant="primary" 
-              className="mt-3"
-              onClick={() => navigate(ROUTES.LEARNED_WORDS)}
-            >
-              <i className="bi bi-journal-text me-2"></i>
-              Xem danh sách từ đã học
-            </Button>
-          </div>
+        <div className="mx-auto my-8 flex max-w-2xl flex-col items-center rounded-[1.75rem] bg-slate-50 p-8 text-center shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+          <i className="bi bi-trophy-fill mb-3 text-5xl text-amber-400"></i>
+          <h3 className="mb-4 text-2xl font-semibold text-emerald-600">{allLearnedMessage}</h3>
+          <p className="mb-2 text-slate-600">Bạn đã hoàn thành việc học tất cả từ vựng có trong hệ thống.</p>
+          <p className="mb-0 text-slate-600">Hãy tiếp tục ôn tập các từ đã học để củng cố kiến thức.</p>
+          <button
+            type="button"
+            className="mt-4 inline-flex items-center rounded-xl bg-brand-gradient px-4 py-3 font-medium text-white shadow-sm transition hover:shadow-md"
+            onClick={() => navigate(ROUTES.LEARNED_WORDS)}
+          >
+            <i className="bi bi-journal-text mr-2"></i>
+            Xem danh sách từ đã học
+          </button>
         </div>
       ) : word ? (
-        <div className="word-container">
-          <div className="word-header">
-            <h2 className="word-title">{word.word}</h2>
-            
-            {word.vietnamese && (
-              <div className="vietnamese-translation">
-                <h3 className="vietnamese-title">Nghĩa tiếng Việt:</h3>
-                <p className="vietnamese-text">{word.vietnamese}</p>
-              </div>
-            )}
-            
-            {!word.vietnamese && (
-              <div className="vietnamese-translation vietnamese-missing">
-                <h3 className="vietnamese-title">Nghĩa tiếng Việt:</h3>
-                <p className="vietnamese-text">Chưa có bản dịch</p>
-              </div>
-            )}
+        <VocabularyDetailCard
+          vocabulary={word}
+          onPlayAudio={playAudio}
+          actions={
+            <>
+              <button
+                type="button"
+                className="inline-flex items-center rounded-xl bg-brand-gradient px-4 py-3 font-medium text-white shadow-sm transition hover:shadow-md disabled:opacity-70"
+                onClick={fetchNewRandomWord}
+                disabled={loading}
+              >
+                <i className="bi bi-shuffle mr-1"></i>
+                Từ vựng mới
+              </button>
 
-            {word.pronunciations && word.pronunciations.length > 0 && (
-              <div className="pronunciation-container">
-                {word.pronunciations.map((pronunciation: Pronunciation, index: number) => (
-                  <div key={index} className="pronunciation-item">
-                    {pronunciation.text && (
-                      <span className="pronunciation-text">{pronunciation.text}</span>
-                    )}
-                    {pronunciation.audio && (
-                      <Button 
-                        variant="link" 
-                        className="pronunciation-button"
-                        onClick={() => playAudio(pronunciation.audio)}
-                      >
-                        <i className="bi bi-play-circle-fill"></i>
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-            </div>
-
-          {word.meanings && word.meanings.length > 0 && (
-            <div className="meanings-container">
-              {word.meanings.map((meaning: Meaning, index: number) => (
-                <div key={index} className="meaning-item">
-                  <div className="part-of-speech-container">
-                    <span className={`part-of-speech ${getPartOfSpeechClass(meaning.partOfSpeech)}`}>
-                      {meaning.partOfSpeech}
-                    </span>
-                  </div>
-                  
-                  {meaning.definitions.map((definition, defIndex) => (
-                    <div key={defIndex} className="definition-item">
-                      <p className="definition-text">
-                        <span className="definition-number">{defIndex + 1}.</span> {definition.text}
-                      </p>
-                      
-                      {definition.example && (
-                        <p className="definition-example">
-                          <i className="bi bi-quote"></i> {definition.example}
-                        </p>
-                      )}
-                      
-                      {definition.synonyms && definition.synonyms.length > 0 && (
-                        <div className="synonyms">
-                          <span className="synonyms-label">Từ đồng nghĩa:</span>
-                          <span className="synonyms-list">{definition.synonyms.join(', ')}</span>
-                        </div>
-                      )}
-                      
-                      {definition.antonyms && definition.antonyms.length > 0 && (
-                        <div className="antonyms">
-                          <span className="antonyms-label">Từ trái nghĩa:</span>
-                          <span className="antonyms-list">{definition.antonyms.join(', ')}</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="word-actions mt-4">
-            <Button 
-              variant="primary" 
-              onClick={fetchNewRandomWord}
-              disabled={loading}
-              className="me-2"
-            >
-              <i className="bi bi-shuffle me-1"></i> Từ vựng mới
-            </Button>
-            
-            <Button 
-              variant={word.isLearned ? "success" : "outline-success"} 
-              onClick={handleSaveWord}
-              disabled={word.isLearned || loading || saving}
-            >
-              {saving ? (
-                <Spinner animation="border" size="sm" className="me-1" />
-              ) : (
-                <i className={`bi ${word.isLearned ? "bi-check-circle-fill" : "bi-plus-circle"} me-1`}></i>
-              )}
-              {word.isLearned ? 'Đã lưu' : saving ? 'Đang lưu...' : 'Lưu từ này'}
-            </Button>
-          </div>
-        </div>
+              <button
+                type="button"
+                className={[
+                  'inline-flex items-center rounded-xl px-4 py-3 font-medium shadow-sm transition',
+                  word.isLearned
+                    ? 'cursor-not-allowed bg-emerald-600 text-white opacity-80'
+                    : 'border border-emerald-600 bg-white text-emerald-700 hover:bg-emerald-50',
+                ].join(' ')}
+                onClick={handleSaveWord}
+                disabled={word.isLearned || loading || saving}
+              >
+                {saving ? (
+                  <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent"></span>
+                ) : (
+                  <i className={`bi ${word.isLearned ? 'bi-check-circle-fill' : 'bi-plus-circle'} mr-1`}></i>
+                )}
+                {word.isLearned ? 'Đã lưu' : saving ? 'Đang lưu...' : 'Lưu từ này'}
+              </button>
+            </>
+          }
+        />
       ) : (
-        <div className="text-center my-5">
+        <div className="my-10 text-center text-slate-600">
           <p>Không tìm thấy từ vựng. Vui lòng thử lại.</p>
-          <Button variant="primary" onClick={fetchRandomWord}>
+          <button
+            type="button"
+            className="inline-flex items-center rounded-xl bg-brand-gradient px-4 py-3 font-medium text-white shadow-sm transition hover:shadow-md"
+            onClick={fetchRandomWord}
+          >
             Tải từ vựng ngẫu nhiên
-          </Button>
+          </button>
         </div>
       )}
-    </Container>
+    </div>
   );
 };
 
-export default WordGeneratorPage; 
+export default WordGeneratorPage;

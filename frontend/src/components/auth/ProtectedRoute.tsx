@@ -34,9 +34,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ element }) => {
   // when loading and not done yet, show spinner
   if ((isLoading || !initialCheckDone) && showLoader) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-slate-500" role="status" aria-live="polite">
+          <span className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-brand-primary"></span>
+          <span className="sr-only">Loading...</span>
         </div>
       </div>
     );

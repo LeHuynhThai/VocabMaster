@@ -1,7 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import authService from '../services/authService';
 import { User, LoginRequest, RegisterRequest } from '../types';
-import useToast from '../hooks/useToast';
 
 interface AuthContextType {
   user: User | null;
@@ -29,8 +28,6 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [authError, setAuthError] = useState<boolean>(false);
-  const { showToast } = useToast();
 
   // Kiểm tra xem có token trong localStorage không
   const checkAuthToken = () => {
@@ -63,21 +60,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 setUser(refreshedUser);
                 saveAuthState(true);
               } else {
-                setAuthError(true);
                 saveAuthState(false);
               }
             } else {
-              setAuthError(true);
               saveAuthState(false);
             }
           }
         } else {
-          setAuthError(true);
           saveAuthState(false);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        setAuthError(true);
         saveAuthState(false);
       } finally {
         setIsLoading(false);
@@ -92,8 +85,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const loggedInUser = await authService.login(credentials);
       setUser(loggedInUser);
-      // reset auth error when login is successful
-      setAuthError(false);
       // save auth state
       saveAuthState(true);
     } catch (error) {

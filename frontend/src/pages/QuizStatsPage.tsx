@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Card, Row, Col, ProgressBar, ListGroup, Alert, Spinner } from 'react-bootstrap';
+import React, { useCallback, useState, useEffect } from 'react';
 import quizService, { QuizStats, CompletedQuiz } from '../services/quizService';
 import useToast from '../hooks/useToast';
 import Pagination from '../components/ui/Pagination';
-import './QuizStatsPage.css';
 
 const QuizStatsPage: React.FC = () => {
   const [stats, setStats] = useState<QuizStats | null>(null);
@@ -14,11 +12,7 @@ const QuizStatsPage: React.FC = () => {
   const [error, setError] = useState<string>('');
   const { showToast } = useToast();
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError('');
     
@@ -44,7 +38,11 @@ const QuizStatsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const formatPercentage = (value: number): string => {
     return value.toFixed(1) + '%';
@@ -78,147 +76,132 @@ const QuizStatsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Container className="py-4">
-        <div className="text-center py-5">
-          <Spinner animation="border" role="status" variant="primary">
-            <span className="visually-hidden">Đang tải...</span>
-          </Spinner>
-          <p className="mt-3">Đang tải thống kê...</p>
+      <section className="mx-auto max-w-6xl px-4 py-8 lg:ml-[250px]">
+        <div className="flex flex-col items-center justify-center gap-3 py-10 text-slate-500">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-brand-primary"></div>
+          <span className="sr-only">Đang tải...</span>
+          <p>Đang tải thống kê...</p>
         </div>
-      </Container>
+      </section>
     );
   }
 
   if (error) {
     return (
-      <Container className="py-4">
-        <Alert variant="danger">
-          <Alert.Heading>Lỗi</Alert.Heading>
+      <section className="mx-auto max-w-6xl px-4 py-8 lg:ml-[250px]">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-700">
+          <h2 className="text-xl font-semibold">Lỗi</h2>
           <p>{error}</p>
-          <button className="btn btn-outline-danger" onClick={loadData}>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-xl border border-rose-300 px-4 py-2 text-sm font-medium transition hover:bg-rose-100"
+            onClick={loadData}
+          >
             Thử lại
           </button>
-        </Alert>
-      </Container>
+        </div>
+      </section>
     );
   }
 
   return (
-    <Container className="py-4 quiz-stats-page">
+    <section className="min-h-[calc(100vh-80px)] max-w-6xl bg-transparent px-4 py-8 lg:ml-[250px] lg:border-l lg:border-slate-200 lg:bg-[#f8f9fa]">
       <div className="mb-4">
-        <h1 className="page-title">Thống kê trắc nghiệm</h1>
-        <p className="text-muted">Theo dõi tiến độ học tập của bạn</p>
+        <h1 className="mb-2 text-3xl font-semibold text-slate-800">Thống kê trắc nghiệm</h1>
+        <p className="text-slate-500">Theo dõi tiến độ học tập của bạn</p>
       </div>
 
-      {/* Summary Cards */}
-      <Row className="mb-4">
-        <Col md={3} className="mb-3">
-          <Card className="stats-card">
-            <Card.Body className="text-center">
-              <div className="stats-number">{stats?.totalQuestions || 0}</div>
-              <div className="stats-label">Tổng số câu hỏi</div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3} className="mb-3">
-          <Card className="stats-card">
-            <Card.Body className="text-center">
-              <div className="stats-number">{stats?.completedQuestions || 0}</div>
-              <div className="stats-label">Đã hoàn thành</div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3} className="mb-3">
-          <Card className="stats-card">
-            <Card.Body className="text-center">
-              <div className="stats-number">{stats?.correctAnswers || 0}</div>
-              <div className="stats-label">Trả lời đúng</div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3} className="mb-3">
-          <Card className="stats-card">
-            <Card.Body className="text-center">
-              <div className="stats-number">{formatPercentage(stats?.accuracyRate || 0)}</div>
-              <div className="stats-label">Tỷ lệ chính xác</div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      <div className="mb-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl bg-white p-6 text-center shadow-[0_2px_10px_rgba(0,0,0,0.1)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
+              <div className="mb-2 text-4xl font-bold text-[#6f42c1]">{stats?.totalQuestions || 0}</div>
+              <div className="text-sm font-medium text-slate-500">Tổng số câu hỏi</div>
+        </div>
+        <div className="rounded-2xl bg-white p-6 text-center shadow-[0_2px_10px_rgba(0,0,0,0.1)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
+              <div className="mb-2 text-4xl font-bold text-[#6f42c1]">{stats?.completedQuestions || 0}</div>
+              <div className="text-sm font-medium text-slate-500">Đã hoàn thành</div>
+        </div>
+        <div className="rounded-2xl bg-white p-6 text-center shadow-[0_2px_10px_rgba(0,0,0,0.1)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
+              <div className="mb-2 text-4xl font-bold text-[#6f42c1]">{stats?.correctAnswers || 0}</div>
+              <div className="text-sm font-medium text-slate-500">Trả lời đúng</div>
+        </div>
+        <div className="rounded-2xl bg-white p-6 text-center shadow-[0_2px_10px_rgba(0,0,0,0.1)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
+              <div className="mb-2 text-4xl font-bold text-[#6f42c1]">{formatPercentage(stats?.accuracyRate || 0)}</div>
+              <div className="text-sm font-medium text-slate-500">Tỷ lệ chính xác</div>
+        </div>
+      </div>
 
-      {/* Progress Section */}
-      <Card className="mb-4">
-        <Card.Body>
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <h5 className="mb-0">Tiến độ hoàn thành</h5>
-            <span className="text-muted">
+      <div className="mb-4 rounded-2xl bg-white p-6 shadow-[0_2px_10px_rgba(0,0,0,0.1)]">
+        <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-lg font-semibold text-slate-900">Tiến độ hoàn thành</h2>
+          <span className="text-sm text-slate-500">
               {formatPercentage(getCompletionPercentage())} ({stats?.completedQuestions || 0}/{stats?.totalQuestions || 0})
-            </span>
-          </div>
-          <ProgressBar 
-            now={getCompletionPercentage()} 
-            variant="primary" 
-            className="progress-custom"
-          />
-        </Card.Body>
-      </Card>
+          </span>
+        </div>
+        <div className="h-3 overflow-hidden rounded-full bg-slate-200">
+          <div
+            className="h-full rounded-full bg-brand-gradient transition-all duration-300"
+            style={{ width: `${getCompletionPercentage()}%` }}
+          ></div>
+        </div>
+      </div>
 
-      {/* Correct Answers List */}
-      <Card>
-        <Card.Body>
-          <div className="d-flex justify-content-between align-items-center mb-3">
+      <div className="rounded-2xl bg-white p-6 shadow-[0_2px_10px_rgba(0,0,0,0.1)]">
+        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h5 className="mb-0">Danh sách các câu đã hoàn thành</h5>
+            <h2 className="text-lg font-semibold text-slate-900">Danh sách các câu đã hoàn thành</h2>
               {allCompletedAnswers.length > 0 && (
-                <small className="text-muted">
+              <p className="mt-1 text-sm text-slate-500">
                   Hiển thị {startIndex + 1}-{Math.min(endIndex, allCompletedAnswers.length)} trong tổng số {allCompletedAnswers.length} câu
-                </small>
+              </p>
               )}
             </div>
-            <button 
-              className="btn btn-outline-primary btn-sm" 
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-xl border border-brand-primary px-4 py-2.5 text-sm font-medium text-brand-primary transition hover:bg-brand-primary/5 disabled:cursor-not-allowed disabled:opacity-60"
               onClick={loadData}
               disabled={loading}
             >
-              <i className="bi bi-arrow-clockwise me-1"></i>
+            <i className="bi bi-arrow-clockwise mr-1"></i>
               Làm mới
-            </button>
+          </button>
           </div>
-          
+
           {allCompletedAnswers.length === 0 ? (
-            <div className="text-center py-4">
-              <i className="bi bi-inbox display-4 text-muted mb-3"></i>
-              <p className="text-muted">Bạn chưa hoàn thành câu hỏi nào.</p>
+          <div className="py-8 text-center">
+              <i className="bi bi-inbox mb-3 block text-6xl text-slate-400"></i>
+            <p className="text-slate-500">Bạn chưa hoàn thành câu hỏi nào.</p>
             </div>
           ) : (
             <>
-              <ListGroup variant="flush">
+            <div className="divide-y divide-slate-200">
                 {currentPageAnswers.map((answer, index) => (
-                  <ListGroup.Item key={answer.id} className="correct-answer-item">
-                    <div className="d-flex justify-content-between align-items-start">
-                      <div className="flex-grow-1">
-                        <div className="d-flex align-items-center mb-1">
-                          <span className={`badge me-2 ${answer.wasCorrect ? 'bg-success' : 'bg-danger'}`}>
+                <div key={answer.id} className="flex flex-col gap-3 px-0 py-4 transition hover:bg-slate-50 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center gap-2">
+                      <span
+                        className={[
+                          'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
+                          answer.wasCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800',
+                        ].join(' ')}
+                      >
                             #{startIndex + index + 1}
                           </span>
-                          <strong className="word-text">{answer.word}</strong>
+                          <strong className="text-[1.1rem] text-slate-800">{answer.word}</strong>
                         </div>
-                        <div className={`answer-text ${answer.wasCorrect ? 'text-success' : 'text-danger'}`}>
-                          <i className={`bi me-1 ${answer.wasCorrect ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}`}></i>
+                    <div className={`mt-1 font-medium ${answer.wasCorrect ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      <i className={`bi mr-1 ${answer.wasCorrect ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}`}></i>
                           {answer.correctAnswer}
                         </div>
                       </div>
-                      <div className="text-muted small">
+                  <div className="text-sm text-slate-500">
                         {formatDate(answer.completedAt)}
                       </div>
-                    </div>
-                  </ListGroup.Item>
+                </div>
                 ))}
-              </ListGroup>
-              
-              {/* Pagination */}
+            </div>
+
               {totalPages > 1 && (
-                <div className="d-flex justify-content-center mt-4">
+            <div className="mt-4 flex justify-center">
                   <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
@@ -228,9 +211,8 @@ const QuizStatsPage: React.FC = () => {
               )}
             </>
           )}
-        </Card.Body>
-      </Card>
-    </Container>
+      </div>
+    </section>
   );
 };
 

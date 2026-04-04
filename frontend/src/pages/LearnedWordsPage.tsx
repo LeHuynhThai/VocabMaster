@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Card, Table, Button, Alert, Spinner, Form, InputGroup } from 'react-bootstrap';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import vocabularyService, { LearnedWord } from '../services/vocabularyService';
 import { useAuth } from '../contexts/AuthContext';
 import Pagination from '../components/ui/Pagination';
 import useToast from '../hooks/useToast';
-import './LearnedWordsPage.css';
 
 /**
  * Format date to local format
@@ -37,7 +35,6 @@ const LearnedWordsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10); // Fixed page size of 10
-  const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -46,7 +43,7 @@ const LearnedWordsPage: React.FC = () => {
   /**
    * Fetch paginated learned words for the current user
    */
-  const fetchLearnedWords = async (page: number = currentPage) => {
+  const fetchLearnedWords = useCallback(async (page: number) => {
     if (!isAuthenticated) {
       return; // do not call API if not authenticated
     }
@@ -64,7 +61,6 @@ const LearnedWordsPage: React.FC = () => {
 
       setWords(items);
       setFilteredWords(items);
-      setTotalItems(totalItemsLocal);
       setTotalPages(totalPagesLocal);
       setCurrentPage(page);
     } catch (err) {
@@ -73,7 +69,7 @@ const LearnedWordsPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthenticated, pageSize]);
 
   /**
    * Remove a word from the learned words list
@@ -112,14 +108,12 @@ const LearnedWordsPage: React.FC = () => {
     
     if (!query.trim()) {
       setFilteredWords(words);
-      setTotalItems(words.length);
       setTotalPages(Math.max(1, Math.ceil(words.length / pageSize)));
     } else {
       const filtered = words.filter(word => 
         word.word.toLowerCase().includes(query.toLowerCase())
       );
       setFilteredWords(filtered);
-      setTotalItems(filtered.length);
       setTotalPages(Math.max(1, Math.ceil(filtered.length / pageSize)));
     }
     
@@ -159,7 +153,7 @@ const LearnedWordsPage: React.FC = () => {
     if (isAuthenticated) {
       fetchLearnedWords(1);
     }
-  }, [isAuthenticated]);
+  }, [fetchLearnedWords, isAuthenticated]);
 
   // Reload data when page becomes visible
   useEffect(() => {
@@ -174,111 +168,121 @@ const LearnedWordsPage: React.FC = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isAuthenticated, currentPage]);
+  }, [currentPage, fetchLearnedWords, isAuthenticated]);
 
   // retry loading if there was an error
   const handleRetry = () => {
     fetchLearnedWords(currentPage);
   };
 
+  const actionButtonClass =
+    'inline-flex h-9 w-9 items-center justify-center rounded-lg border transition disabled:cursor-not-allowed disabled:opacity-60';
+
   return (
-    <Container className="py-4 learned-words-page">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <Button 
-          variant="outline-primary" 
-          onClick={() => fetchLearnedWords(currentPage)} 
+    <section className="mx-auto max-w-5xl px-4 py-8">
+      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <button
+          type="button"
+          onClick={() => fetchLearnedWords(currentPage)}
           disabled={isLoading}
+          className="inline-flex items-center rounded-xl border border-brand-primary px-4 py-2.5 text-sm font-medium text-brand-primary transition hover:bg-brand-primary/5 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <i className="bi bi-arrow-clockwise me-2"></i>
+          <i className="bi bi-arrow-clockwise mr-2"></i>
           Làm mới
-        </Button>
-        
-        <div className="search-container" style={{ width: '40%' }}>
-          <InputGroup>
-            <Form.Control
+        </button>
+
+        <div className="w-full md:max-w-md">
+          <div className="flex overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm focus-within:border-brand-primary focus-within:ring-4 focus-within:ring-brand-primary/10">
+            <input
               type="text"
               placeholder="Tìm kiếm từ vựng đã học..."
               value={searchQuery}
               onChange={handleSearchChange}
               disabled={isLoading}
+              className="w-full bg-transparent px-4 py-3 text-slate-900 outline-none placeholder:text-slate-400"
             />
-            <InputGroup.Text>
+            <div className="flex items-center border-l border-slate-200 px-4 text-slate-400">
               <i className="bi bi-search"></i>
-            </InputGroup.Text>
-          </InputGroup>
+            </div>
+          </div>
         </div>
       </div>
-      
+
       {error && (
-        <Alert variant="danger" className="d-flex justify-content-between align-items-center">
+        <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-rose-700 sm:flex-row sm:items-center sm:justify-between">
           <div>{error}</div>
-          <Button variant="outline-danger" size="sm" onClick={handleRetry}>
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="inline-flex items-center justify-center rounded-xl border border-rose-300 px-4 py-2 text-sm font-medium transition hover:bg-rose-100"
+          >
             Thử lại
-          </Button>
-        </Alert>
+          </button>
+        </div>
       )}
-      
-      <Card>
-        <Card.Body>
+
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.1)]">
+        <div className="p-6">
           {isLoading ? (
-            <div className="text-center py-5">
-              <Spinner animation="border" role="status" variant="primary">
-                <span className="visually-hidden">Đang tải...</span>
-              </Spinner>
+            <div className="flex justify-center py-10">
+              <div className="flex flex-col items-center gap-3 text-slate-500">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-brand-primary"></div>
+                <span className="sr-only">Đang tải...</span>
+              </div>
             </div>
           ) : filteredWords.length === 0 ? (
-            <div className="text-center py-5">
+            <div className="py-10 text-center">
               {searchQuery.trim() ? (
-                <p className="text-muted mb-4">Không tìm thấy từ vựng nào phù hợp với "{searchQuery}".</p>
+                <p className="mb-4 text-slate-500">Không tìm thấy từ vựng nào phù hợp với "{searchQuery}".</p>
               ) : (
-                <p className="text-muted mb-4">Bạn chưa lưu từ vựng nào.</p>
+                <p className="mb-4 text-slate-500">Bạn chưa lưu từ vựng nào.</p>
               )}
             </div>
           ) : (
             <>
-              <div className="table-responsive">
-                <Table hover>
-                  <thead className="table-light">
+              <div className="overflow-x-auto rounded-2xl border border-slate-100">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50">
                     <tr>
-                      <th>#</th>
-                      <th>Từ vựng</th>
-                      <th>Ngày học</th>
-                      <th className="text-end">Thao tác</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">#</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Từ vựng</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Ngày học</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Thao tác</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-100 bg-white">
                     {filteredWords.map((word, index) => (
                       <tr key={word.id || index}>
-                        <td>{((currentPage - 1) * pageSize) + index + 1}</td>
-                        <td>{word.word}</td>
-                        <td>{word.learnedAt ? formatDate(word.learnedAt) : '-'}</td>
-                        <td className="text-end">
-                          <Button 
-                            variant="outline-info" 
-                            size="sm"
-                            className="me-2"
-                            onClick={() => viewWordDetail(word.word)}
-                            title="Xem chi tiết từ vựng"
-                          >
-                            <i className="bi bi-eye"></i>
-                          </Button>
-                          <Button 
-                            variant="outline-danger" 
-                            size="sm"
-                            onClick={() => removeWord(word.id, word.word)}
-                            disabled={isLoading}
-                            title="Xóa từ vựng"
-                          >
-                            <i className="bi bi-trash"></i>
-                          </Button>
+                        <td className="px-4 py-3 text-sm text-slate-500">{((currentPage - 1) * pageSize) + index + 1}</td>
+                        <td className="px-4 py-3 text-sm font-medium text-slate-800">{word.word}</td>
+                        <td className="px-4 py-3 text-sm text-slate-600">{word.learnedAt ? formatDate(word.learnedAt) : '-'}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              className={`${actionButtonClass} border-sky-300 text-sky-700 hover:bg-sky-50`}
+                              onClick={() => viewWordDetail(word.word)}
+                              title="Xem chi tiết từ vựng"
+                            >
+                              <i className="bi bi-eye"></i>
+                            </button>
+                            <button
+                              type="button"
+                              className={`${actionButtonClass} border-rose-300 text-rose-700 hover:bg-rose-50`}
+                              onClick={() => removeWord(word.id, word.word)}
+                              disabled={isLoading}
+                              title="Xóa từ vựng"
+                            >
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
-                </Table>
+                </table>
               </div>
-              
-              {/* Pagination */}
+
               <Pagination 
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -286,10 +290,10 @@ const LearnedWordsPage: React.FC = () => {
               />
             </>
           )}
-        </Card.Body>
-      </Card>
-    </Container>
+        </div>
+      </div>
+    </section>
   );
 };
 
-export default LearnedWordsPage; 
+export default LearnedWordsPage;

@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Button, Spinner, Alert } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Vocabulary, Pronunciation, Meaning } from '../types';
+import { Vocabulary } from '../types';
 import api from '../services/api';
-import './WordGeneratorPage.css';
+import VocabularyDetailCard from '../features/vocabulary/components/VocabularyDetailCard';
 
 const WordDetailPage: React.FC = () => {
   const { word } = useParams<{ word: string }>();
@@ -44,131 +43,67 @@ const WordDetailPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Container className="py-4">
-        <div className="text-center">
-          <Spinner animation="border" role="status" variant="primary">
-            <span className="visually-hidden">Đang tải...</span>
-          </Spinner>
+      <div className="mx-auto max-w-5xl px-4 py-8">
+        <div className="flex justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-brand-primary"></div>
         </div>
-      </Container>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Container className="py-4">
-        <Alert variant="danger">
-          <Alert.Heading>Lỗi</Alert.Heading>
+      <div className="mx-auto max-w-5xl px-4 py-8">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-700">
+          <h2 className="mb-2 text-xl font-semibold">Lỗi</h2>
           <p>{error}</p>
-          <Button variant="outline-danger" onClick={() => navigate(-1)}>Quay lại</Button>
-        </Alert>
-      </Container>
+          <button
+            type="button"
+            className="rounded-xl border border-rose-300 px-4 py-2 text-sm font-medium transition hover:bg-rose-100"
+            onClick={() => navigate(-1)}
+          >
+            Quay lại
+          </button>
+        </div>
+      </div>
     );
   }
 
   if (!vocabulary) {
     return (
-      <Container className="py-4">
-        <Alert variant="warning">
-          <Alert.Heading>Không tìm thấy</Alert.Heading>
+      <div className="mx-auto max-w-5xl px-4 py-8">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-800">
+          <h2 className="mb-2 text-xl font-semibold">Không tìm thấy</h2>
           <p>Không tìm thấy từ vựng "{word}"</p>
-          <Button variant="outline-warning" onClick={() => navigate(-1)}>Quay lại</Button>
-        </Alert>
-      </Container>
+          <button
+            type="button"
+            className="rounded-xl border border-amber-300 px-4 py-2 text-sm font-medium transition hover:bg-amber-100"
+            onClick={() => navigate(-1)}
+          >
+            Quay lại
+          </button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container className="py-4 word-generator-page">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <Button variant="outline-secondary" onClick={() => navigate(-1)}>
-          <i className="bi bi-arrow-left me-2"></i>
+    <div className="mx-auto max-w-5xl px-4 py-8">
+      <div className="mb-4 flex items-center justify-between">
+        <button
+          type="button"
+          className="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          onClick={() => navigate(-1)}
+        >
+          <i className="bi bi-arrow-left mr-2"></i>
           Quay lại
-        </Button>
+        </button>
       </div>
 
-      <div className="word-container">
-        <div className="word-header">
-          <h2 className="word-title">{vocabulary.word}</h2>
-
-          {vocabulary.vietnamese && (
-            <div className="vietnamese-translation">
-              <h3 className="vietnamese-title">Nghĩa tiếng Việt:</h3>
-              <p className="vietnamese-text">{vocabulary.vietnamese}</p>
-            </div>
-          )}
-
-          {!vocabulary.vietnamese && (
-            <div className="vietnamese-translation vietnamese-missing">
-              <h3 className="vietnamese-title">Nghĩa tiếng Việt:</h3>
-              <p className="vietnamese-text">Chưa có bản dịch</p>
-            </div>
-          )}
-
-          {vocabulary.pronunciations && vocabulary.pronunciations.length > 0 && (
-            <div className="pronunciation-container">
-              {vocabulary.pronunciations.map((pronunciation: Pronunciation, index: number) => (
-                <div key={index} className="pronunciation-item">
-                  {pronunciation.text && (
-                    <span className="pronunciation-text">{pronunciation.text}</span>
-                  )}
-                  {pronunciation.audio && (
-                    <Button 
-                      variant="link" 
-                      className="pronunciation-button"
-                      onClick={() => playAudio(pronunciation.audio)}
-                    >
-                      <i className="bi bi-play-circle-fill"></i>
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {vocabulary.meanings && vocabulary.meanings.length > 0 && (
-          <div className="meanings-container">
-            {vocabulary.meanings.map((meaning: Meaning, index: number) => (
-              <div key={index} className="meaning-item">
-                <div className="part-of-speech-container">
-                  <span className={`part-of-speech`}>
-                    {meaning.partOfSpeech}
-                  </span>
-                </div>
-                {meaning.definitions.map((definition, defIndex) => (
-                  <div key={defIndex} className="definition-item">
-                    <p className="definition-text">
-                      <span className="definition-number">{defIndex + 1}.</span> {definition.text}
-                    </p>
-                    {definition.example && (
-                      <p className="definition-example">
-                        <i className="bi bi-quote"></i> {definition.example}
-                      </p>
-                    )}
-                    {definition.synonyms && definition.synonyms.length > 0 && (
-                      <div className="synonyms">
-                        <span className="synonyms-label">Từ đồng nghĩa:</span>
-                        <span className="synonyms-list">{definition.synonyms.join(', ')}</span>
-                      </div>
-                    )}
-                    {definition.antonyms && definition.antonyms.length > 0 && (
-                      <div className="antonyms">
-                        <span className="antonyms-label">Từ trái nghĩa:</span>
-                        <span className="antonyms-list">{definition.antonyms.join(', ')}</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </Container>
+      <VocabularyDetailCard vocabulary={vocabulary} onPlayAudio={playAudio} />
+    </div>
   );
 };
 
 export default WordDetailPage;
-
 

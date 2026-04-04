@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { getAvatarText } from '../../utils/helpers';
 import { ROUTES } from '../../utils/constants';
-import './Sidebar.css';
 
 /**
  * Improved Sidebar component
@@ -12,6 +11,14 @@ import './Sidebar.css';
 const Sidebar: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
+
+  const navigationItems = [
+    { label: 'Trang chủ', icon: 'bi-house-door', path: ROUTES.HOME },
+    { label: 'Từ vựng mới', icon: 'bi-book', path: ROUTES.WORD_GENERATOR },
+    { label: 'Từ đã học', icon: 'bi-journal-check', path: ROUTES.LEARNED_WORDS },
+    { label: 'Trắc nghiệm', icon: 'bi-question-circle', path: ROUTES.QUIZ },
+    { label: 'Thống kê', icon: 'bi-bar-chart', path: ROUTES.QUIZ_STATS },
+  ];
 
   /**
    * Check if the current path matches the given path
@@ -26,65 +33,55 @@ const Sidebar: React.FC = () => {
   }
 
   return (
-    <div className="sidebar">
-      {/* Sidebar content */}
-      <div className="sidebar-content">
-        {/* User profile section */}
+    <aside className="fixed left-0 top-[70px] z-[1030] hidden h-[calc(100vh-70px)] w-[250px] flex-col overflow-hidden bg-white shadow-sm lg:flex">
+      <div className="flex h-full flex-col overflow-y-auto py-6">
         {user && (
-          <div className="sidebar-profile">
-            <div className="avatar-container">
-              <div className="avatar">
+          <div className="mb-6 flex items-center border-b border-slate-200 px-5 pb-6">
+            <div className="shrink-0">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[linear-gradient(135deg,#6a11cb_0%,#2575fc_100%)] text-xl font-bold text-white shadow-md">
                 {getAvatarText(user.name)}
               </div>
             </div>
-            <div className="user-info">
-              <p className="user-name">{user.name}</p>
+            <div className="ml-4 min-w-0">
+              <p className="mb-1 truncate text-base font-semibold text-slate-800">{user.name}</p>
+              <p className="m-0 text-xs uppercase tracking-[0.2em] text-slate-500">Học viên</p>
             </div>
           </div>
         )}
-        
-        {/* Navigation links */}
-        <nav className="sidebar-nav">
-          <h6 className="nav-title">MENU</h6>
-          <ul className="nav-list">
-            <li className={`nav-item ${isActive(ROUTES.HOME) ? 'active' : ''}`}>
-              <Link to={ROUTES.HOME} className="nav-link">
-                <i className="bi bi-house-door"></i>
-                <span>Trang chủ</span>
-              </Link>
-            </li>
-            
-            <li className={`nav-item ${isActive(ROUTES.WORD_GENERATOR) ? 'active' : ''}`}>
-              <Link to={ROUTES.WORD_GENERATOR} className="nav-link">
-                <i className="bi bi-book"></i>
-                <span>Từ vựng mới</span>
-              </Link>
-            </li>
-            
-            <li className={`nav-item ${isActive(ROUTES.LEARNED_WORDS) ? 'active' : ''}`}>
-              <Link to={ROUTES.LEARNED_WORDS} className="nav-link">
-                <i className="bi bi-journal-check"></i>
-                <span>Từ đã học</span>
-              </Link>
-            </li>
 
-            <li className={`nav-item ${isActive(ROUTES.QUIZ) ? 'active' : ''}`}>
-              <Link to={ROUTES.QUIZ} className="nav-link">
-                <i className="bi bi-question-circle"></i>
-                <span>Trắc nghiệm</span>
-              </Link>
-            </li>
-            
-            <li className={`nav-item ${isActive(ROUTES.QUIZ_STATS) ? 'active' : ''}`}>
-              <Link to={ROUTES.QUIZ_STATS} className="nav-link">
-                <i className="bi bi-bar-chart"></i>
-                <span>Thống kê</span>
-              </Link>
-            </li>
+        <nav className="mb-6">
+          <h6 className="px-5 text-xs font-bold uppercase tracking-[0.2em] text-slate-700">Menu</h6>
+          <ul className="mt-4 space-y-2">
+            {navigationItems.map((item) => {
+              const active = isActive(item.path);
+
+              return (
+                <li key={item.path}>
+                  <Link
+                    to={item.path}
+                    className={[
+                      'group flex items-center gap-4 border-l-[3px] px-5 py-4 font-semibold no-underline transition',
+                      active
+                        ? 'border-l-[#6a11cb] bg-violet-50 text-[#6a11cb]'
+                        : 'border-l-transparent text-slate-700 hover:bg-violet-50/70 hover:text-[#6a11cb]',
+                    ].join(' ')}
+                  >
+                    <i
+                      className={[
+                        `bi ${item.icon}`,
+                        'min-w-6 text-center text-xl',
+                        active ? 'text-[#6a11cb]' : 'text-[#6a11cb] group-hover:text-[#6a11cb]',
+                      ].join(' ')}
+                    ></i>
+                    <span>{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       </div>
-    </div>
+    </aside>
   );
 };
 
