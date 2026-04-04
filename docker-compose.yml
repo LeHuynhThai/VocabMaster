@@ -29,7 +29,7 @@ services:
 
   ui:
     build:
-      context: ./Client
+      context: ./frontend
       dockerfile: Dockerfile
       args:
         - REACT_APP_API_URL=http://localhost:5000

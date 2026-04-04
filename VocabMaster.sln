@@ -3,25 +3,25 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36221.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Client", "Client\", "{F03FED76-20DB-B30E-51FF-188119B1BFB7}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "frontend", "frontend\", "{F03FED76-20DB-B30E-51FF-188119B1BFB7}"
 	ProjectSection(WebsiteProperties) = preProject
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.8"
 		Debug.AspNetCompiler.VirtualPath = "/localhost_61781"
-		Debug.AspNetCompiler.PhysicalPath = "Client\"
+		Debug.AspNetCompiler.PhysicalPath = "frontend\"
 		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_61781\"
 		Debug.AspNetCompiler.Updateable = "true"
 		Debug.AspNetCompiler.ForceOverwrite = "true"
 		Debug.AspNetCompiler.FixedNames = "false"
 		Debug.AspNetCompiler.Debug = "True"
 		Release.AspNetCompiler.VirtualPath = "/localhost_61781"
-		Release.AspNetCompiler.PhysicalPath = "Client\"
+		Release.AspNetCompiler.PhysicalPath = "frontend\"
 		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_61781\"
 		Release.AspNetCompiler.Updateable = "true"
 		Release.AspNetCompiler.ForceOverwrite = "true"
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
 		VWDPort = "61781"
-		SlnRelativePath = "Client\"
+		SlnRelativePath = "frontend\"
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API", "API\API.csproj", "{CBFA08EA-AECE-205F-7B85-326FD0B81BAD}"

@@ -9,8 +9,7 @@ namespace Service.Interfaces
         Task<bool> Register(User user);
         Task Logout();
         Task<User> GetCurrentUser();
-        Task<Dictionary<string, object>?> AuthenticateGoogleUser(string accessToken);
-        Task<Dictionary<string, object>?> GetGoogleUserInfo(string accessToken);
+
         string HashPassword(string password);
         bool VerifyPassword(string password, string hash);
         Task<Dictionary<string, object>> GenerateJwtToken(User user);
