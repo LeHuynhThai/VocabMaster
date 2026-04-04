@@ -1,6 +1,5 @@
 import React from 'react';
 import { Button as BootstrapButton, ButtonProps as BSButtonProps, Spinner } from 'react-bootstrap';
-import './Button.css';
 
 /**
  * Extended button props
@@ -24,16 +23,26 @@ const Button: React.FC<ButtonProps> = ({
   iconPosition = 'left',
   className = '',
   disabled,
+  variant,
   ...props
 }) => {
-  // Determine if the icon is a string (class name) or a component
-  const iconElement = typeof icon === 'string' 
-    ? <i className={`${icon} button-icon`}></i> 
+  const iconElement = typeof icon === 'string'
+    ? <i className={`${icon} text-lg`} />
     : icon;
+
+  const variantClass = (() => {
+    const v = (variant as string) || '';
+    if (v === 'primary') return 'bg-gradient-to-r from-[#6a11cb] to-[#2575fc] text-white border-none hover:from-[#5a0cb0] hover:to-[#1565e6]';
+    if (v === 'outline-primary') return 'border border-[#6a11cb] text-[#6a11cb] hover:bg-[#f5f0ff]';
+    return '';
+  })();
+
+  const classes = `inline-flex items-center justify-center px-4 py-2 font-medium rounded-md transition-all relative overflow-hidden min-h-[38px] ${variantClass} ${className}`;
 
   return (
     <BootstrapButton
-      className={`custom-button ${className}`}
+      variant={variant}
+      className={classes}
       disabled={isLoading || disabled}
       {...props}
     >
@@ -45,18 +54,18 @@ const Button: React.FC<ButtonProps> = ({
             size="sm"
             role="status"
             aria-hidden="true"
-            className="button-spinner"
+            className="mr-2 w-4 h-4"
           />
-          <span className="visually-hidden">Đang tải...</span>
+          <span className="sr-only">Đang tải...</span>
         </>
       ) : (
         <>
           {icon && iconPosition === 'left' && (
-            <span className="icon-left">{iconElement}</span>
+            <span className="mr-2 flex items-center">{iconElement}</span>
           )}
           <span className="button-text">{children}</span>
           {icon && iconPosition === 'right' && (
-            <span className="icon-right">{iconElement}</span>
+            <span className="ml-2 flex items-center">{iconElement}</span>
           )}
         </>
       )}
