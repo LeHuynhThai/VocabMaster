@@ -1,5 +1,5 @@
 import api, { removeToken } from './api';
-import { LoginRequest, RegisterRequest, User, TokenResponse, GoogleAuthRequest } from '../types';
+import { LoginRequest, RegisterRequest, User, TokenResponse } from '../types';
 
 const getErrorMessage = (error: any, fallback: string): string => {
   const serverMessage = error?.response?.data?.message || error?.response?.data?.Message;
@@ -30,25 +30,7 @@ const authService = {
     }
   },
 
-  googleLogin: async (googleAuth: GoogleAuthRequest): Promise<User> => {
-    try {
-      const payload = {
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken || 'dummy_token'
-      };
-      const response = await api.post<TokenResponse>('/api/account/google-login', payload, {
-        headers: { 'Content-Type': 'application/json' }
-      });
-      return {
-        id: response.data.userId,
-        name: response.data.userName,
-        role: response.data.role
-      };
-    } catch (error: any) {
-      const message = getErrorMessage(error, 'Đăng nhập Google thất bại. Vui lòng thử lại.');
-      throw new Error(message);
-    }
-  },
+  
 
   register: async (userData: RegisterRequest): Promise<boolean> => {
     try {

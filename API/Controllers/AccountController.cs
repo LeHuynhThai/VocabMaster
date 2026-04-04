@@ -44,87 +44,7 @@ public class AccountController : ControllerBase
         }
     }
 
-    [HttpPost("google-login")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GoogleLogin([FromBody] Dictionary<string, string> googleAuth)
-    {
-        try
-        {
-            if (googleAuth == null)
-            {
-                return BadRequest("Dữ liệu không hợp lệ");
-            }
 
-            if (!googleAuth.TryGetValue("accessToken", out var accessToken) || string.IsNullOrEmpty(accessToken))
-            {
-                return BadRequest("AccessToken không được cung cấp");
-            }
-
-            try
-            {
-                var tokenResponse = await _authenticationService.AuthenticateGoogleUser(accessToken);
-
-                if (tokenResponse == null)
-                {
-                    return Unauthorized("Không thể xác thực với Google");
-                }
-
-                return Ok(tokenResponse);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Lỗi xác thực Google: {ex.Message}");
-            }
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, "Đã xảy ra lỗi không xác định");
-        }
-    }
-
-    [HttpPost("validate-google-token")]
-    [AllowAnonymous]
-    public async Task<IActionResult> ValidateGoogleToken([FromBody] Dictionary<string, string> googleAuth)
-    {
-
-        try
-        {
-            if (googleAuth == null || !googleAuth.TryGetValue("accessToken", out var accessToken) || string.IsNullOrEmpty(accessToken))
-            {
-                return BadRequest(new { valid = false, message = "Token is missing" });
-            }
-
-            var userInfo = await _authenticationService.GetGoogleUserInfo(accessToken);
-
-            if (userInfo != null)
-            {
-                userInfo.TryGetValue("sub", out var id);
-                userInfo.TryGetValue("email", out var email);
-                userInfo.TryGetValue("name", out var name);
-                userInfo.TryGetValue("picture", out var picture);
-                userInfo.TryGetValue("email_verified", out var emailVerified);
-
-                return Ok(new
-                {
-                    valid = true,
-                    userInfo = new
-                    {
-                        id = id,
-                        email = email,
-                        name = name,
-                        picture = picture,
-                        emailVerified = emailVerified
-                    }
-                });
-            }
-
-            return BadRequest(new { valid = false, message = "Invalid or expired token" });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { valid = false, message = ex.Message });
-        }
-    }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(User model)
@@ -174,7 +94,7 @@ public class AccountController : ControllerBase
             learnedWordsCount = user.LearnedVocabularies?.Count ?? 0
         });
     }
-                
+
     [HttpGet("refresh-token")]
     [Authorize]
     public async Task<IActionResult> RefreshToken()

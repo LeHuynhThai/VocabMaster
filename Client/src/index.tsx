@@ -5,10 +5,6 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import './assets/styles/global.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { GoogleOAuthProvider } from '@react-oauth/google';
-
-// use your own google client id if you want to use google login
-const GOOGLE_CLIENT_ID = '397769974633-r24u62vcnksdouoftr0eac5v7f8gt1p1.apps.googleusercontent.com';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -16,9 +12,7 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <App />
-    </GoogleOAuthProvider>
+    <App />
   </React.StrictMode>
 );
 
