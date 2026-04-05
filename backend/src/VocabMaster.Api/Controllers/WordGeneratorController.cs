@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using System.Text.Json;
-using System.Security.Claims;
+using VocabMaster.Api.Contracts.Common;
+using VocabMaster.Api.Contracts.Vocabulary;
 using VocabMaster.Application.Interfaces;
 using VocabMaster.Domain.Entities;
 
@@ -13,27 +13,16 @@ namespace VocabMaster.Api.Controllers
     [Route("api/[controller]")]
     public class WordGeneratorController : ControllerBase
     {
+        private readonly ICurrentUserService _currentUserService;
         private readonly IVocabularyService _vocabularyService;
         private readonly IMemoryCache _cache;
         private const string RandomWordCacheKey = "RandomWord_";
 
-        public WordGeneratorController(IVocabularyService vocabularyService, IMemoryCache cache = null)
+        public WordGeneratorController(ICurrentUserService currentUserService, IVocabularyService vocabularyService, IMemoryCache cache)
         {
+            _currentUserService = currentUserService ?? throw new ArgumentNullException(nameof(currentUserService));
             _vocabularyService = vocabularyService;
-            _cache = cache;
-        }
-
-        private static T? SafeDeserialize<T>(string json)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(json)) return default;
-                return JsonSerializer.Deserialize<T>(json);
-            }
-            catch
-            {
-                return default;
-            }
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         }
 
         [HttpGet("word-detail/{word}")]
@@ -44,19 +33,18 @@ namespace VocabMaster.Api.Controllers
                 var vocabulary = await _vocabularyService.GetVocabularyByWord(word);
                 if (vocabulary == null)
                 {
-                    return NotFound(new { message = "Không tìm thấy từ vựng" });
+                    return NotFound(new MessageResponse { Message = "Không tìm thấy từ vựng" });
                 }
 
-                return Ok(new
-                {
-                    id = vocabulary.Id,
-                    word = vocabulary.Word,
-                    vietnamese = vocabulary.Vietnamese
-                });
+                return Ok(ToVocabularySummaryResponse(vocabulary));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, new { message = "Lỗi server", details = ex.Message });
+                return StatusCode(500, new ErrorResponse
+                {
+                    Error = "server_error",
+                    Message = "Lỗi server"
+                });
             }
         }
 
@@ -65,113 +53,99 @@ namespace VocabMaster.Api.Controllers
         {
             try
             {
-                var userId = GetUserIdFromClaims();
-                if (userId <= 0)
+                var userId = _currentUserService.GetUserId();
+                if (!userId.HasValue)
                 {
-                    return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
-                }
-
-                string cacheKey = $"{RandomWordCacheKey}{userId}";
-                if (_cache != null)
-                {
-                    _cache.Remove(cacheKey);
-                }
-
-                var randomWord = await _vocabularyService.GetRandomWord(userId);
-
-                if (randomWord == null)
-                {
-                    return Ok(new
+                    return Unauthorized(new ErrorResponse
                     {
-                        allLearned = true,
-                        message = "Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống."
+                        Error = "auth_error",
+                        Message = "Không thể xác thực người dùng"
                     });
                 }
 
-                return Ok(new
+                string cacheKey = $"{RandomWordCacheKey}{userId}";
+                _cache.Remove(cacheKey);
+
+                var randomWord = await _vocabularyService.GetRandomWord(userId.Value);
+
+                if (randomWord == null)
                 {
-                    id = randomWord.Id,
-                    word = randomWord.Word,
-                    vietnamese = randomWord.Vietnamese
-                });
+                    return Ok(new AllLearnedVocabularyResponse
+                    {
+                        AllLearned = true,
+                        Message = "Chúc mừng! Bạn đã học hết tất cả từ vựng trong hệ thống."
+                    });
+                }
+
+                return Ok(ToVocabularySummaryResponse(randomWord));
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, new
+                return StatusCode(500, new ErrorResponse
                 {
-                    error = "server_error",
-                    message = "Đã xảy ra lỗi khi lấy từ ngẫu nhiên chưa học",
-                    details = ex.Message
+                    Error = "server_error",
+                    Message = "Đã xảy ra lỗi khi lấy từ ngẫu nhiên chưa học"
                 });
             }
         }
 
         [HttpPost("learned-word")]
-        public async Task<IActionResult> AddLearnedWord([FromBody] Dictionary<string, string> dto)
+        public async Task<IActionResult> AddLearnedWord([FromBody] AddLearnedWordRequest request)
         {
             try
             {
-                var userId = GetUserIdFromClaims();
-                if (userId <= 0)
+                var userId = _currentUserService.GetUserId();
+                if (!userId.HasValue)
                 {
-                    return Unauthorized(new { error = "auth_error", message = "Không thể xác thực người dùng" });
-                }
-
-                if (dto == null || !dto.TryGetValue("word", out var word) || string.IsNullOrWhiteSpace(word))
-                {
-                    return BadRequest(new { error = "validation_error", message = "Dữ liệu không hợp lệ" });
-                }
-
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(new { error = "validation_error", message = "Dữ liệu không hợp lệ", details = ModelState });
-                }
-
-                var learnedWord = new LearnedWord
-                {
-                    Word = word,
-                    UserId = userId,
-                    LearnedAt = DateTime.UtcNow
-                };
-
-                var result = await _vocabularyService.AddLearnedWord(learnedWord);
-
-                return Ok(new
-                {
-                    success = true,
-                    message = "Đã lưu từ vựng thành công",
-                    data = new
+                    return Unauthorized(new ErrorResponse
                     {
-                        id = result.Id,
-                        word = result.Word,
-                        learnedAt = result.LearnedAt
+                        Error = "auth_error",
+                        Message = "Không thể xác thực người dùng"
+                    });
+                }
+
+                if (!ModelState.IsValid || string.IsNullOrWhiteSpace(request.Word))
+                {
+                    return BadRequest(new ErrorResponse
+                    {
+                        Error = "validation_error",
+                        Message = "Dữ liệu không hợp lệ"
+                    });
+                }
+
+                var result = await _vocabularyService.AddLearnedWord(request.Word, userId.Value);
+
+                return Ok(new DataResponse<LearnedWordResponse>
+                {
+                    Success = true,
+                    Message = "Đã lưu từ vựng thành công",
+                    Data = new LearnedWordResponse
+                    {
+                        Id = result.Id,
+                        Word = result.Word,
+                        LearnedAt = result.LearnedAt
                     }
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, new
+                return StatusCode(500, new ErrorResponse
                 {
-                    error = "server_error",
-                    message = "Đã xảy ra lỗi khi lưu từ vựng",
-                    details = ex.Message
+                    Error = "server_error",
+                    Message = "Đã xảy ra lỗi khi lưu từ vựng"
                 });
             }
         }
 
-
-        private int GetUserIdFromClaims()
+        private static VocabularySummaryResponse ToVocabularySummaryResponse(Vocabulary vocabulary)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier) ??
-                              User.Claims.FirstOrDefault(c => c.Type == "UserId");
-
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+            return new VocabularySummaryResponse
             {
-                return userId;
-            }
-
-            return 0;
+                Id = vocabulary.Id,
+                Word = vocabulary.Word,
+                Vietnamese = vocabulary.Vietnamese
+            };
         }
     }
 }

@@ -18,9 +18,9 @@ namespace VocabMaster.Domain.Entities
         public bool WasCorrect { get; set; }
 
         [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        public virtual User User { get; set; } = null!;
 
         [ForeignKey("QuizQuestionId")]
-        public virtual QuizQuestion QuizQuestion { get; set; }
+        public virtual QuizQuestion QuizQuestion { get; set; } = null!;
     }
 }

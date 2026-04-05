@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using VocabMaster.Api.Contracts.Common;
+using VocabMaster.Api.Contracts.Quiz;
 using VocabMaster.Application.Interfaces;
+using VocabMaster.Domain.Entities;
 
 namespace VocabMaster.Api.Controllers
 {
@@ -10,10 +12,12 @@ namespace VocabMaster.Api.Controllers
     [Authorize]
     public class QuizzController : ControllerBase
     {
+        private readonly ICurrentUserService _currentUserService;
         private readonly IQuizzQuestionService _quizzQuestionService;
 
-        public QuizzController(IQuizzQuestionService quizzQuestionService)
+        public QuizzController(ICurrentUserService currentUserService, IQuizzQuestionService quizzQuestionService)
         {
+            _currentUserService = currentUserService ?? throw new ArgumentNullException(nameof(currentUserService));
             _quizzQuestionService = quizzQuestionService;
         }
 
@@ -22,37 +26,33 @@ namespace VocabMaster.Api.Controllers
         {
             try
             {
-                var userId = GetUserIdFromClaims();
-                if (userId <= 0)
+                var userId = _currentUserService.GetUserId();
+                if (!userId.HasValue)
                 {
-                    return Unauthorized(new { message = "Không thể xác thực người dùng" });
-                }
-
-                var question = await _quizzQuestionService.GetRandomUncompletedQuestion(userId);
-
-                if (question == null)
-                {
-                    return Ok(new
+                    return Unauthorized(new ErrorResponse
                     {
-                        message = "Bạn đã hoàn thành tất cả câu hỏi!",
-                        completed = true,
-                        allCompleted = true
+                        Error = "auth_error",
+                        Message = "Không thể xác thực người dùng"
                     });
                 }
 
-                return Ok(new
+                var question = await _quizzQuestionService.GetRandomUncompletedQuestion(userId.Value);
+
+                if (question == null)
                 {
-                    id = question.Id,
-                    word = question.Word,
-                    correctAnswer = question.CorrectAnswer,
-                    wrongAnswer1 = question.WrongAnswer1,
-                    wrongAnswer2 = question.WrongAnswer2,
-                    wrongAnswer3 = question.WrongAnswer3
-                });
+                    return Ok(new QuizCompletionStatusResponse
+                    {
+                        Message = "Bạn đã hoàn thành tất cả câu hỏi!",
+                        Completed = true,
+                        AllCompleted = true
+                    });
+                }
+
+                return Ok(ToQuizQuestionResponse(question));
             }
             catch (Exception)
             {
-                return StatusCode(500, new { message = "Internal server error" });
+                return StatusCode(500, new MessageResponse { Message = "Internal server error" });
             }
         }
 
@@ -61,52 +61,54 @@ namespace VocabMaster.Api.Controllers
         {
             try
             {
-                var userId = GetUserIdFromClaims();
-                if (userId <= 0)
+                var userId = _currentUserService.GetUserId();
+                if (!userId.HasValue)
                 {
-                    return Unauthorized(new { message = "Không thể xác thực người dùng" });
+                    return Unauthorized(new ErrorResponse
+                    {
+                        Error = "auth_error",
+                        Message = "Không thể xác thực người dùng"
+                    });
                 }
 
-                if (request == null || request.QuizQuestionId <= 0 || string.IsNullOrWhiteSpace(request.SelectedAnswer))
+                if (!ModelState.IsValid || string.IsNullOrWhiteSpace(request.SelectedAnswer))
                 {
-                    return BadRequest(new { message = "Dữ liệu không hợp lệ" });
+                    return BadRequest(new ErrorResponse
+                    {
+                        Error = "validation_error",
+                        Message = "Dữ liệu không hợp lệ"
+                    });
                 }
 
                 var isCorrect = await _quizzQuestionService.SubmitQuizAnswer(
-                    userId,
+                    userId.Value,
                     request.QuizQuestionId,
                     request.SelectedAnswer
                 );
 
-                return Ok(new
+                return Ok(new SubmitQuizAnswerResponse
                 {
-                    isCorrect = isCorrect,
-                    message = isCorrect ? "Chúc mừng! Bạn đã trả lời đúng." : "Rất tiếc! Đáp án không đúng."
+                    IsCorrect = isCorrect,
+                    Message = isCorrect ? "Chúc mừng! Bạn đã trả lời đúng." : "Rất tiếc! Đáp án không đúng."
                 });
             }
             catch (Exception)
             {
-                return StatusCode(500, new { message = "Internal server error" });
+                return StatusCode(500, new MessageResponse { Message = "Internal server error" });
             }
         }
 
-        private int GetUserIdFromClaims()
+        private static QuizQuestionResponse ToQuizQuestionResponse(QuizQuestion question)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier) ??
-                              User.Claims.FirstOrDefault(c => c.Type == "UserId");
-
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+            return new QuizQuestionResponse
             {
-                return userId;
-            }
-
-            return 0;
-        }
-
-        public sealed class SubmitQuizAnswerRequest
-        {
-            public int QuizQuestionId { get; set; }
-            public string SelectedAnswer { get; set; } = string.Empty;
+                Id = question.Id,
+                Word = question.Word,
+                CorrectAnswer = question.CorrectAnswer,
+                WrongAnswer1 = question.WrongAnswer1,
+                WrongAnswer2 = question.WrongAnswer2,
+                WrongAnswer3 = question.WrongAnswer3
+            };
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using VocabMaster.Api.Contracts.Common;
+using VocabMaster.Api.Contracts.Quiz;
 using VocabMaster.Application.Interfaces;
 
 namespace VocabMaster.Api.Controllers
@@ -10,10 +11,12 @@ namespace VocabMaster.Api.Controllers
     [Authorize]
     public class QuizzStatController : ControllerBase
     {
+        private readonly ICurrentUserService _currentUserService;
         private readonly IQuizzStatService _quizzStatService;
 
-        public QuizzStatController(IQuizzStatService quizzStatService)
+        public QuizzStatController(ICurrentUserService currentUserService, IQuizzStatService quizzStatService)
         {
+            _currentUserService = currentUserService ?? throw new ArgumentNullException(nameof(currentUserService));
             _quizzStatService = quizzStatService;
         }
 
@@ -22,31 +25,29 @@ namespace VocabMaster.Api.Controllers
         {
             try
             {
-                var userId = GetUserIdFromClaims();
-
-                var totalQuestions = await _quizzStatService.GetTotalQuestions();
-                var completedQuizzes = await _quizzStatService.GetCompletedQuizzes(userId);
-
-                var completedQuestions = completedQuizzes.Count;
-                var correctAnswers = completedQuizzes.Count(cq => cq.WasCorrect);
-
-                double accuracyRate = 0;
-                if (completedQuestions > 0)
+                var userId = _currentUserService.GetUserId();
+                if (!userId.HasValue)
                 {
-                    accuracyRate = (double)correctAnswers / completedQuestions * 100;
+                    return Unauthorized(new ErrorResponse
+                    {
+                        Error = "auth_error",
+                        Message = "Không thể xác thực người dùng"
+                    });
                 }
 
-                return Ok(new
+                var stats = await _quizzStatService.GetQuizStats(userId.Value);
+
+                return Ok(new QuizStatsResponse
                 {
-                    totalQuestions = totalQuestions,
-                    completedQuestions = completedQuestions,
-                    correctAnswers = correctAnswers,
-                    accuracyRate = accuracyRate
+                    TotalQuestions = stats.TotalQuestions,
+                    CompletedQuestions = stats.CompletedQuestions,
+                    CorrectAnswers = stats.CorrectAnswers,
+                    AccuracyRate = stats.AccuracyRate
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, new { message = "Internal server error" });
+                return StatusCode(500, new MessageResponse { Message = "Internal server error" });
             }
         }
 
@@ -55,39 +56,32 @@ namespace VocabMaster.Api.Controllers
         {
             try
             {
-                var userId = GetUserIdFromClaims();
-
-                var completedQuizzes = await _quizzStatService.GetCompletedQuizzes(userId);
-
-                var completedAnswers = completedQuizzes.Select(cq => new
+                var userId = _currentUserService.GetUserId();
+                if (!userId.HasValue)
                 {
-                    id = cq.Id,
-                    quizQuestionId = cq.QuizQuestionId,
-                    word = cq.QuizQuestion.Word,
-                    correctAnswer = cq.QuizQuestion.CorrectAnswer,
-                    completedAt = cq.CompletedAt,
-                    wasCorrect = cq.WasCorrect
-                }).ToList();
+                    return Unauthorized(new ErrorResponse
+                    {
+                        Error = "auth_error",
+                        Message = "Không thể xác thực người dùng"
+                    });
+                }
 
-                return Ok(completedAnswers);
+                var completedAnswers = await _quizzStatService.GetCompletedAnswers(userId.Value);
+
+                return Ok(completedAnswers.Select(answer => new CompletedQuizAnswerResponse
+                {
+                    Id = answer.Id,
+                    QuizQuestionId = answer.QuizQuestionId,
+                    Word = answer.Word,
+                    CorrectAnswer = answer.CorrectAnswer,
+                    CompletedAt = answer.CompletedAt,
+                    WasCorrect = answer.WasCorrect
+                }));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, new { message = "Internal server error" });
+                return StatusCode(500, new MessageResponse { Message = "Internal server error" });
             }
-        }
-
-        private int GetUserIdFromClaims()
-        {
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier) ??
-                              User.Claims.FirstOrDefault(c => c.Type == "UserId");
-
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
-            {
-                return userId;
-            }
-
-            return 0;
         }
     }
 }

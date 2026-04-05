@@ -18,7 +18,13 @@ namespace VocabMaster.Infrastructure.Repositories
         public async Task<Vocabulary?> GetRandom()
         {
             var count = await _context.Vocabularies.CountAsync();
-            var skipCount = new Random().Next(count);
+            if (count == 0)
+            {
+                return null;
+            }
+
+            var skipCount = Random.Shared.Next(count);
+
             return await _context.Vocabularies
                 .Skip(skipCount)
                 .Take(1)
@@ -31,7 +37,14 @@ namespace VocabMaster.Infrastructure.Repositories
             var count = await _context.Vocabularies
                 .Where(v => !learnedWords.Contains(v.Word))
                 .CountAsync();
-            var skipCount = new Random().Next(count);
+
+            if (count == 0)
+            {
+                return null;
+            }
+
+            var skipCount = Random.Shared.Next(count);
+
             return await _context.Vocabularies
                 .Where(v => !learnedWords.Contains(v.Word))
                 .Skip(skipCount)
@@ -43,6 +56,11 @@ namespace VocabMaster.Infrastructure.Repositories
         public async Task<bool> Update(Vocabulary vocabulary)
         {
             var existingVocabulary = await _context.Vocabularies.FindAsync(vocabulary.Id);
+            if (existingVocabulary == null)
+            {
+                return false;
+            }
+
             existingVocabulary.Vietnamese = vocabulary.Vietnamese;
             await _context.SaveChangesAsync();
             return true;
@@ -67,13 +85,16 @@ namespace VocabMaster.Infrastructure.Repositories
         }
 
         // Remove learned word
-        public async Task<bool> RemoveLearnedWord(int learnedWordId)
+        public async Task<bool> RemoveLearnedWord(int learnedWordId, int userId)
         {
-            var learnedWord = await _context.LearnedVocabularies.FindAsync(learnedWordId);
+            var learnedWord = await _context.LearnedVocabularies
+                .FirstOrDefaultAsync(lw => lw.Id == learnedWordId && lw.UserId == userId);
+
             if (learnedWord == null)
             {
                 return false;
             }
+
             _context.LearnedVocabularies.Remove(learnedWord);
             await _context.SaveChangesAsync();
             return true;

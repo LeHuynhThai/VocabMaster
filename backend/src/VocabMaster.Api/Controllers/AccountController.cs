@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VocabMaster.Api.Contracts.Account;
+using VocabMaster.Api.Contracts.Common;
 using VocabMaster.Application.Interfaces;
-using VocabMaster.Domain.Entities;
 
 namespace VocabMaster.Api.Controllers;
 
@@ -10,62 +11,70 @@ namespace VocabMaster.Api.Controllers;
 public class AccountController : ControllerBase
 {
     private readonly IAuthenticationService _authenticationService;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<AccountController> _logger;
 
     public AccountController(
-        IAuthenticationService authenticationService)
+        IAuthenticationService authenticationService,
+        ICurrentUserService currentUserService,
+        ILogger<AccountController> logger)
     {
         _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
+        _currentUserService = currentUserService ?? throw new ArgumentNullException(nameof(currentUserService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(User model)
+    public async Task<IActionResult> Login([FromBody] LoginRequest model)
     {
-        // validate fields login request
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
         }
+
         try
         {
             var loginResult = await _authenticationService.Login(model.Name, model.Password);
-            if (loginResult != null)
+            if (loginResult is not null)
             {
                 return Ok(loginResult);
             }
-            else
-            {
-                return Unauthorized(new { message = "Tên đăng nhập hoặc mật khẩu không hợp lệ" });
-            }
+
+            return Unauthorized(new AuthenticationErrorResponse { Message = "Tên đăng nhập hoặc mật khẩu không hợp lệ" });
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
-            return BadRequest(new { message = "Đã xảy ra lỗi khi đăng nhập" });
+            _logger.LogError(ex, "Unexpected error while logging in user {UserName}", model.Name);
+            return StatusCode(500, new MessageResponse { Message = "Đã xảy ra lỗi khi đăng nhập" });
         }
     }
 
-
-
     [HttpPost("register")]
-    public async Task<IActionResult> Register(User model)
+    public async Task<IActionResult> Register([FromBody] RegisterRequest model)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
-            model.Role = UserRole.User;
-            var result = await _authenticationService.Register(model);
+            var result = await _authenticationService.Register(model.Name, model.Password);
             if (result)
             {
-                return Ok(new { success = true, message = "Đăng ký thành công" });
+                return Ok(new OperationResultResponse
+                {
+                    Success = true,
+                    Message = "Đăng ký thành công"
+                });
             }
-            else
-            {
-                return BadRequest(new { message = "Tên đăng nhập đã tồn tại" });
-            }
+
+            return BadRequest(new MessageResponse { Message = "Tên đăng nhập đã tồn tại" });
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
-            return BadRequest(new { message = "Đã xảy ra lỗi khi đăng ký" });
+            _logger.LogError(ex, "Unexpected error while registering user {UserName}", model.Name);
+            return StatusCode(500, new MessageResponse { Message = "Đã xảy ra lỗi khi đăng ký" });
         }
     }
 
@@ -73,25 +82,28 @@ public class AccountController : ControllerBase
     [Authorize]
     public IActionResult Logout()
     {
-        return Ok(new { success = true, message = "Đăng xuất thành công" });
+        return Ok(new OperationResultResponse
+        {
+            Success = true,
+            Message = "Đăng xuất thành công"
+        });
     }
 
     [HttpGet("currentuser")]
     [Authorize]
     public async Task<IActionResult> GetCurrentUser()
     {
-        var user = await _authenticationService.GetCurrentUser();
+        var user = await _currentUserService.GetCurrentUser();
         if (user == null)
         {
             return Unauthorized();
         }
 
-        return Ok(new
+        return Ok(new CurrentUserResponse
         {
-            id = user.Id,
-            name = user.Name,
-            role = user.Role.ToString(),
-            learnedWordsCount = user.LearnedVocabularies?.Count ?? 0
+            Id = user.Id,
+            Name = user.Name,
+            LearnedWordsCount = user.LearnedVocabularies?.Count ?? 0
         });
     }
 
@@ -99,7 +111,7 @@ public class AccountController : ControllerBase
     [Authorize]
     public async Task<IActionResult> RefreshToken()
     {
-        var user = await _authenticationService.GetCurrentUser();
+        var user = await _currentUserService.GetCurrentUser();
         if (user == null)
         {
             return Unauthorized();

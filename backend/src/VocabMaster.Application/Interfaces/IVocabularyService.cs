@@ -6,8 +6,8 @@ namespace VocabMaster.Application.Interfaces
     {
         Task<Vocabulary?> GetRandomWord(int userId);
         Task<List<LearnedWord>> GetLearnedWords(int userId);
-        Task<LearnedWord> AddLearnedWord(LearnedWord learnedWord);
-        Task<bool> RemoveLearnedWord(int learnedWordId);
+        Task<LearnedWord> AddLearnedWord(string word, int userId);
+        Task<bool> RemoveLearnedWord(int learnedWordId, int userId);
         Task<Vocabulary?> GetVocabularyByWord(string word);
     }
 }

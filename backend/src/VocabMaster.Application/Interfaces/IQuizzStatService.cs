@@ -1,10 +1,10 @@
-﻿using VocabMaster.Domain.Entities;
+﻿using VocabMaster.Application.Models.Quiz;
 
 namespace VocabMaster.Application.Interfaces
 {
     public interface IQuizzStatService
     {
-        Task<int> GetTotalQuestions();
-        Task<List<CompletedQuiz>> GetCompletedQuizzes(int userId);
+        Task<QuizStatsSummary> GetQuizStats(int userId);
+        Task<List<CompletedQuizAnswerSummary>> GetCompletedAnswers(int userId);
     }
 }

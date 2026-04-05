@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -6,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 // Removed System.Text.Json usage as Google OAuth helpers were removed
 using VocabMaster.Application.Interfaces;
+using VocabMaster.Application.Models.Authentication;
 using VocabMaster.Domain.Entities;
 using VocabMaster.Domain.Interfaces;
 
@@ -14,33 +14,52 @@ namespace VocabMaster.Infrastructure.Identity
     public class AuthenticationService : IAuthenticationService
     {
         private readonly IUserRepo _userRepository;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _configuration;
 
         public AuthenticationService(
             IUserRepo userRepository,
-            IHttpContextAccessor httpContextAccessor,
             IConfiguration configuration)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
-        public async Task<Dictionary<string, object>?> Login(string name, string password)
+        public async Task<AuthenticationResult?> Login(string name, string password)
         {
-            var user = await _userRepository.ValidateUser(name, password);
-            return user != null ? await GenerateJwtToken(user) : null;
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(password))
+            {
+                return null;
+            }
+
+            var user = await _userRepository.GetByName(name.Trim());
+            if (user == null || !VerifyPassword(password, user.Password))
+            {
+                return null;
+            }
+
+            return await GenerateJwtToken(user);
         }
 
-        public async Task<bool> Register(User user)
+        public async Task<bool> Register(string name, string password)
         {
-            if (user == null) throw new ArgumentNullException(nameof(user));
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Name cannot be null or empty", nameof(name));
 
-            if (await _userRepository.IsNameExist(user.Name))
+            if (string.IsNullOrWhiteSpace(password))
+                throw new ArgumentException("Password cannot be null or empty", nameof(password));
+
+            var normalizedName = name.Trim();
+
+            if (await _userRepository.IsNameExist(normalizedName))
                 return false;
 
-            user.Password = HashPassword(user.Password);
+            var user = new User
+            {
+                Name = normalizedName,
+                Password = HashPassword(password),
+                Role = UserRole.User
+            };
+
             await _userRepository.Add(user);
             return true;
         }
@@ -50,24 +69,7 @@ namespace VocabMaster.Infrastructure.Identity
             await Task.CompletedTask;
         }
 
-        public async Task<User> GetCurrentUser()
-        {
-            if (_httpContextAccessor.HttpContext == null ||
-                !_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
-            {
-                return null;
-            }
-
-            var userId = FindUserIdFromClaims(_httpContextAccessor.HttpContext.User);
-            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int id))
-            {
-                return null;
-            }
-
-            return await _userRepository.GetById(id);
-        }
-
-        public string HashPassword(string password)
+        private static string HashPassword(string password)
         {
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password cannot be null or empty", nameof(password));
@@ -75,7 +77,7 @@ namespace VocabMaster.Infrastructure.Identity
             return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
-        public bool VerifyPassword(string password, string hash)
+        private static bool VerifyPassword(string password, string hash)
         {
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password cannot be null or empty", nameof(password));
@@ -86,15 +88,19 @@ namespace VocabMaster.Infrastructure.Identity
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
 
-        public async Task<Dictionary<string, object>> GenerateJwtToken(User user)
+        public async Task<AuthenticationResult> GenerateJwtToken(User user)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
 
             var jwtSettings = _configuration.GetSection("JWT");
-            var secretKey = jwtSettings["Secret"];
-            var issuer = jwtSettings["Issuer"];
-            var audience = jwtSettings["Audience"];
-            var expiryInDays = int.Parse(jwtSettings["ExpiryInDays"]);
+            var secretKey = GetRequiredJwtSetting(jwtSettings, "Secret");
+            var issuer = GetRequiredJwtSetting(jwtSettings, "Issuer");
+            var audience = GetRequiredJwtSetting(jwtSettings, "Audience");
+
+            if (!int.TryParse(GetRequiredJwtSetting(jwtSettings, "ExpiryInDays"), out var expiryInDays))
+            {
+                throw new InvalidOperationException("JWT setting 'ExpiryInDays' must be a valid integer.");
+            }
 
             var claims = CreateUserClaims(user);
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
@@ -109,17 +115,16 @@ namespace VocabMaster.Infrastructure.Identity
                 signingCredentials: credentials
             );
 
-            return await Task.FromResult(new Dictionary<string, object>
+            return await Task.FromResult(new AuthenticationResult
             {
-                ["accessToken"] = new JwtSecurityTokenHandler().WriteToken(token),
-                ["expiresIn"] = (int)(tokenExpiration - DateTime.UtcNow).TotalSeconds,
-                ["userId"] = user.Id,
-                ["userName"] = user.Name,
-                ["role"] = user.Role.ToString()
+                AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
+                ExpiresIn = (int)(tokenExpiration - DateTime.UtcNow).TotalSeconds,
+                UserId = user.Id,
+                UserName = user.Name
             });
         }
 
-        public List<Claim> CreateUserClaims(User user)
+        private static List<Claim> CreateUserClaims(User user)
         {
             return new List<Claim>
             {
@@ -133,13 +138,10 @@ namespace VocabMaster.Infrastructure.Identity
             };
         }
 
-        public string FindUserIdFromClaims(ClaimsPrincipal user)
+        private static string GetRequiredJwtSetting(IConfigurationSection jwtSettings, string key)
         {
-            return user.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                ?? user.FindFirst("UserId")?.Value
-                ?? user.FindFirst("userId")?.Value
-                ?? user.FindFirst("id")?.Value
-                ?? user.FindFirst("sub")?.Value;
+            return jwtSettings[key]
+                ?? throw new InvalidOperationException($"JWT setting '{key}' is not configured.");
         }
     }
 }

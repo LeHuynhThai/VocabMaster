@@ -9,7 +9,7 @@ namespace VocabMaster.Domain.Interfaces
         Task<bool> Update(Vocabulary vocabulary);
         Task<List<LearnedWord>> GetLearnedWords(int userId);
         Task<LearnedWord> AddLearnedWord(LearnedWord learnedWord);
-        Task<bool> RemoveLearnedWord(int learnedWordId);
+        Task<bool> RemoveLearnedWord(int learnedWordId, int userId);
         Task<Vocabulary?> GetVocabularyByWord(string word);
     }
 }

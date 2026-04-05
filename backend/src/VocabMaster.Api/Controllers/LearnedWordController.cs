@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using VocabMaster.Api.Contracts.Common;
+using VocabMaster.Api.Contracts.Vocabulary;
 using VocabMaster.Application.Interfaces;
+using VocabMaster.Domain.Entities;
 
 namespace VocabMaster.Api.Controllers
 {
@@ -10,37 +12,41 @@ namespace VocabMaster.Api.Controllers
     [Route("api/[controller]")]
     public class LearnedWordController : ControllerBase
     {
+        private readonly ICurrentUserService _currentUserService;
         private readonly IVocabularyService _vocabularyService;
 
-        public LearnedWordController(IVocabularyService vocabularyService)
+        public LearnedWordController(ICurrentUserService currentUserService, IVocabularyService vocabularyService)
         {
+            _currentUserService = currentUserService ?? throw new ArgumentNullException(nameof(currentUserService));
             _vocabularyService = vocabularyService;
         }
 
         [HttpGet("learned-word")]
         public async Task<IActionResult> GetAll()
         {
-            var userId = GetUserIdFromClaims();
+            var userId = _currentUserService.GetUserId();
+            if (!userId.HasValue)
+            {
+                return Unauthorized(new ErrorResponse
+                {
+                    Error = "auth_error",
+                    Message = "Không thể xác thực người dùng"
+                });
+            }
+
             try
             {
-                var items = await _vocabularyService.GetLearnedWords(userId);
-
-                var result = items.Select(x => new
-                {
-                    id = x.Id,
-                    word = x.Word,
-                    learnedAt = x.LearnedAt
-                }).ToList();
+                var items = await _vocabularyService.GetLearnedWords(userId.Value);
+                var result = items.Select(ToLearnedWordResponse).ToList();
 
                 return Ok(result);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, new
+                return StatusCode(500, new ErrorResponse
                 {
-                    error = "server_error",
-                    message = "Đã xảy ra lỗi khi lấy danh sách từ đã học",
-                    details = ex.Message
+                    Error = "server_error",
+                    Message = "Đã xảy ra lỗi khi lấy danh sách từ đã học"
                 });
             }
         }
@@ -48,48 +54,53 @@ namespace VocabMaster.Api.Controllers
         [HttpDelete("learned-word/{id}")]
         public async Task<IActionResult> RemoveLearnedWord(int id)
         {
+            var userId = _currentUserService.GetUserId();
+            if (!userId.HasValue)
+            {
+                return Unauthorized(new ErrorResponse
+                {
+                    Error = "auth_error",
+                    Message = "Không thể xác thực người dùng"
+                });
+            }
+
             try
             {
-                var result = await _vocabularyService.RemoveLearnedWord(id);
+                var result = await _vocabularyService.RemoveLearnedWord(id, userId.Value);
 
                 if (result)
                 {
-                    return Ok(new
+                    return Ok(new OperationResultResponse
                     {
-                        success = true,
-                        message = "Xóa từ vựng đã học thành công"
+                        Success = true,
+                        Message = "Xóa từ vựng đã học thành công"
                     });
                 }
-                else
+
+                return NotFound(new OperationResultResponse
                 {
-                    return NotFound(new
-                    {
-                        success = false,
-                        message = "Không tìm thấy từ vựng đã học"
-                    });
-                }
+                    Success = false,
+                    Message = "Không tìm thấy từ vựng đã học"
+                });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, new
+                return StatusCode(500, new ErrorResponse
                 {
-                    success = false,
-                    error = "server_error",
-                    message = "Đã xảy ra lỗi khi xóa từ vựng đã học",
-                    details = ex.Message
+                    Error = "server_error",
+                    Message = "Đã xảy ra lỗi khi xóa từ vựng đã học"
                 });
             }
         }
 
-        private int GetUserIdFromClaims()
+        private static LearnedWordResponse ToLearnedWordResponse(LearnedWord learnedWord)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)
-                              ?? User.Claims.FirstOrDefault(c => c.Type == "UserId");
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+            return new LearnedWordResponse
             {
-                return userId;
-            }
-            return 0;
+                Id = learnedWord.Id,
+                Word = learnedWord.Word,
+                LearnedAt = learnedWord.LearnedAt
+            };
         }
     }
 }

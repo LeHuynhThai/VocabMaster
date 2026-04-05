@@ -14,11 +14,12 @@ namespace VocabMaster.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<User> GetByName(string name)
+        public async Task<User?> GetByName(string name)
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Name == name);
         }
-        public async Task<User> GetById(int id)
+
+        public async Task<User?> GetById(int id)
         {
             return await _context.Users
                 .Include(u => u.LearnedVocabularies)
@@ -34,12 +35,6 @@ namespace VocabMaster.Infrastructure.Repositories
         {
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
-        }
-
-        public async Task<User> ValidateUser(string name, string password)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Name == name);
-            return user;
         }
     }
 }

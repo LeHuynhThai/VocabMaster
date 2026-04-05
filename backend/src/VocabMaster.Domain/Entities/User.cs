@@ -7,11 +7,11 @@ namespace VocabMaster.Domain.Entities
     {
         [Required]
         [MaxLength(50)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [Required]
         [MaxLength(100)]
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
 
         public UserRole Role { get; set; } = UserRole.User;
 

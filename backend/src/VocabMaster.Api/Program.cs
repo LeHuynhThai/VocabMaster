@@ -38,8 +38,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationDbContext")));
 builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
-// AutoMapper removed — no mapping profiles used currently
-
 // Add Repositories
 builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IVocabularyRepo, VocabularyRepo>();
@@ -49,6 +47,7 @@ builder.Services.AddScoped<IQuizzStatRepo, QuizzStatRepo>();
 
 // services for authentication
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // Add vocabulary service  
 builder.Services.AddScoped<IVocabularyService, VocabularyService>();
@@ -139,9 +138,10 @@ app.UseSession();
 
 app.MapControllers();
 
-// Seed data
-using (var scope = app.Services.CreateScope())
+if (!app.Environment.IsEnvironment("Testing"))
 {
+    // Seed data
+    using var scope = app.Services.CreateScope();
     var services = scope.ServiceProvider;
     try
     {
@@ -159,3 +159,5 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+public partial class Program;

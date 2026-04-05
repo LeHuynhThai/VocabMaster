@@ -8,7 +8,7 @@ namespace VocabMaster.Domain.Entities
     {
         [Required]
         [MaxLength(100)]
-        public string Word { get; set; }
+        public string Word { get; set; } = string.Empty;
 
         [Required]
         public int UserId { get; set; }
@@ -17,6 +17,6 @@ namespace VocabMaster.Domain.Entities
         public DateTime LearnedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        public virtual User User { get; set; } = null!;
     }
 }
