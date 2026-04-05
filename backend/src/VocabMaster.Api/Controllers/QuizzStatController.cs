@@ -1,0 +1,93 @@
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using VocabMaster.Application.Interfaces;
+
+namespace VocabMaster.Api.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
+    public class QuizzStatController : ControllerBase
+    {
+        private readonly IQuizzStatService _quizzStatService;
+
+        public QuizzStatController(IQuizzStatService quizzStatService)
+        {
+            _quizzStatService = quizzStatService;
+        }
+
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetQuizStats()
+        {
+            try
+            {
+                var userId = GetUserIdFromClaims();
+
+                var totalQuestions = await _quizzStatService.GetTotalQuestions();
+                var completedQuizzes = await _quizzStatService.GetCompletedQuizzes(userId);
+
+                var completedQuestions = completedQuizzes.Count;
+                var correctAnswers = completedQuizzes.Count(cq => cq.WasCorrect);
+
+                double accuracyRate = 0;
+                if (completedQuestions > 0)
+                {
+                    accuracyRate = (double)correctAnswers / completedQuestions * 100;
+                }
+
+                return Ok(new
+                {
+                    totalQuestions = totalQuestions,
+                    completedQuestions = completedQuestions,
+                    correctAnswers = correctAnswers,
+                    accuracyRate = accuracyRate
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error" });
+            }
+        }
+
+        [HttpGet("completed-answers")]
+        public async Task<IActionResult> GetCompletedAnswers()
+        {
+            try
+            {
+                var userId = GetUserIdFromClaims();
+
+                var completedQuizzes = await _quizzStatService.GetCompletedQuizzes(userId);
+
+                var completedAnswers = completedQuizzes.Select(cq => new
+                {
+                    id = cq.Id,
+                    quizQuestionId = cq.QuizQuestionId,
+                    word = cq.QuizQuestion.Word,
+                    correctAnswer = cq.QuizQuestion.CorrectAnswer,
+                    completedAt = cq.CompletedAt,
+                    wasCorrect = cq.WasCorrect
+                }).ToList();
+
+                return Ok(completedAnswers);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error" });
+            }
+        }
+
+        private int GetUserIdFromClaims()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier) ??
+                              User.Claims.FirstOrDefault(c => c.Type == "UserId");
+
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return userId;
+            }
+
+            return 0;
+        }
+    }
+}
