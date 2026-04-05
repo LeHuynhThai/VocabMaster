@@ -9,7 +9,6 @@ Trang web học tiếng Anh từ vựng dễ dàng.
 - Lưu từ vựng: Lưu từ vựng đã học.
 - Quiz cơ bản: Các câu hỏi trắc nghiệm để kiểm tra từ vựng.
 - Thống kê tiến độ: Theo dõi số từ đã học và kết quả quiz đã hoàn thành.
-- Quản trị (Admin): Bảng điều khiển cho quản trị viên để quản lý từ vựng.
 
 ## Quick Start
 
@@ -24,7 +23,7 @@ Trang web học tiếng Anh từ vựng dễ dàng.
 
 4. **Chạy ứng dụng:** Khởi chạy backend và frontend.
 
-- cd API
+- cd backend/src/VocabMaster.Api
 - dotnet run
 - cd frontend
 - npm start

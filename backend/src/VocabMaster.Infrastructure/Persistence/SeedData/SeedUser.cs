@@ -39,13 +39,6 @@ namespace VocabMaster.Infrastructure.Persistence.SeedData
 
             var users = new List<User>();
 
-            users.Add(new User
-            {
-                Name = "Admin",
-                Password = BCrypt.Net.BCrypt.HashPassword("123"),
-                Role = UserRole.Admin
-            });
-
             for (int i = 1; i <= 10; i++)
             {
                 users.Add(new User
