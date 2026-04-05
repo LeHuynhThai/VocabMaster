@@ -14,24 +14,13 @@ namespace VocabMaster.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<List<int>> GetCompletedQuestionIds(int userId)
-        {
-            return await _context.CompletedQuizzes
-                .Where(cq => cq.UserId == userId)
-                .Select(cq => cq.QuizQuestionId)
-                .ToListAsync();
-        }
-
         public async Task<QuizQuestion?> GetRandomUncompletedQuestion(int userId)
         {
-            var completedQuestionIds = await GetCompletedQuestionIds(userId);
-
-            var randomQuestion = await _context.QuizQuestions
-                .Where(q => !completedQuestionIds.Contains(q.Id))
-                .OrderBy(x => Guid.NewGuid())
+            return await _context.QuizQuestions
+                .Where(question => !_context.CompletedQuizzes.Any(completedQuiz =>
+                    completedQuiz.UserId == userId && completedQuiz.QuizQuestionId == question.Id))
+                .OrderBy(_ => Guid.NewGuid())
                 .FirstOrDefaultAsync();
-
-            return randomQuestion;
         }
 
         public async Task<QuizQuestion?> GetQuestionById(int questionId)
@@ -40,8 +29,21 @@ namespace VocabMaster.Infrastructure.Repositories
                 .FirstOrDefaultAsync(q => q.Id == questionId);
         }
 
-        public async Task<bool> SaveCompletedQuiz(int userId, int quizQuestionId, bool wasCorrect)
+        public async Task<CompletedQuiz?> GetCompletedQuiz(int userId, int quizQuestionId)
         {
+            return await _context.CompletedQuizzes
+                .FirstOrDefaultAsync(completedQuiz =>
+                    completedQuiz.UserId == userId && completedQuiz.QuizQuestionId == quizQuestionId);
+        }
+
+        public async Task<CompletedQuiz> SaveCompletedQuiz(int userId, int quizQuestionId, bool wasCorrect)
+        {
+            var existingCompletion = await GetCompletedQuiz(userId, quizQuestionId);
+            if (existingCompletion != null)
+            {
+                return existingCompletion;
+            }
+
             var completedQuiz = new CompletedQuiz
             {
                 UserId = userId,
@@ -51,8 +53,24 @@ namespace VocabMaster.Infrastructure.Repositories
             };
 
             _context.CompletedQuizzes.Add(completedQuiz);
-            await _context.SaveChangesAsync();
-            return true;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return completedQuiz;
+            }
+            catch (DbUpdateException)
+            {
+                _context.Entry(completedQuiz).State = EntityState.Detached;
+
+                var savedCompletion = await GetCompletedQuiz(userId, quizQuestionId);
+                if (savedCompletion != null)
+                {
+                    return savedCompletion;
+                }
+
+                throw;
+            }
         }
     }
 }

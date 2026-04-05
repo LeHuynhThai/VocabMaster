@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import quizService, { QuizStats } from '../../services/quizService';
+import { logger } from '../../utils/logger';
 import { useQuizStats } from '../../contexts/QuizStatsContext';
 import { ROUTES } from '../../utils/constants';
 
@@ -24,7 +25,7 @@ const QuizStatsComponent: React.FC = () => {
         setStats(data);
         setError(null);
       } catch (err) {
-        console.error('Error fetching quiz statistics:', err);
+        logger.error('Error fetching quiz statistics', err);
         setError('Không thể tải thống kê.');
       } finally {
         setLoading(false);

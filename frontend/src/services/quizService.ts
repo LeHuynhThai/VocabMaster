@@ -1,5 +1,6 @@
 import api from './api';
 import { API_ENDPOINTS } from '../utils/constants';
+import { logger } from '../utils/logger';
 
 export interface QuizQuestion {
   id: number;
@@ -14,7 +15,7 @@ export interface QuizQuestion {
 export interface AllCompletedResponse {
   allCompleted: boolean;
   message: string;
-  stats: QuizStats;
+  stats?: QuizStats;
 }
 
 // Union type for quiz question response
@@ -73,7 +74,7 @@ const quizService = {
       const response = await api.get(API_ENDPOINTS.QUIZ_RANDOM);
       return response.data;
     } catch (error: any) {
-      console.error('Error getting random quiz question:', error);
+      logger.error('Error getting random quiz question', error);
       throw error;
     }
   },
@@ -87,23 +88,17 @@ const quizService = {
       const response = await api.get(API_ENDPOINTS.QUIZ_RANDOM_UNCOMPLETED);
       
       // Check if response indicates all questions are completed
-      if (response.data.completed) {
+      if (response.data.allCompleted || response.data.completed) {
         return {
           allCompleted: true,
-          message: response.data.message,
-          stats: {
-            totalQuestions: 0,
-            completedQuestions: 0,
-            correctAnswers: 0,
-            accuracyRate: 0
-          }
+          message: response.data.message
         } as AllCompletedResponse;
       }
       
       // Return the question data
       return response.data as QuizQuestion;
     } catch (error: any) {
-      console.error('Error getting random uncompleted quiz question:', error);
+      logger.error('Error getting random uncompleted quiz question', error);
       throw error;
     }
   },
@@ -122,7 +117,7 @@ const quizService = {
       });
       return response.data;
     } catch (error: any) {
-      console.error('Error checking quiz answer:', error);
+      logger.error('Error checking quiz answer', error);
       throw error;
     }
   },
@@ -135,21 +130,17 @@ const quizService = {
    */
   checkAnswerAndComplete: async (questionId: number, selectedAnswer: string): Promise<QuizResult> => {
     try {
-      console.log('Calling checkAnswerAndComplete with:', { 
-        questionId, 
-        selectedAnswer, 
-        endpoint: API_ENDPOINTS.QUIZ_CHECK_ANSWER_COMPLETE 
-      });
-      
+      logger.debug('Calling checkAnswerAndComplete with', { questionId, endpoint: API_ENDPOINTS.QUIZ_CHECK_ANSWER_COMPLETE });
+
       const response = await api.post(API_ENDPOINTS.QUIZ_CHECK_ANSWER_COMPLETE, {
         questionId,
         selectedAnswer
       });
-      
-      console.log('Response from checkAnswerAndComplete:', response.data);
+
+      logger.debug('Response from checkAnswerAndComplete', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('Error checking and completing quiz answer:', error);
+      logger.error('Error checking and completing quiz answer', error);
       throw error;
     }
   },
@@ -163,7 +154,7 @@ const quizService = {
       const response = await api.get(API_ENDPOINTS.QUIZ_COMPLETED);
       return response.data;
     } catch (error: any) {
-      console.error('Error getting completed quizzes:', error);
+      logger.error('Error getting completed quizzes', error);
       throw error;
     }
   },
@@ -177,7 +168,7 @@ const quizService = {
       const response = await api.get(API_ENDPOINTS.QUIZ_CORRECT);
       return response.data;
     } catch (error: any) {
-      console.error('Error getting correct quizzes:', error);
+      logger.error('Error getting correct quizzes', error);
       throw error;
     }
   },
@@ -194,7 +185,7 @@ const quizService = {
       });
       return response.data;
     } catch (error: any) {
-      console.error('Error fetching paginated correct quizzes:', error);
+      logger.error('Error fetching paginated correct quizzes', error);
       // Return empty paginated response if error
       return {
         items: [],
@@ -217,12 +208,12 @@ const quizService = {
   submitAnswer: async (quizQuestionId: number, selectedAnswer: string): Promise<SubmitAnswerResponse> => {
     try {
       const response = await api.post(API_ENDPOINTS.QUIZ_SUBMIT_ANSWER, {
-        QuizQuestionId: quizQuestionId,
-        SelectedAnswer: selectedAnswer
+        quizQuestionId,
+        selectedAnswer
       });
       return response.data;
     } catch (error: any) {
-      console.error('Error submitting quiz answer:', error);
+      logger.error('Error submitting quiz answer', error);
       throw error;
     }
   },
@@ -236,7 +227,7 @@ const quizService = {
       const response = await api.get(API_ENDPOINTS.QUIZ_STATS);
       return response.data;
     } catch (error: any) {
-      console.error('Error getting quiz stats:', error);
+      logger.error('Error getting quiz stats', error);
       throw error;
     }
   },
@@ -247,13 +238,12 @@ const quizService = {
    */
   getCompletedAnswers: async (): Promise<CompletedQuiz[]> => {
     try {
-      console.log('Calling getCompletedAnswers with endpoint:', API_ENDPOINTS.QUIZ_COMPLETED_ANSWERS);
+      logger.debug('Calling getCompletedAnswers with endpoint', API_ENDPOINTS.QUIZ_COMPLETED_ANSWERS);
       const response = await api.get(API_ENDPOINTS.QUIZ_COMPLETED_ANSWERS);
-      console.log('getCompletedAnswers response:', response.data);
+      logger.debug('getCompletedAnswers response', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('Error getting completed answers:', error);
-      console.error('Error details:', error.response?.data);
+      logger.error('Error getting completed answers', error);
       throw error;
     }
   }

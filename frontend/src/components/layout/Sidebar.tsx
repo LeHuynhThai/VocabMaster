@@ -44,7 +44,6 @@ const Sidebar: React.FC = () => {
             </div>
             <div className="ml-4 min-w-0">
               <p className="mb-1 truncate text-base font-semibold text-slate-800">{user.name}</p>
-              <p className="m-0 text-xs uppercase tracking-[0.2em] text-slate-500">Học viên</p>
             </div>
           </div>
         )}

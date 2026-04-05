@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Vocabulary } from '../types';
 import api from '../services/api';
+import { logger } from '../utils/logger';
 import VocabularyDetailCard from '../features/vocabulary/components/VocabularyDetailCard';
 
 const WordDetailPage: React.FC = () => {
@@ -25,7 +26,7 @@ const WordDetailPage: React.FC = () => {
       setVocabulary(response.data);
     } catch (err) {
       setError('Không thể tải thông tin từ vựng.');
-      console.error('Error fetching word detail:', err);
+      logger.error('Error fetching word detail', err);
     } finally {
       setIsLoading(false);
     }
@@ -35,9 +36,9 @@ const WordDetailPage: React.FC = () => {
     if (!audioUrl) return;
     try {
       const audio = new Audio(audioUrl);
-      audio.play().catch(err => console.error('Error playing audio:', err));
+      audio.play().catch(err => logger.error('Error playing audio', err));
     } catch (err) {
-      console.error('Error creating audio element:', err);
+      logger.error('Error creating audio element', err);
     }
   };
 

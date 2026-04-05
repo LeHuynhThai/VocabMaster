@@ -1,5 +1,6 @@
 import api, { removeToken } from './api';
 import { LoginRequest, RegisterRequest, User, TokenResponse } from '../types';
+import { logger } from '../utils/logger';
 
 const getErrorMessage = (error: any, fallback: string): string => {
   const serverMessage = error?.response?.data?.message || error?.response?.data?.Message;
@@ -21,8 +22,7 @@ const authService = {
       const response = await api.post<TokenResponse>('/api/account/login', credentials);
       return {
         id: response.data.userId,
-        name: response.data.userName,
-        role: response.data.role
+        name: response.data.userName
       };
     } catch (error: any) {
       const message = getErrorMessage(error, 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
@@ -56,10 +56,15 @@ const authService = {
   getCurrentUser: async (): Promise<User | null> => {
     try {
       const response = await api.get('/api/account/currentuser');
-      return response.data;
+      const data = response.data || {};
+      return {
+        id: data.id,
+        name: data.name,
+        learnedWordsCount: data.learnedWordsCount ?? undefined
+      };
     } catch (error: any) {
       if (error.response?.status !== 401) {
-        console.error('Get current user API error:', error.response?.data || error.message);
+        logger.error('Get current user API error', error.response?.data || error.message);
       }
       return null;
     }
@@ -70,7 +75,7 @@ const authService = {
       await api.get<TokenResponse>('/api/account/refresh-token');
       return true;
     } catch (error: any) {
-      console.error('Refresh token error:', error.response?.data || error.message);
+      logger.error('Refresh token error', error.response?.data || error.message);
       return false;
     }
   },

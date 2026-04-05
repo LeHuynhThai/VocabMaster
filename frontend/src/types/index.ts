@@ -4,7 +4,6 @@
 export interface User {
   id: number;
   name: string;
-  role: string;
   learnedWordsCount?: number;
 }
 
@@ -83,7 +82,6 @@ export interface TokenResponse {
   expiresIn: number;
   userId: number;
   userName: string;
-  role: string;
 }
 
 /**

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import authService from '../services/authService';
+import { logger } from '../utils/logger';
 import { User, LoginRequest, RegisterRequest } from '../types';
 
 interface AuthContextType {
@@ -70,7 +71,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           saveAuthState(false);
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        logger.error('Auth initialization error', error);
         saveAuthState(false);
       } finally {
         setIsLoading(false);
@@ -88,7 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // save auth state
       saveAuthState(true);
     } catch (error) {
-      console.error('Login failed:', error);
+      logger.error('Login failed', error);
       saveAuthState(false);
       throw error;
     } finally {
@@ -104,7 +105,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const success = await authService.register(userData);
       return success;
     } catch (error) {
-      console.error('Registration failed:', error);
+      logger.error('Registration failed', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -119,7 +120,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // clear auth state
       saveAuthState(false);
     } catch (error) {
-      console.error('Logout failed:', error);
+      logger.error('Logout failed', error);
     } finally {
       setIsLoading(false);
     }

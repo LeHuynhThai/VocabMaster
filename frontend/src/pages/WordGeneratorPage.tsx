@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import VocabularyDetailCard from '../features/vocabulary/components/VocabularyDetailCard';
 import vocabularyService from '../services/vocabularyService';
+import { logger } from '../utils/logger';
 import { Vocabulary } from '../types';
 import { ROUTES } from '../utils/constants';
 
@@ -38,7 +39,7 @@ const WordGeneratorPage: React.FC = () => {
 
       navigate(ROUTES.WORD_GENERATOR, { replace: true });
     } catch (error) {
-      console.error('Error fetching random word:', error);
+      logger.error('Error fetching random word', error);
       addToast({
         type: 'error',
         message: 'Bạn đã học hết tất cả từ vựng trong hệ thống.',
@@ -65,7 +66,7 @@ const WordGeneratorPage: React.FC = () => {
 
       navigate(ROUTES.WORD_GENERATOR, { replace: true });
     } catch (error) {
-      console.error('Error fetching new random word:', error);
+      logger.error('Error fetching new random word', error);
       addToast({
         type: 'error',
         message: 'Bạn đã học hết tất cả từ vựng trong hệ thống.',
@@ -100,7 +101,7 @@ const WordGeneratorPage: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error saving word:', error);
+      logger.error('Error saving word', error);
       addToast({
         type: 'error',
         message: 'Không thể lưu từ vựng. Vui lòng thử lại sau.',
@@ -118,10 +119,10 @@ const WordGeneratorPage: React.FC = () => {
     try {
       const audio = new Audio(audioUrl);
       audio.play().catch((error) => {
-        console.error('Error playing audio:', error);
+        logger.error('Error playing audio', error);
       });
     } catch (error) {
-      console.error('Error creating audio element:', error);
+      logger.error('Error creating audio element', error);
     }
   };
 

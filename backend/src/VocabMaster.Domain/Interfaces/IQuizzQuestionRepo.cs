@@ -4,9 +4,9 @@ namespace VocabMaster.Domain.Interfaces
 {
     public interface IQuizzQuestionRepo
     {
-        Task<List<int>> GetCompletedQuestionIds(int userId);
         Task<QuizQuestion?> GetRandomUncompletedQuestion(int userId);
         Task<QuizQuestion?> GetQuestionById(int questionId);
-        Task<bool> SaveCompletedQuiz(int userId, int quizQuestionId, bool wasCorrect);
+        Task<CompletedQuiz?> GetCompletedQuiz(int userId, int quizQuestionId);
+        Task<CompletedQuiz> SaveCompletedQuiz(int userId, int quizQuestionId, bool wasCorrect);
     }
 }

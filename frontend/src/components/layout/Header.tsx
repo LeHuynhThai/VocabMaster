@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { getAvatarText } from '../../utils/helpers';
 import { ROUTES, MESSAGES } from '../../utils/constants';
+import { logger } from '../../utils/logger';
 
 /**
  * Header component with improved design
@@ -19,11 +20,11 @@ const Header: React.FC = () => {
     e.preventDefault();
     try {
       await logout();
-      console.log(MESSAGES.LOGOUT_SUCCESS);
+      logger.info(MESSAGES.LOGOUT_SUCCESS);
       // Redirect to login page after successful logout
       navigate(ROUTES.LOGIN);
     } catch (error) {
-      console.error("Lỗi đăng xuất:", error);
+      logger.error('Lỗi đăng xuất:', error);
     }
   };
 

@@ -1,12 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuizStats } from '../contexts/QuizStatsContext';
-import useToast from '../hooks/useToast';
+import { useToast } from '../contexts/ToastContext';
 import quizService, { QuizQuestion, QuizStats, SubmitAnswerResponse } from '../services/quizService';
+import { logger } from '../utils/logger';
 import { MESSAGES, ROUTES } from '../utils/constants';
 
+type ToastVariant = 'success' | 'danger' | 'warning' | 'info';
+
 const QuizPage: React.FC = () => {
-  const { showToast } = useToast();
+  const { addToast } = useToast();
   const { refreshStats } = useQuizStats();
   const [question, setQuestion] = useState<QuizQuestion | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,12 +22,21 @@ const QuizPage: React.FC = () => {
   const [allCompleted, setAllCompleted] = useState(false);
   const [completionMessage, setCompletionMessage] = useState('');
 
+  const showToast = useCallback((message: string, type: ToastVariant) => {
+    const mappedType = type === 'danger' ? 'error' : type;
+
+    addToast({
+      message,
+      type: mappedType,
+    });
+  }, [addToast]);
+
   const loadStats = useCallback(async () => {
     try {
       const statsData = await quizService.getQuizStats();
       setStats(statsData);
     } catch (loadStatsError) {
-      console.error('Error fetching quiz stats:', loadStatsError);
+      logger.error('Error fetching quiz stats', loadStatsError);
     }
   }, []);
 
@@ -48,7 +60,7 @@ const QuizPage: React.FC = () => {
         setQuestion(response as QuizQuestion);
       }
     } catch (loadQuestionError: any) {
-      console.error('Error fetching quiz question:', loadQuestionError);
+      logger.error('Error fetching quiz question', loadQuestionError);
       const errorMessage = loadQuestionError.response?.data?.message || MESSAGES.ERROR_QUIZ_FETCH;
       setError(errorMessage);
       showToast(errorMessage, 'danger');
@@ -58,8 +70,8 @@ const QuizPage: React.FC = () => {
   }, [loadStats, showToast]);
 
   useEffect(() => {
-    loadQuestion();
-    loadStats();
+    void loadQuestion();
+    void loadStats();
   }, [loadQuestion, loadStats]);
 
   useEffect(() => {
@@ -100,7 +112,7 @@ const QuizPage: React.FC = () => {
       refreshStats();
       showToast(resultData.message, resultData.isCorrect ? 'success' : 'danger');
     } catch (submitError) {
-      console.error('Error checking answer:', submitError);
+      logger.error('Error checking answer', submitError);
       showToast('Đã xảy ra lỗi khi kiểm tra câu trả lời', 'danger');
     } finally {
       setIsChecking(false);
@@ -131,7 +143,7 @@ const QuizPage: React.FC = () => {
   };
 
   const handleNextQuestion = () => {
-    loadQuestion();
+    void loadQuestion();
   };
 
   const formatPercentage = (value: number): string => {

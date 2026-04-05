@@ -1,6 +1,7 @@
 import api from './api';
 import { Vocabulary } from '../types';
 import { API_ENDPOINTS } from '../utils/constants';
+import { logger } from '../utils/logger';
 
 // Interface for learned word
 export interface LearnedWord {
@@ -59,7 +60,7 @@ const vocabularyService = {
     } catch (error: any) {
       // Gracefully handle missing endpoint or auth issues by returning an empty list
       // to keep the UI functional without spamming console errors.
-      console.warn('Learned words endpoint unavailable, returning empty list.');
+      logger.warn('Learned words endpoint unavailable, returning empty list.');
       return [];
     }
   },
@@ -76,7 +77,7 @@ const vocabularyService = {
       const response = await api.post(API_ENDPOINTS.ADD_LEARNED_WORD, { word });
       return response.data && response.data.success;
     } catch (error: any) {
-      console.error('Error marking word as learned:', error);
+      logger.error('Error marking word as learned', error);
       return false;
     }
   },
@@ -91,7 +92,7 @@ const vocabularyService = {
       const response = await api.delete(`${API_ENDPOINTS.LEARNED_WORDS}/${id}`);
       return response.data && response.data.success;
     } catch (error: any) {
-      console.error('Error removing learned word:', error);
+      logger.error('Error removing learned word', error);
       return false;
     }
   }

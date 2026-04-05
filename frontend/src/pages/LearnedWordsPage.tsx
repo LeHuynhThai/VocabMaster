@@ -1,6 +1,7 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import vocabularyService, { LearnedWord } from '../services/vocabularyService';
+import { logger } from '../utils/logger';
 import { useAuth } from '../contexts/AuthContext';
 import Pagination from '../components/ui/Pagination';
 import useToast from '../hooks/useToast';
@@ -65,7 +66,7 @@ const LearnedWordsPage: React.FC = () => {
       setCurrentPage(page);
     } catch (err) {
       setError('Không thể tải danh sách các từ đã học. Vui lòng thử lại sau.');
-      console.error('Error fetching learned words:', err);
+      logger.error('Error fetching learned words', err);
     } finally {
       setIsLoading(false);
     }
@@ -93,7 +94,7 @@ const LearnedWordsPage: React.FC = () => {
       }
     } catch (err) {
       showToast('Không thể xóa từ này. Vui lòng thử lại sau.', 'danger');
-      console.error('Error removing word:', err);
+      logger.error('Error removing word', err);
     } finally {
       setIsLoading(false);
     }

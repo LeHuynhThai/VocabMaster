@@ -1,6 +1,7 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import quizService, { QuizStats, CompletedQuiz } from '../services/quizService';
-import useToast from '../hooks/useToast';
+import { logger } from '../utils/logger';
+import { useToast } from '../contexts/ToastContext';
 import Pagination from '../components/ui/Pagination';
 
 const QuizStatsPage: React.FC = () => {
@@ -10,7 +11,16 @@ const QuizStatsPage: React.FC = () => {
   const [pageSize] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const { showToast } = useToast();
+  const { addToast } = useToast();
+
+  const showToast = useCallback((message: string, type: 'danger' | 'success' | 'warning' | 'info' = 'danger') => {
+    const mappedType = type === 'danger' ? 'error' : type;
+
+    addToast({
+      message,
+      type: mappedType,
+    });
+  }, [addToast]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -26,12 +36,12 @@ const QuizStatsPage: React.FC = () => {
          const completedAnswersData = await quizService.getCompletedAnswers();
          setAllCompletedAnswers(completedAnswersData);
        } catch (completedAnswersError: any) {
-         console.error('Error loading completed answers:', completedAnswersError);
+         logger.error('Error loading completed answers', completedAnswersError);
          // Don't show error toast for completed answers, just log it
          setAllCompletedAnswers([]);
        }
     } catch (err: any) {
-      console.error('Error loading quiz stats:', err);
+      logger.error('Error loading quiz stats', err);
       const errorMessage = err.response?.data?.message || 'Không thể tải thống kê. Vui lòng thử lại sau.';
       setError(errorMessage);
       showToast(errorMessage, 'danger');
@@ -41,7 +51,7 @@ const QuizStatsPage: React.FC = () => {
   }, [showToast]);
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, [loadData]);
 
   const formatPercentage = (value: number): string => {

@@ -23,6 +23,11 @@ namespace VocabMaster.Api.Controllers
             try
             {
                 var userId = GetUserIdFromClaims();
+                if (userId <= 0)
+                {
+                    return Unauthorized(new { message = "Không thể xác thực người dùng" });
+                }
+
                 var question = await _quizzQuestionService.GetRandomUncompletedQuestion(userId);
 
                 if (question == null)
@@ -30,7 +35,8 @@ namespace VocabMaster.Api.Controllers
                     return Ok(new
                     {
                         message = "Bạn đã hoàn thành tất cả câu hỏi!",
-                        completed = true
+                        completed = true,
+                        allCompleted = true
                     });
                 }
 
@@ -44,35 +50,32 @@ namespace VocabMaster.Api.Controllers
                     wrongAnswer3 = question.WrongAnswer3
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new { message = "Internal server error" });
             }
         }
 
         [HttpPost("submit-answer")]
-        public async Task<IActionResult> SubmitQuizAnswer([FromBody] Dictionary<string, object> request)
+        public async Task<IActionResult> SubmitQuizAnswer([FromBody] SubmitQuizAnswerRequest request)
         {
             try
             {
                 var userId = GetUserIdFromClaims();
+                if (userId <= 0)
+                {
+                    return Unauthorized(new { message = "Không thể xác thực người dùng" });
+                }
 
-                if (request == null ||
-                    !request.TryGetValue("quizQuestionId", out var quizQuestionIdObj) ||
-                    quizQuestionIdObj == null ||
-                    !int.TryParse(quizQuestionIdObj.ToString(), out var quizQuestionId) ||
-                    !request.TryGetValue("selectedAnswer", out var selectedAnswerObj) ||
-                    selectedAnswerObj == null ||
-                    string.IsNullOrWhiteSpace(selectedAnswerObj.ToString()))
+                if (request == null || request.QuizQuestionId <= 0 || string.IsNullOrWhiteSpace(request.SelectedAnswer))
                 {
                     return BadRequest(new { message = "Dữ liệu không hợp lệ" });
                 }
 
-                var selectedAnswer = selectedAnswerObj.ToString();
                 var isCorrect = await _quizzQuestionService.SubmitQuizAnswer(
                     userId,
-                    quizQuestionId,
-                    selectedAnswer
+                    request.QuizQuestionId,
+                    request.SelectedAnswer
                 );
 
                 return Ok(new
@@ -81,7 +84,7 @@ namespace VocabMaster.Api.Controllers
                     message = isCorrect ? "Chúc mừng! Bạn đã trả lời đúng." : "Rất tiếc! Đáp án không đúng."
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new { message = "Internal server error" });
             }
@@ -98,6 +101,12 @@ namespace VocabMaster.Api.Controllers
             }
 
             return 0;
+        }
+
+        public sealed class SubmitQuizAnswerRequest
+        {
+            public int QuizQuestionId { get; set; }
+            public string SelectedAnswer { get; set; } = string.Empty;
         }
     }
 }

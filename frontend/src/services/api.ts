@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { logger } from '../utils/logger';
 
 // URL API backend
 const API_URL = process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'https://localhost:64732' : '');
@@ -32,8 +33,8 @@ export const removeToken = (): void => {
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Debug request
-    console.log('Starting Request', JSON.stringify(config, null, 2));
+    // Debug request (sanitized)
+    logger.debug({ type: 'request', method: config.method, url: config.url, params: config.params, data: config.data });
     
     // Add token to header if exists
     const token = getToken();
@@ -50,7 +51,7 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.log('Request Error:', error);
+    logger.error('Request Error', error);
     return Promise.reject(error);
   }
 );
@@ -58,8 +59,8 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    // Debug response
-    console.log('Response:', JSON.stringify(response.data, null, 2));
+    // Debug response (sanitized)
+    logger.debug({ type: 'response', url: response.config?.url, status: response.status, data: response.data });
     
     // Save token if response contains token (login successful)
     if (response.data && response.data.accessToken) {
@@ -69,28 +70,28 @@ api.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
-    // Debug error
-    console.log('Response Error:', error);
-    
+    // Debug error (sanitized)
+    logger.error('Response Error', error);
+
     // Prevent default events that can cause page reload
     if (error.config && error.response) {
-      // Log error but don't interrupt application flow
-      console.log(`API Error: ${error.response.status} - ${error.response.statusText}`);
-      
+      // Log minimal info
+      logger.warn(`API Error: ${error.response.status} - ${error.response.statusText}`);
+
       // Handle 401 Unauthorized error without page reload
       if (error.response.status === 401) {
-        console.log('Authentication error - not redirecting automatically');
+        logger.warn('Authentication error - not redirecting automatically');
         // Check if token is expired
         const isTokenExpired = error.response.headers['token-expired'] === 'true';
         if (isTokenExpired) {
-          console.log('Token expired, removing from storage');
+          logger.warn('Token expired, removing from storage');
           removeToken();
         }
       }
     } else if (error.request) {
-      console.log('API Error: No response received');
+      logger.warn('API Error: No response received');
     } else {
-      console.log('API Error:', error.message);
+      logger.error('API Error', error.message);
     }
     
     // Return error to allow component to handle
