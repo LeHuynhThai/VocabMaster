@@ -14,8 +14,8 @@ services:
 
   api:
     build:
-      context: .
-      dockerfile: API/Dockerfile
+      context: ./backend
+      dockerfile: src/VocabMaster.Api/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5000
@@ -37,3 +37,4 @@ services:
       - "3000:80"
     depends_on:
       - api
+
