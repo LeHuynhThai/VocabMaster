@@ -49,15 +49,6 @@ const Header: React.FC = () => {
                 <span className="max-w-[120px] truncate text-sm font-semibold text-[#ffd700] sm:max-w-[180px]">
                   {user?.name}
                 </span>
-                {user?.role === 'Admin' && (
-                  <Link
-                    to={ROUTES.ADMIN_VOCABULARY}
-                    className="hidden items-center gap-1 rounded-md px-2 py-1 text-sm text-white/90 no-underline transition hover:bg-white/10 hover:text-white sm:inline-flex"
-                  >
-                    <i className="bi bi-shield-check"></i>
-                    <span>Admin</span>
-                  </Link>
-                )}
                 <button
                   className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-500/20"
                   onClick={handleLogout}

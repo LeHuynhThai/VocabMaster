@@ -46,7 +46,6 @@ builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IVocabularyRepo, VocabularyRepo>();
 builder.Services.AddScoped<IQuizzQuestionRepo, QuizzQuestionRepo>();
 builder.Services.AddScoped<IQuizzStatRepo, QuizzStatRepo>();
-builder.Services.AddScoped<IAdminDashBoardRepo, AdminDashBoardRepo>();
 
 
 // services for authentication
@@ -60,9 +59,6 @@ builder.Services.AddScoped<IQuizzQuestionService, QuizzQuestionService>();
 
 // Add quiz stat service
 builder.Services.AddScoped<IQuizzStatService, QuizzStatService>();
-
-// Add admin dashboard service
-builder.Services.AddScoped<IAdminDashBoardService, AdminDashBoardService>();
 
 // Add HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
@@ -117,13 +113,6 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
-
-builder.Services.AddHttpClient("GoogleTranslate", client =>
-{
-    client.BaseAddress = new Uri("https://translate.google.so/");
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.Timeout = TimeSpan.FromSeconds(15);
-});
 
 // Add memory caching
 builder.Services.AddMemoryCache();

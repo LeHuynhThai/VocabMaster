@@ -10,8 +10,6 @@ export const ROUTES = {
   TRANSLATION: '/translation',
   QUIZ: '/quiz',
   QUIZ_STATS: '/quiz-stats',
-  ADMIN_DASHBOARD: '/admin',
-  ADMIN_VOCABULARY: '/admin/vocabulary',
   NOT_FOUND: '/not-found'
 };
 
@@ -39,10 +37,7 @@ export const API_ENDPOINTS = {
   QUIZ_CHECK_ANSWER_COMPLETE: '/api/quiz/check-complete',
   QUIZ_COMPLETED: '/api/quiz/completed',
   QUIZ_CORRECT: '/api/quiz/correct',
-  QUIZ_CORRECT_PAGINATED: '/api/quiz/correct/paginated',
-  // Admin endpoints
-  ADMIN_ADD_VOCABULARY: '/api/admindashboard/vocabulary',
-  ADMIN_DELETE_VOCABULARY: '/api/admindashboard/vocabulary'
+  QUIZ_CORRECT_PAGINATED: '/api/quiz/correct/paginated'
 };
 
 /**

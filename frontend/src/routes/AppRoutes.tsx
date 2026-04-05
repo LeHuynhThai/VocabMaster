@@ -1,8 +1,6 @@
 import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
-import AdminDashboardPage from '../pages/AdminDashboardPage';
-import AdminVocabularyPage from '../pages/AdminVocabularyPage';
 import HomePage from '../pages/HomePage';
 import LearnedWordsPage from '../pages/LearnedWordsPage';
 import LoginPage from '../pages/LoginPage';
@@ -40,14 +38,6 @@ const AppRoutes: React.FC = () => {
       <Route
         path={ROUTES.QUIZ_STATS}
         element={<ProtectedRoute element={<QuizStatsPage />} />}
-      />
-      <Route
-        path={ROUTES.ADMIN_VOCABULARY}
-        element={<ProtectedRoute element={<AdminVocabularyPage />} />}
-      />
-      <Route
-        path={ROUTES.ADMIN_DASHBOARD}
-        element={<ProtectedRoute element={<AdminDashboardPage />} />}
       />
       <Route path={ROUTES.NOT_FOUND} element={<NotFoundPage />} />
       <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} />} />
