@@ -4,12 +4,12 @@
 
 ## Công nghệ sử dụng
 
-| Tầng          | Công nghệ                                            |
-| ------------- | ---------------------------------------------------- |
-| Frontend      | React 18, TypeScript, Tailwind CSS, React Router v6  |
-| Backend       | ASP.NET Core 9 (Web API), Entity Framework Core, JWT |
-| Cơ sở dữ liệu | SQL Server 2022                                      |
-| Triển khai    | Docker, Docker Compose, Nginx                        |
+| Tầng          | Công nghệ                                                    |
+| ------------- | ------------------------------------------------------------ |
+| Frontend      | React 18, TypeScript, Tailwind CSS, React Router v6          |
+| Backend       | ASP.NET Core 9 (Web API), Entity Framework Core, JWT, BCrypt |
+| Cơ sở dữ liệu | SQL Server 2022                                              |
+| Triển khai    | Docker, Docker Compose                                       |
 
 ## Kiến trúc
 
@@ -17,13 +17,13 @@ Backend được tổ chức theo Clean Architecture gồm 4 tầng:
 
 - **Domain** — Entity: `User`, `Vocabulary`, `QuizQuestion`, `LearnedWord`, `CompletedQuiz`
 - **Application** — Interface và Service: xác thực, quiz, từ vựng, thống kê
-- **Infrastructure** — EF Core DbContext, Repository, JWT, Seeding dữ liệu
+- **Infrastructure** — EF Core DbContext, Repository, JWT, BCrypt, Seeding dữ liệu
 - **Api** — Controllers (`Account`, `WordGenerator`, `LearnedWord`, `Quizz`, `QuizzStat`), DTO/Contracts, Middleware
 
 ## Chức năng chính
 
 - **Đăng ký / Đăng nhập** — xác thực bằng JWT, tự động refresh token
-- **Random từ vựng** — hiển thị ngẫu nhiên 1 từ tiếng Anh kèm nghĩa tiếng Việt và ví dụ
+- **Random từ vựng** — hiển thị ngẫu nhiên 1 từ tiếng Anh kèm nghĩa tiếng Việt
 - **Lưu từ vựng** — đánh dấu từ đã học, xem lại danh sách
 - **Quiz trắc nghiệm** — câu hỏi 4 lựa chọn, kiểm tra từ vựng đã học
 - **Thống kê tiến độ** — theo dõi số từ đã học và kết quả quiz đã hoàn thành
