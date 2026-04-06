@@ -56,4 +56,3 @@ docker compose up --build
 ![alt text](DemoPhoto/image5.png)
 ![alt text](DemoPhoto/image6.png)
 ![alt text](DemoPhoto/image7.png)
-![alt text](DemoPhoto/image8.png)
