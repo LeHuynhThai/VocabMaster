@@ -142,3 +142,4 @@ coverage/
 
 .dockerignore
 frontend/.env
+backend/src/VocabMaster.Api/.env
