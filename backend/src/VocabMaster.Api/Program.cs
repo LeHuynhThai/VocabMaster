@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Collections.Generic;
 using VocabMaster.Api.Middlewares;
 using VocabMaster.Application.Interfaces;
 using VocabMaster.Application.Services;
@@ -27,6 +28,24 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
     {
         policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
+// Read frontend URL from environment/config and include in CORS origins
+var frontendUrl = builder.Configuration["FRONTEND_URL"];
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        var origins = new List<string> { "http://localhost:3000", "https://localhost:3000" };
+        if (!string.IsNullOrEmpty(frontendUrl))
+        {
+            origins.Add(frontendUrl);
+        }
+        policy.WithOrigins(origins.ToArray())
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
