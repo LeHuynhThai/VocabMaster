@@ -141,3 +141,4 @@ dist/
 coverage/
 
 .dockerignore
+frontend/.env
